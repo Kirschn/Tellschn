@@ -17,6 +17,14 @@ if ($stmt = mysqli_prepare($link, "SELECT oauth_uid, username, description FROM 
     $stmt->bind_result($id, $username, $description);
     $stmt->fetch();
     $stmt->close();
+    if (!isset($id)) {
+    	header("Location: https://tell.kirschn.de");
+    	die();
+    }
+    if ($id == "") {
+    	header("Location: https://tell.kirschn.de");
+    	die();
+    }
 }
 if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SESSION["sessionkey"] == "") {
 	$_SESSION["sessionkey"] = substr(md5(microtime()),rand(0,26),5);
