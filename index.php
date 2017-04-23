@@ -73,7 +73,7 @@
 	</style>
 	
 	</head>
-	<bod onload="onload()">
+	<body onload="onload()">
 	<div class="elBackground">&nbsp;</div>
 	<div class="elHeadContainer"><h1>Tellschn</h1><br><br>Der schnelle Weg eine anonyme Meinung zu bekommen</div>
 	<div class="inputElement">
@@ -116,16 +116,19 @@
 				} else {
 					$page = 0;
 				}
-				if ($stmt = mysqli_prepare($link, "SELECT id, content, timestamp FROM tells WHERE for_uid=? ORDER BY id DESC LIMIT ?,10")) {
+				if ($stmt = mysqli_prepare($link, "SELECT id, content, timestamp, tweetable FROM tells WHERE for_uid=? ORDER BY id DESC LIMIT ?,10")) {
 				    $stmt->bind_param("ii", $twitter_id, $page);
 				    $stmt->execute();
 				    $stmt->store_result();
-				    $stmt->bind_result($id, $content, $timestamp);
+				    $stmt->bind_result($id, $content, $timestamp, $tweetable);
 
 				    while($stmt->fetch())
 				    {
-				        echo "<br><div style='text-align: right'>".DateTime::createFromFormat('Y-m-d H:i:s', $timestamp)->format('d.m.Y H:i:s')." Uhr<br><br>
-				        <button type='button' class='btn btn-primary' onclick='tweetmodal($id)'>Tweet</button></div><br>".htmlspecialchars($content)."<hr>";
+				        echo "<br><div style='text-align: right'>".DateTime::createFromFormat('Y-m-d H:i:s', $timestamp)->format('d.m.Y H:i:s')." Uhr<br><br>";
+				        if ($tweetable) {
+                            echo "<button type='button' class='btn btn-primary' onclick='tweetmodal($id)'>Tweet</button>";
+                            echo "</div><br>" . htmlspecialchars($content) . "<hr>";
+                        }
 				    }
 
 				    

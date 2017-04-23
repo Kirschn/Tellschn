@@ -115,6 +115,7 @@ if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SE
 		<div class="form-group">
 		  <textarea class="form-control" rows="10" id="input" placeholder="<?php echo htmlspecialchars($description); ?>" oninput="recalcRem()"></textarea><br>
 		  <span id="remaining">9999</span> Zeichen verbleibend<br>
+            <input type="checkbox" checked name="tweetable" id="tweetable"/><label for="tweetable">Tweetbar?</label>
 		  <button type="button" class="btn btn-primary" id="send" onclick="send()">Send</button>
 		</div>
 	</div>
