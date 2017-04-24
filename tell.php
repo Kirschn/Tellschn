@@ -114,8 +114,8 @@ if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SE
 	<div class="inputElement">
 		<div class="form-group">
 		  <textarea class="form-control" rows="10" id="input" placeholder="<?php echo htmlspecialchars($description); ?>" oninput="recalcRem()"></textarea><br>
-		  <span id="remaining">9999</span> Zeichen verbleibend<br>
-            <input type="file" id="uploadFile" name="file" /><label for="uploadFile" id="uploadLabel">Anhang</label><br>
+		  <span id="remaining">9999</span> Zeichen verbleibend<br><br>
+            <input type="file" id="uploadFile" name="file" /><label for="uploadFile" id="uploadLabel">Anhang</label><br><br>
             <input type="checkbox" name="tweetable" id="tweetable"/><label for="tweetable"> Privat</label><br>
 		  <button type="button" class="btn btn-primary" id="send" onclick="send()">Send</button>
 		</div>

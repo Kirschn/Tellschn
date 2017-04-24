@@ -71,8 +71,8 @@
 		    to   { opacity: 1;}
 		}
         .imgContainer {
-            width: 48pt;
-            height: 48pt;
+            width: 100pt;
+            height: 100pt;
         }
 	</style>
 	
@@ -211,6 +211,7 @@
         };
 		function onload() {
 		//	document.getElementById("remaining").addEventListener("input", recalcRemaining);
+            $('.appendIMG').resizeToParent();
             $(window).resize(function() {
                 $('.appendIMG').resizeToParent();
             });
