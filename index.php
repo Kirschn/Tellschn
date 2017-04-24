@@ -17,7 +17,7 @@
 			height: 100%;
 			display: inline-block;
 			font-size: 16px;
-			background: #eee;
+//			background: #eee;
 		}
 		.elBackground {
 			position: absolute;
@@ -121,14 +121,13 @@
 				    $stmt->execute();
 				    $stmt->store_result();
 				    $stmt->bind_result($id, $content, $timestamp, $tweetable);
-
+				    
 				    while($stmt->fetch())
 				    {
 				        echo "<br><div style='text-align: right'>".DateTime::createFromFormat('Y-m-d H:i:s', $timestamp)->format('d.m.Y H:i:s')." Uhr<br><br>";
 				        if ($tweetable) {
-                            echo "<button type='button' class='btn btn-primary' onclick='tweetmodal($id)'>Tweet</button>";
+                            echo "<button type='button' class='btn btn-primary' onclick='tweetmodal($id)'>Tweet</button>"; } else { echo "Das soll unter uns bleiben!"; }
                             echo "</div><br>" . htmlspecialchars($content) . "<hr>";
-                        }
 				    }
 
 				    

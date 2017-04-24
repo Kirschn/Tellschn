@@ -58,7 +58,7 @@ if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SE
 			top: 0;
 			left: 0;
 			/* background: linear-gradient(rgb(200, 200, 200), white); */
-			background: #eee;
+//			background: #eee;
 			z-index: -1;
 
 
@@ -115,7 +115,7 @@ if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SE
 		<div class="form-group">
 		  <textarea class="form-control" rows="10" id="input" placeholder="<?php echo htmlspecialchars($description); ?>" oninput="recalcRem()"></textarea><br>
 		  <span id="remaining">9999</span> Zeichen verbleibend<br>
-            <input type="checkbox" checked name="tweetable" id="tweetable"/><label for="tweetable">Tweetbar?</label>
+            <input type="checkbox" name="tweetable" id="tweetable"/><label for="tweetable"> Privat</label><br>
 		  <button type="button" class="btn btn-primary" id="send" onclick="send()">Send</button>
 		</div>
 	</div>
@@ -148,7 +148,8 @@ if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SE
 				data: {
 					foruid: <?php echo htmlspecialchars($id); ?>,
 					content: $("textarea#input").val(),
-					sessionkey: "<?php echo $_SESSION["sessionkey"]; ?>"
+					sessionkey: "<?php echo $_SESSION["sessionkey"]; ?>",
+					tweetable: !($("#tweetable").is(":checked"))
 				}
 			}).done(function(data) {
 				document.getElementById("modalbody").innerHTML = data;

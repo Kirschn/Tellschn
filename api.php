@@ -10,10 +10,12 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 		if(mysqli_connect_errno()){
 			die("Failed to connect with MySQL");
 		}
+		$tweetable = 0;
+		if ($_POST["tweetable"] == "true") {
+			$tweetable = 1;
+		}
 		if ($stmt = mysqli_prepare($link, "INSERT INTO tells (for_uid, content, tweetable) VALUES (?, ?, ?)")) {
-		    $stmt->bind_param("is", $_POST["foruid"], substr($_POST["content"],0,9000), isset(
-		        $_POST["tweetable"]
-            ));
+		    $stmt->bind_param("isi", $_POST["foruid"], substr($_POST["content"],0,9000), $tweetable);
 		    $stmt->execute();
 //		    echo var_dump($stmt);
 		    $stmt->close();
