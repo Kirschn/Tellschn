@@ -116,18 +116,25 @@
 				} else {
 					$page = 0;
 				}
-				if ($stmt = mysqli_prepare($link, "SELECT id, content, timestamp, tweetable FROM tells WHERE for_uid=? ORDER BY id DESC LIMIT ?,10")) {
+				if ($stmt = mysqli_prepare($link, "SELECT id, content, timestamp, tweetable, image FROM tells WHERE for_uid=? ORDER BY id DESC LIMIT ?,10")) {
 				    $stmt->bind_param("ii", $twitter_id, $page);
 				    $stmt->execute();
 				    $stmt->store_result();
-				    $stmt->bind_result($id, $content, $timestamp, $tweetable);
+				    $stmt->bind_result($id, $content, $timestamp, $tweetable, $image);
 				    
 				    while($stmt->fetch())
 				    {
 				        echo "<br><div style='text-align: right'>".DateTime::createFromFormat('Y-m-d H:i:s', $timestamp)->format('d.m.Y H:i:s')." Uhr<br><br>";
 				        if ($tweetable) {
-                            echo "<button type='button' class='btn btn-primary' onclick='tweetmodal($id)'>Tweet</button>"; } else { echo "Das soll unter uns bleiben!"; }
-                            echo "</div><br>" . htmlspecialchars($content) . "<hr>";
+                            echo "<button type='button' class='btn btn-primary' onclick='tweetmodal($id)'>Tweet</button>";
+				        } else {
+				            echo "Das soll unter uns bleiben!";
+				        }
+                        echo "</div><br>" . htmlspecialchars($content);
+				        if ($image !== null) {
+				            echo "<a href='".$image."'><img src='".$image."' /></a>";
+                        }
+                        echo "<hr>";
 				    }
 
 				    

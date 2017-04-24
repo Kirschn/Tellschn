@@ -115,6 +115,7 @@ if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SE
 		<div class="form-group">
 		  <textarea class="form-control" rows="10" id="input" placeholder="<?php echo htmlspecialchars($description); ?>" oninput="recalcRem()"></textarea><br>
 		  <span id="remaining">9999</span> Zeichen verbleibend<br>
+            <input type="file" id="uploadFile" name="file" /><label for="uploadFile" id="uploadLabel">Anhang</label><br>
             <input type="checkbox" name="tweetable" id="tweetable"/><label for="tweetable"> Privat</label><br>
 		  <button type="button" class="btn btn-primary" id="send" onclick="send()">Send</button>
 		</div>
@@ -140,6 +141,7 @@ if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SE
 	  </div>
 	</div>
 	<script>
+        var sharepicLink = null;
 		function send() {
 			if (parseInt($("#input").val().length) <=9999) {
 			$.ajax({
@@ -149,7 +151,8 @@ if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SE
 					foruid: <?php echo htmlspecialchars($id); ?>,
 					content: $("textarea#input").val(),
 					sessionkey: "<?php echo $_SESSION["sessionkey"]; ?>",
-					tweetable: !($("#tweetable").is(":checked"))
+					tweetable: !($("#tweetable").is(":checked")),
+                    image: sharepicLink
 				}
 			}).done(function(data) {
 				document.getElementById("modalbody").innerHTML = data;
@@ -157,6 +160,27 @@ if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SE
 			});
 		}
 		}
+		function uploadPicture() {
+            var file_data = $('#uploadFile').prop('files')[0];
+            var form_data = new FormData();
+            form_data.append('file', file_data);
+            $("#uploadLabel").html("Uploading...");
+            $.ajax({
+                url: 'https://sharepic.moe/upload.php', // point to server-side PHP script
+                dataType: 'text',  // what to expect back from the PHP script, if anything
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'post',
+                success: function(php_script_response){
+                    $("#uploadLabel").html("Upload done!");
+                    console.log(php_script_response);
+                    sharepicLink = php_script_response;
+                }
+            });
+
+        }
 		</script>
 	</body>
 </html>
