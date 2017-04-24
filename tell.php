@@ -176,11 +176,12 @@ if (!isset($_SESSION["sessionkey"]) || $_SESSION["sessionkey"] == "used" || $_SE
                 success: function(php_script_response){
                     $("#uploadLabel").html("Upload done!");
                     console.log(php_script_response);
-                    sharepicLink = php_script_response;
+                    sharepicLink = "https://sharepic.moe/" + php_script_response + "/raw";
                 }
             });
 
         }
+        $("#uploadFile").on("change", uploadPicture);
 		</script>
 	</body>
 </html>
