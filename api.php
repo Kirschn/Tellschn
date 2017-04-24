@@ -14,7 +14,8 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 		if ($_POST["tweetable"] == "true") {
 			$tweetable = 1;
 		}
-		if (strpos($_POST["image"], "https://sharepic.moe/") == 0 && strpos($_POST["image"], "/raw") !== false) {
+        if ($_POST["image"] == "") {$_POST["image"] = null;}
+		if (strpos($_POST["image"], "https://sharepic.moe/") == 0 && strpos($_POST["image"], "/raw") !== false || $_POST["image"] == null) {
 
         } else {
 		    echo "Nope.";
@@ -22,7 +23,7 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 		    //manipulated request!
 
         }
-		if ($stmt = mysqli_prepare($link, "INSERT INTO tells (for_uid, content, tweetable) VALUES (?, ?, ?, ?)")) {
+		if ($stmt = mysqli_prepare($link, "INSERT INTO tells (for_uid, content, tweetable, image) VALUES (?, ?, ?, ?)")) {
 		    $stmt->bind_param("isis", $_POST["foruid"], substr($_POST["content"],0,9000), $tweetable, $_POST["image"]);
 		    $stmt->execute();
 //		    echo var_dump($stmt);
