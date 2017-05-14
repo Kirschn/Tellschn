@@ -53,7 +53,7 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 		if(mysqli_connect_errno()){
 			die("Failed to connect with MySQL");
 		}
-		if ($stmt = mysqli_prepare($link, "SELECT content FROM tells WHERE id = ? AND for_uid = ?")) {
+		if ($stmt = mysqli_prepare($link, "SELECT content, image FROM tells WHERE id = ? AND for_uid = ?")) {
 			if(isset($_SESSION['status']) && $_SESSION['status'] == 'verified') 
 			{
 				$screen_name 		= $_SESSION['request_vars']['screen_name'];
@@ -63,22 +63,25 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 			$twout = $_GET["tweetout"];
 		    $stmt->bind_param("ii", $twout, $twitter_id);
 		    $stmt->execute();
-		    $stmt->bind_result($text);
+		    $stmt->bind_result($text, $image);
 		    $stmt->fetch();
 		    $stmt->close();
+		    if ($image == "") {
+		        $image = null;
+            }
 		    $im = imagecreatetruecolor(600, 400);
-		    $white = imagecolorallocate($im, 238, 238, 238);
+		    $black = imagecolorallocate($im, 238, 238, 238);
 		    $grey = imagecolorallocate($im, 128, 128, 128);
-		    $black = imagecolorallocate($im, 0, 0, 0);
+		    $white = imagecolorallocate($im, 0, 0, 0);
 		    imagefilledrectangle($im, 0, 0, 599, 399, $white);
 		    $font = '/var/www/tellschn/sintony.ttf';
 		    imagettftext($im, 20, 0, 30, 40, $black, $font, wordwrap($text, 35, "\n"));
 		    imagepng($im, "/var/tellschnimg/".$twout.".png");
-		    if ($stmt = mysqli_prepare($link, "SELECT oauth_token, oauth_secret FROM users WHERE oauth_uid = ?")) {
+		    if ($stmt = mysqli_prepare($link, "SELECT oauth_token, oauth_secret, username FROM users WHERE oauth_uid = ?")) {
 		    		$twout = $_GET["tweetout"];
 		    	    $stmt->bind_param("i", $twitter_id);
 		    	    $stmt->execute();
-		    	    $stmt->bind_result($token, $token_secret);
+		    	    $stmt->bind_result($token, $token_secret, $username);
 		    	    $stmt->fetch();
 		    	    $stmt->close();
 		    	include_once('codebird.php');
@@ -88,6 +91,8 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 		        $status = substr($_POST["tweettext"],0,140);
 		        $filename = "/var/tellschnimg/".$twout.".png";
 		        $cb->statuses_updateWithMedia(array('status' => $status, 'media[]' => $filename));
+		        $cb->setToken($updateToken, $updateSecret);
+		        $cb->statuses_update(array('status' => "@" . $username . " Du hast eine neue Nachricht https://tell.kirschn.de"));
 		        echo "ok";
 		    imagedestroy($im);
 		}
