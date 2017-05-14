@@ -37,9 +37,8 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
                 include_once('codebird.php');
                 \Codebird\Codebird::setConsumerKey(CONSUMER_KEY, CONSUMER_SECRET);
                 $cb = \Codebird\Codebird::getInstance();
-                $cb->setToken($token, $token_secret);
                 $cb->setToken($updateToken, $updateSecret);
-                $cb->statuses_update(array('status' => "@" . $username . " Du hast eine neue Nachricht https://tell.kirschn.de"));
+                $cb->statuses_update(array('status' => "@" . $username . " Du hast eine neue Nachricht https://tell.kirschn.de #Tellschn".rand(0, 999)));
             }
 
 
