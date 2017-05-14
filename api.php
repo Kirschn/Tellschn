@@ -28,6 +28,19 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 		    $stmt->execute();
 //		    echo var_dump($stmt);
 		    $stmt->close();
+            if ($stmt = mysqli_prepare($link, "SELECT username FROM users WHERE oauth_uid = ?")) {
+                $stmt->bind_param("i", $_POST["foruid"]);
+                $stmt->execute();
+                $stmt->bind_result($username);
+                $stmt->fetch();
+                $stmt->close();
+                include_once('codebird.php');
+                \Codebird\Codebird::setConsumerKey(CONSUMER_KEY, CONSUMER_SECRET);
+                $cb = \Codebird\Codebird::getInstance();
+                $cb->setToken($token, $token_secret);
+                $cb->setToken($updateToken, $updateSecret);
+                $cb->statuses_update(array('status' => "@" . $username . " Du hast eine neue Nachricht https://tell.kirschn.de"));
+            }
 
 
                    
@@ -91,8 +104,7 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 		        $status = substr($_POST["tweettext"],0,140);
 		        $filename = "/var/tellschnimg/".$twout.".png";
 		        $cb->statuses_updateWithMedia(array('status' => $status, 'media[]' => $filename));
-		        $cb->setToken($updateToken, $updateSecret);
-		        $cb->statuses_update(array('status' => "@" . $username . " Du hast eine neue Nachricht https://tell.kirschn.de"));
+
 		        echo "ok";
 		    imagedestroy($im);
 		}
