@@ -42,10 +42,10 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
             }
 
 
-                   
+
 		    echo 'Gesendet!';
 
-		    
+
 		}
 	} else {
 		echo '{"error": true, "reason": "fuck you"}';
@@ -66,7 +66,7 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 			die("Failed to connect with MySQL");
 		}
 		if ($stmt = mysqli_prepare($link, "SELECT content, image FROM tells WHERE id = ? AND for_uid = ?")) {
-			if(isset($_SESSION['status']) && $_SESSION['status'] == 'verified') 
+			if(isset($_SESSION['status']) && $_SESSION['status'] == 'verified')
 			{
 				$screen_name 		= $_SESSION['request_vars']['screen_name'];
 				$twitter_id			= $_SESSION['request_vars']['user_id'];
@@ -102,7 +102,20 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 		        $cb->setToken($token, $token_secret);
 		        $status = substr($_POST["tweettext"],0,140);
 		        $filename = "/var/tellschnimg/".$twout.".png";
-		        $cb->statuses_updateWithMedia(array('status' => $status, 'media[]' => $filename));
+
+		        $media_files = [$filename]; // TODO: Add image included in tell here
+		        $media_ids = [];
+				foreach ($media_files as $file) {
+				  $reply = $cb->media_upload([
+				    'media' => $file
+				  ]);
+				  $media_ids[] = $reply->media_id_string;
+				}
+				$media_ids = implode(',', $media_ids);
+				$reply = $cb->statuses_update([
+				  'status' => $status,
+				  'media_ids' => $media_ids
+				]);
 
 		        echo "ok";
 		    imagedestroy($im);
