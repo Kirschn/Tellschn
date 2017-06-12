@@ -109,9 +109,14 @@ if (isset($_POST["content"]) && isset($_POST["sessionkey"])) {
 				  $reply = $cb->media_upload([
 				    'media' => $file
 				  ]);
+				  $cp->metadata_create([
+						'media_id' => $reply->media_id_string,
+						'alt_text' => [ 'text' => $text ]
+					]);
 				  $media_ids[] = $reply->media_id_string;
 				}
 				$media_ids = implode(',', $media_ids);
+
 				$reply = $cb->statuses_update([
 				  'status' => $status,
 				  'media_ids' => $media_ids
