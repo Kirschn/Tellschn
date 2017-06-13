@@ -13,7 +13,7 @@
 
 	<style type="text/css">
 		body {
-			
+
 			height: 100%;
 			display: inline-block;
 			font-size: 16px;
@@ -36,7 +36,7 @@
 			position: absolute;
 			animation: fadein 2s;
 			top: 4.5%;
-			animation-fill-mode: forwards; 
+			animation-fill-mode: forwards;
 			font-family: 'Sintony', sans-serif;
 			font-weight:100;
 			-webkit-font-smoothing:antialiased;
@@ -75,7 +75,7 @@
             height: 100pt;
         }
 	</style>
-	
+
 	</head>
 	<body onload="onload()">
 	<div class="elBackground">&nbsp;</div>
@@ -88,7 +88,7 @@
 				$_SESSION["tweetouttoken"] = substr(md5(microtime()),rand(0,26),5);
 			}
 			$tweetouttoken = $_SESSION["tweetouttoken"];
-			if(isset($_SESSION['status']) && $_SESSION['status'] == 'verified') 
+			if(isset($_SESSION['status']) && $_SESSION['status'] == 'verified')
 			{
 				//Retrive variables
 				$screen_name 		= $_SESSION['request_vars']['screen_name'];
@@ -125,7 +125,7 @@
 				    $stmt->execute();
 				    $stmt->store_result();
 				    $stmt->bind_result($id, $content, $timestamp, $tweetable, $image);
-				    
+
 				    while($stmt->fetch())
 				    {
 				        echo "<br><div style='text-align: right'>".DateTime::createFromFormat('Y-m-d H:i:s', $timestamp)->format('d.m.Y H:i:s')." Uhr<br><br>";
@@ -141,19 +141,23 @@
                         echo "<hr>";
 				    }
 
-				    
+
 				    $stmt->close();
 				}
 				$link->close();
 				//Show welcome message
-				
+
+                if ($page >= 10) {
+                    echo '</div><br><br><div style="text-align=right"><a href="/index.php?page='.($page - 10).'"><button type="button" class="btn btn-info" id="prevpage">Vorherige Seite</button></a><br><br><br></div>';
+                }
+
 				echo '</div><br><br><div style="text-align=right"><a href="/index.php?page='.($page + 10).'"><button type="button" class="btn btn-info" id="nextpage">Nächste Seite</button></a><br><br><br></div>';
-					
+
 			}else{
 				//Display login button
 				echo '<a href="process.php"><button type="button" class="btn btn-primary">Sign in with Twitter</button></a>';
 			}
-		?>  
+		?>
 	</div>
 	<script type="text/javascript">
         jQuery.fn.resizeToParent = function(options) {
