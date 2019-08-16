@@ -1,13 +1,14 @@
 {
     "mysql": {
-        "server": "",
-        "user": "",
-        "pass": "",
-        "database": ""
+        "host": "127.0.0.1",
+        "user": "root",
+        "password": "",
+        "database": "afdblock"
     },
+    "cookie_secret": "abcd",
     "twitter": {
-        "app_key": "",
-        "app_secret": "",
+        "consumer_key": "",
+        "consumer_secret": "",
         "redirection_url": ""
     }
 }
