@@ -5,10 +5,10 @@
         "password": "",
         "database": "afdblock"
     },
-    "cookie_secret": "abcd",
+    "cookie_secret": "asadfbcd",
     "twitter": {
         "consumer_key": "",
         "consumer_secret": "",
-        "redirection_url": ""
+        "redirection_url": "http://localhost:8081/login/request-token"
     }
 }

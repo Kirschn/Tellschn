@@ -1,4 +1,4 @@
-const port = process.argv[2] || 8084;
+
 function twoDigits(d) {
     if (0 <= d && d < 10) return "0" + d.toString();
     if (-10 < d && d < 0) return "-0" + (-1 * d).toString();
@@ -11,6 +11,7 @@ var fs = require("fs");
 var util = require("util");
 var accessconf = JSON.parse(fs.readFileSync("access-config.json", "utf8"));
 var appconf = JSON.parse(fs.readFileSync("app-config.json", "utf8"));
+const port = process.argv[2] || appconf.express_port;
 var express = require('express');
 var app = express();
 
@@ -107,9 +108,9 @@ app.get("/login/twitter_callback", function (req, res) {
                                         req.session.userpayload = JSON.stringify(data);
                                         util.log("Done with User Verify: new user");
 
-                                        //TODO REDIRECT TO USER
-                                        res.redirect("/" + user.screen_name)
-
+                                        req.session.save(function(err) {
+                                            res.redirect("/" + user.screen_name);
+                                        })
 
                                     }
 
@@ -128,7 +129,10 @@ app.get("/login/twitter_callback", function (req, res) {
                                         };
                                         util.log("Storing to session...")
                                         req.session.userpayload = JSON.stringify(data);
-                                        res.redirect("/" + user.screen_name);
+                                        req.session.save(function(err) {
+                                            res.redirect("/" + user.screen_name);
+                                        })
+                                        
                                     });
 
 
@@ -154,3 +158,8 @@ app.get("/login/request-token", function (req, res) {
         }
     });
 });
+
+
+app.listen(port, function () {
+    util.log(port, 'Webserver online on Port ' + port + '!');
+  });
