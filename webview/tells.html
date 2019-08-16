@@ -1,0 +1,159 @@
+<!Doctype HTML>
+<html>
+
+<head>
+    <title>Tellschn</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="description" lang="de" content="Der schnelle Weg eine anonyme Meinung zu bekommen">
+    <meta name="theme-color" content="#253e59">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta property="og:site_name" content="Tellschn">
+    <meta property="og:title" content="Tellschn">
+    <meta property="og:description" content="Der schnelle Weg eine anonyme Meinung zu bekommen">
+    <meta property="og:url" content="https://tell.kirschn.de/">
+    <meta property="og:image" content="https://tell.kirschn.de/assets/images/og.png">
+    <meta property="og:type" content="article">
+    <link rel="stylesheet" href="assets/stylesheets/stylesheet.css" />
+    <link rel="icon" href="assets/images/favicon.ico" />
+    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+</head>
+
+<body>
+    <div class="navbar">
+        <a href="/">
+            <img class="logo" src="assets/images/logo_white.svg" alt="Tellschn" style="height:2em; margin-top: -0.45em;">
+        </a>
+
+        <div id="navbar-right">
+            <a href="profile.html"><img src="assets/images/default_ava.gif" style="height:2.2em; margin-top: -0.5em;"></a>
+            <div id="user"><a href="index.html"><i class="material-icons">power_settings_new</i></a>
+            </div>
+        </div>
+    </div>
+    <div class="loggedin">
+        <div id="top">
+            <h1>Hallo, @AngelaMerkel!</h1>
+            <h2>Nachfolgend findest du eine chronologische Übersicht über alle Tells, die du bereits erhalten hast</h2>
+            <p id="share_url">Du möchtest mehr Tells? Teile deinen Profillink mit deinen Freunden!</p>
+            <input id="url" class="copyurl" type="text" name="profile-url" value="https://tell.kirschn.de/Angela_Merkel" readonly="readonly" /> <button class="copyBtn">Kopieren</button>
+        </div>
+        <hr/>
+
+        <div class="tell">
+            <div id="tell_content">
+                <p>Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Aber nicht nur als Kurzmeldungen eignen sich diese Texte. Sie werden sie auch als kürzere
+                    Produktbeschreibung in Onlineshops entdecken. Meist verwenden Shopsysteme eine Kurzbeschreibung mit maximal 50 Wörtern.</p>
+                <hr />
+            </div>
+            <div id="tell_additional">
+                <div id="tell_time">01.01.1970 um 00:00 Uhr</div>
+                <div id="button">
+                    <a class="answer" href="#answer">Antworten</a>
+                </div>
+                <div id="button">
+                    <a class="delete" href="#confirm_delete">Löschen</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="tell img_tell">
+            <div id="tell_content">
+                <a href="#show_img">
+                    <img src="assets/images/test_image.jpg">
+                </a>
+                <p>Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Außerdem verfügt dieser Beitrag über ein Testbild!</p>
+                <hr />
+            </div>
+            <div id="tell_additional">
+                <div id="tell_time">01.01.1970 um 00:00 Uhr</div>
+                <div id="button">
+                    <a class="answer" href="#answer">Antworten</a>
+                </div>
+                <div id="button">
+                    <a class="delete" href="#confirm_delete">Löschen</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="tell">
+            <div id="tell_content">
+                <p>Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Aber nicht nur als Kurzmeldungen eignen sich diese Texte. Sie werden sie auch als kürzere
+                    Produktbeschreibung in Onlineshops entdecken. Meist verwenden Shopsysteme eine Kurzbeschreibung mit maximal 50 Wörtern.</p>
+                <hr />
+            </div>
+            <div id="tell_additional">
+                <div id="tell_time">01.01.1970 um 00:00 Uhr</div>
+                <div id="button">
+                    <a class="answer" href="#answer">Antworten</a>
+                </div>
+                <div id="button">
+                    <a class="delete" href="#confirm_delete">Löschen</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination">
+            <div class="lds-ripple">
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <!-- It's completely okay to remove the annotation in the footer below if it bothers you. -->
+        <footer>Design by <a href="https://arkenau.me" target="_blank">nopeJS</a></footer>
+
+        <div id="answer" class="overlay">
+            <div class="popup">
+                <h2>Antworten</h2>
+                <a class="close" href="#">&times;</a>
+                <div class="content answer_popup">
+                    <div class="answer_tell">
+                        <h3>Tell:</h3>
+                        <p>Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Aber nicht nur als Kurzmeldungen eignen sich diese Texte. Sie werden sie auch
+                            als kürzere Produktbeschreibung in Onlineshops entdecken. Meist verwenden Shopsysteme eine Kurzbeschreibung mit maximal 50 Wörtern.</p>
+                    </div>
+                    <div class="answer_container">
+                        <textarea data-length="280" id="enter_answer"></textarea>
+                        <span class="counter"></span>
+                    </div>
+                    <div id="button">
+                        <button class="send">Senden</button>
+                    </div>
+                    <div class="checkboxes">
+                        <input type="checkbox" id="tweeting" checked>
+                        <label for="tweeting">Auf Twitter antworten</label>
+                        <input type="checkbox" id="profileposting" checked>
+                        <label for="profileposting">Auf deinem Tellschn-Profil antworten</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="confirm_delete" class="overlay">
+            <div class="popup">
+                <h2>Willst du diesen Tell wirklich löschen?</h2>
+                <a class="close" href="#">&times;</a>
+                <div class="content">
+                    <p>Bist du dir sicher, dass du diesen Tell löschen möchtest? Du kannst ihn danach nicht wiederherstellen!
+                    </p>
+                    <button class="delete">Weg damit!</button> <button class="cancel">Lieber doch nicht...</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="show_img" class="overlay">
+            <div class="popup">
+                <a class="close" href="#">&times;</a>
+                <div class="content">
+                    <img src="assets/images/test_image.jpg" />
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script async src="assets/js/charcounter.js"></script>
+    <script async src="assets/js/copy.js"></script>
+</body>
+
+</html>
