@@ -1,0 +1,13 @@
+{
+    "mysql": {
+        "server": "",
+        "user": "",
+        "pass": "",
+        "database": ""
+    },
+    "twitter": {
+        "app_key": "",
+        "app_secret": "",
+        "redirection_url": ""
+    }
+}
