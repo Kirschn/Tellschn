@@ -18,6 +18,10 @@
     <link rel="stylesheet" href="assets/stylesheets/stylesheet.css" />
     <link rel="icon" href="assets/images/favicon.ico" />
     <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <script>
+        var custom_config = {{{custom_configuration}}};
+        var custom_page_text = "{{custom_page_text}}";
+    </script>
 </head>
 
 <body>
@@ -27,17 +31,17 @@
         </a>
 
         <div id="navbar-right">
-            <a href="profile.html"><img src="assets/images/default_ava.gif" style="height:2.2em; margin-top: -0.5em;"></a>
-            <div id="user"><a href="index.html"><i class="material-icons">power_settings_new</i></a>
+            <a href="profile.html"><img src="{{profile_image_url}}" style="height:2.2em; margin-top: -0.5em;"></a>
+            <div id="user"><a href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
             </div>
         </div>
     </div>
     <div class="loggedin">
         <div id="top">
-            <h1>Hallo, @AngelaMerkel!</h1>
+            <h1>Hallo, @{{display_name}}!</h1>
             <h2>Nachfolgend findest du eine chronologische Übersicht über alle Tells, die du bereits erhalten hast</h2>
             <p id="share_url">Du möchtest mehr Tells? Teile deinen Profillink mit deinen Freunden!</p>
-            <input id="url" class="copyurl" type="text" name="profile-url" value="https://tell.kirschn.de/Angela_Merkel" readonly="readonly" /> <button class="copyBtn">Kopieren</button>
+            <input id="url" class="copyurl" type="text" name="profile-url" value="https://tell.kirschn.de/{{display_name}}" readonly="readonly" /> <button class="copyBtn">Kopieren</button>
         </div>
         <hr/>
 

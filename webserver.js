@@ -13,8 +13,10 @@ var accessconf = JSON.parse(fs.readFileSync("access-config.json", "utf8"));
 var appconf = JSON.parse(fs.readFileSync("app-config.json", "utf8"));
 const port = process.argv[2] || appconf.express_port;
 var express = require('express');
+var bodyParser     =        require("body-parser");
 var app = express();
-
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 const session = require('express-session');
 const redis = require('redis');
 const redisClient = redis.createClient();
@@ -41,9 +43,14 @@ var twitter = new Twitter({
 accessconf.mysql.encoding = 'utf8';
 accessconf.mysql.charset = 'utf8mb4';
 var mysql = require('mysql');
+var mustache = require("mustache");
+var templates = {
+    "landing": fs.readFileSync("./webview/landing.html", "utf8"),
+    "send_tells": fs.readFileSync("./webview/send_tells.html", "utf8"),
+    "get_tells": fs.readFileSync("./webview/get_tells.html", "utf8")
+}
 var connection = mysql.createConnection(accessconf.mysql);
 var token_secret_index = [];
-
 function nocache(req, res, next) {
     res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     res.header('Expires', '-1');
@@ -54,12 +61,17 @@ function nocache(req, res, next) {
 app.use("/assets", express.static("./webview/assets"));
 
 app.get("/", function (req, res) {
-
-    util.log(port, " /");
-    res.send(JSON.stringify(req.session));
+    var debug = "";
+    if (appconf.debug) {
+        debug = JSON.stringify(req.session, null, 4).replace(new RegExp("[\n]+"), "\n<br>");
+    }
+    console.log(templates.landing)
+    res.send(mustache.render(templates.landing, {"debug": debug}));
     res.status(200).end();
 });
-
+function uuid() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
 // twitter API Auth callback
 app.get("/login/twitter_callback", function (req, res) {
     util.log(port, " /twitter_callback hit");
@@ -95,8 +107,8 @@ app.get("/login/twitter_callback", function (req, res) {
                                         "shareimgtw": true,
                                         "shareimgloc": true
                                     }),
-                                    "profile_pic_large_uuid": "PENDING",
-                                    "profile_pic_small_uuid": "PENDING"
+                                    "profile_pic_original_link": user.profile_image_url_https,
+                                    "profile_pic_small_link": user.profile_image_url_https // TODO: DOWNSCALE!
 
                                 }
 
@@ -110,7 +122,9 @@ app.get("/login/twitter_callback", function (req, res) {
                                         util.log("Done with User Verify: new user");
 
                                         req.session.save(function(err) {
+                                            if (err) throw err;
                                             res.redirect("/" + user.screen_name);
+                                            res.end();
                                         })
 
                                     }
@@ -127,7 +141,7 @@ app.get("/login/twitter_callback", function (req, res) {
                                         sqlsearchres[0]["set_name"] = user.id_str;
                                         
                                         util.log("Storing to session...")
-                                        req.session.userpayload = JSON.stringify(sqlsearchres[0]);
+                                        req.session.userpayload = sqlsearchres[0];
                                         req.session.save(function(err) {
                                             if (err) throw err;
                                         })
@@ -166,6 +180,38 @@ app.listen(port, function () {
   });
 
 app.get("/api/:endpoint", nocache, function(req, res) {
+    if (req.params.endpoint === "session_info") {
+        // return general information about the logged in user
+
+        //check if user is logged in, if not return error
+        if (req.session.userpayload == undefined) {
+            res.send(JSON.stringify({
+                "err": "NOT_LOGGED_IN"
+            }));
+            res.end();
+        }
+        req.session.token = uuid();
+        res.write(JSON.stringify({
+            "payload": req.session.userpayload,
+            "token": req.session.token}));
+        res.end();
+    } else if (req.params.endpoint === "user_info" && req.query.user != undefined && req.query.user != "") {
+        // return info about user req.query.user
+        var sql = "SELECT "
+    }
+
+
+    if (req.query.token !== req.session.token) {
+        // Token Invalid, Abort Request
+        res.write(JSON.stringify({
+            "err": "TOKEN_INVALID"
+        }));
+        res.end();
+        return;
+    } else {
+        // Generate new token since this one was just used
+        req.session.token =  uuid();
+    }
     if (req.params.endpoint == "") {
 
     } else if (req.params.endpoint === "logoff") {
@@ -177,6 +223,156 @@ app.get("/api/:endpoint", nocache, function(req, res) {
     }
 });
 
-app.get("/:userpage", nocache, function(req, res) {
 
+app.post("/api/:endpoint", nocache, function(req, res) {
+   
+    if (req.query.token !== req.session.token) {
+        // Token Invalid, Abort Request
+        res.write(JSON.stringify({
+            "err": "TOKEN_INVALID"
+        }));
+        res.end();
+        return;
+    } else {
+        // Generate new token since this one was just used
+        req.session.token =  uuid();
+    }
+    if (req.params.endpoint == "send_tell") {
+        if (req.body.for_user_id !== undefined &&
+            req.body.content !== undefined &&
+            req.body.do_not_share !== undefined) {
+                var has_image = true;
+                if (req.body.image_uid == undefined) {
+                    has_image = false;
+                    req.body.image_uid = null;
+                }
+                if (req.body.by_user_id == undefined) {
+                    req.body.by_user_id = null;
+                }
+                // routine to insert into database
+                // sanity checks: length and check if the user id exists, etc.
+                if (req.body.content.length > 9999) {
+                    res.JSON({"err": "CONTENT_TOO_LONG", "status": "failed"});
+                    res.end();
+                }
+                connection.query("SELECT twitter_id, twitter_handle, im_config FROM users WHERE twitter_id = ?", req.body.for_user_id, 
+                    function (err, sanity_1) {
+                        if (err) throw err;
+                        if (sanity_1[0] == undefined) {
+                            // user id not found
+                            res.JSON({"err": "USER_ID_NOT_FOUND", "status": "failed"});
+                            res.end();
+                            return;
+                        }
+                        connection.query("INSERT INTO tells (for_user_id, by_user_id, content, media_attachment, do_not_share) VALUES ?", [
+                            req.body.for_user_id,
+                            req.body.by_user_id,
+                            req.body.content,
+                            req.body.media_attachment,
+                            req.body.do_not_share
+                        ], function(err) {
+                            if (err) throw err;
+                            // Insert Successful: 
+                            // 1) Give Feedback to the user
+                            // 2) Start Job to check if the user has IM Notifications activated
+                            res.JSON({"err": null, "status": "success"});
+                            res.end();
+                            queue.create("send_instant_msg_notification", {
+                                "twitter_id": sanity_1[0].twitter_id,
+                                "twitter_handle": sanity_1[0].twitter_handle,
+                                "im_config": sanity_1[0].im_config
+                                
+                            });
+                            return;
+                        });
+                    });
+            }
+    } else if (req.params.endpoint == "give_answer") {
+        if (req.body.for_tell_id !== undefined &&
+            req.body.content !== undefined &&
+            req.body.reply_config !== undefined) {
+                
+                // routine to insert into database
+                // sanity checks: length and check if the user id exists, etc.
+                if (req.body.content.length > 9999) {
+                    res.JSON({"err": "CONTENT_TOO_LONG", "status": "failed"});
+                    res.end();
+                }
+                connection.query("SELECT for_user_id FROM users WHERE id = ?", req.body.for_tell_id, 
+                    function (err, sanity_1) {
+                        if (err) throw err;
+                        if (sanity_1[0] == undefined) {
+                            // user id not found
+                            res.JSON({"err": "USER_ID_NOT_FOUND", "status": "failed"});
+                            res.end();
+                            return;
+                        }
+                        if (req.session.userpayload !== undefined && req.session.userpayload.twitter_id !== sanity_1["for_user_id"]) {
+                            // user tries to reply to a tell that is not their own
+                            res.JSON({"err": "WRONG_TELL_OWNER", "status": "failed"});
+                            res.end();
+                            return;
+                        }
+                        var replyconfig = [];
+                        try {
+                            replyconfig = JSON.parse(req.body.reply_config);
+                        } catch (e) {
+                            // invalid JSON
+                            res.JSON({"err": "INVALID_SHARE_CONFIG", "status": "failed"});
+                            res.end();
+                            return;
+                        }
+
+                        connection.query("INSERT INTO answers (for_tell_id, content, show_public) VALUES ?", [
+                            req.body.for_tell_id,
+                            req.body.content,
+                            replyconfig.show_on_page
+                        ], function(err) {
+                            if (err) throw err;
+                            // Insert Successful: 
+                            // 1) Give Feedback to the user
+                            // 2) Start Job to check if the user has IM Notifications activated
+                            res.JSON({"err": null, "status": "success"});
+                            res.end();
+                            queue.create("send_instant_msg_notification", {
+                                "twitter_id": sanity_1[0].twitter_id,
+                                "twitter_handle": sanity_1[0].twitter_handle,
+                                "im_config": sanity_1[0].im_config
+                            });
+                            return;
+                        });
+                    });
+            }
+    }
+});
+
+
+app.get("/:userpage", nocache, function(req, res) {
+    if (req.session.userpayload !== undefined && req.params.userpage === req.session.userpayload.twitter_handle) {
+        // show template for logged in user
+        res.send(mustache.render(templates.get_tells, {
+            "profile_image_url": req.session.userpayload.profile_pic_original_link,
+            "display_name": req.session.userpayload.twitter_handle,
+            "custom_config": req.session.userpayload.custom_configuration,
+            "custom_page_text": req.session.userpayload.custom_page_text
+        }));
+        res.end();
+    } else {
+        // show template for telling a new tell
+        connection.query("SELECT twitter_id, twitter_handle, profile_pic_original_link, profile_pic_small_link, custom_page_text FROM users WHERE twitter_handle = ?", req.params.userpage, function(err, result) {
+            if (err) throw err;
+            if (result[0] == undefined) {
+                res.redirect("/");
+                res.end();
+                return;
+            }
+            res.send(mustache.render(templates.send_tells, {
+                "profile_image_url": result[0].profile_pic_original_link,
+                "display_name": result[0].twitter_handle,
+                "custom_page_text": result[0].custom_page_text
+            }));
+            res.end();
+        })
+        
+    }
 });

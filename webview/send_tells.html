@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>@AngelaMerkel - Tellschn</title>
+    <title>@{{display_name}} - Tellschn</title>
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
@@ -27,7 +27,8 @@
     </div>
     <div class="loggedin">
         <div id="top">
-            <h1>Hinterlasse @Angela_Merkel einen Tell!</h1>
+            <h1>Hinterlasse @{{display_name}} einen Tell!</h1>
+            <p>{{custom_page_text}}</p>
             <textarea data-length=9999 id="enter_tell"></textarea>
             <div class="tell_actions">
                 <div id="file_upload">
@@ -91,8 +92,6 @@
                 <div></div>
             </div>
         </div>
-        <!-- It's completely okay to remove the annotation in the footer below if it bothers you. -->
-        <footer>Design by <a href="https://arkenau.me" target="_blank">nopeJS</a></footer>
     </div>
     <script async src="/assets/js/charcounter.js"></script>
 </body>
