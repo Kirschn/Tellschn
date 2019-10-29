@@ -1,10 +1,5 @@
-var enterAnswerElem = document
-    .querySelector("#enter_answer")
 
-enterAnswerElem
-    .addEventListener("keyup", function() {
-        checkTextAreaMaxLength(this);
-    });
+    
 
 
 function checkTextAreaMaxLength(textBox) {
@@ -32,4 +27,4 @@ function activateSendButton(){
     document.querySelector(".send").disabled = false
 }
 
-checkTextAreaMaxLength(enterAnswerElem)
+

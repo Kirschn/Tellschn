@@ -47,7 +47,8 @@ var mustache = require("mustache");
 var templates = {
     "landing": fs.readFileSync("./webview/landing.html", "utf8"),
     "send_tells": fs.readFileSync("./webview/send_tells.html", "utf8"),
-    "get_tells": fs.readFileSync("./webview/get_tells.html", "utf8")
+    "get_tells": fs.readFileSync("./webview/get_tells.html", "utf8"),
+    "view_tells": fs.readFileSync("./webview/assets/view_tells.html", "utf8")
 }
 var connection = mysql.createConnection(accessconf.mysql);
 var token_secret_index = [];
@@ -59,13 +60,12 @@ function nocache(req, res, next) {
 }
 
 app.use("/assets", express.static("./webview/assets"));
-
+app.use("/cdn", express.static("./cdn"));
 app.get("/", function (req, res) {
     var debug = "";
     if (appconf.debug) {
         debug = JSON.stringify(req.session, null, 4).replace(new RegExp("[\n]+"), "\n<br>");
     }
-    console.log(templates.landing)
     res.send(mustache.render(templates.landing, {"debug": debug}));
     res.status(200).end();
 });
@@ -198,29 +198,42 @@ app.get("/api/:endpoint", nocache, function(req, res) {
     } else if (req.params.endpoint === "user_info" && req.query.user != undefined && req.query.user != "") {
         // return info about user req.query.user
         var sql = "SELECT "
-    }
+    } else if (req.params.endpoint === "logoff") {
+        req.session.destroy(function() {
+            res.redirect("/");
+            return;
+        });
+        
 
 
-    if (req.query.token !== req.session.token) {
+    } else if (req.query.token !== req.session.token) {
         // Token Invalid, Abort Request
+        console.log("Invalid token: ", req.query.token, req.session.token );
         res.write(JSON.stringify({
             "err": "TOKEN_INVALID"
         }));
         res.end();
         return;
-    } else {
-        // Generate new token since this one was just used
-        req.session.token =  uuid();
-    }
-    if (req.params.endpoint == "") {
-
-    } else if (req.params.endpoint === "logoff") {
-        req.session.destroy(function() {
-            res.redirect("/");
-        });
-
-
-    }
+    } 
+    if (req.params.endpoint == "get_own_tells") {
+        if (req.session.userpayload !== undefined && req.session.userpayload.twitter_id !== undefined) {
+            if (req.query.page == undefined) {
+                res.end("Es ist einer Fehler aufgetreten.");
+            }
+            var request = connection.query("SELECT tells.id AS tell_id, tells.timestamp AS timestamp, tells.content AS tell_content, tells.do_not_share AS do_not_share,"
+                +" attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, attachment_media.cdn_path AS cdn_path, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media FROM `tells`"
+                + " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid WHERE deleted = 0 AND tells.for_user_id = ? ORDER BY tells.id DESC LIMIT ?,10",
+                [req.session.userpayload.twitter_id, parseInt(req.query.page*appconf.tells_per_page)], function (err, tells) {
+                    if (err) throw err; console.log(request.sql);
+                    res.send(mustache.render(templates.view_tells, {
+                        "tells": tells
+                    }));
+                    res.end();
+                })
+        } else {
+            res.end("Es ist ein Fehler aufgetreten.")
+        }
+    } 
 });
 
 
@@ -233,17 +246,12 @@ app.post("/api/:endpoint", nocache, function(req, res) {
         }));
         res.end();
         return;
-    } else {
-        // Generate new token since this one was just used
-        req.session.token =  uuid();
     }
     if (req.params.endpoint == "send_tell") {
         if (req.body.for_user_id !== undefined &&
             req.body.content !== undefined &&
             req.body.do_not_share !== undefined) {
-                var has_image = true;
                 if (req.body.image_uid == undefined) {
-                    has_image = false;
                     req.body.image_uid = null;
                 }
                 if (req.body.by_user_id == undefined) {
@@ -252,7 +260,7 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                 // routine to insert into database
                 // sanity checks: length and check if the user id exists, etc.
                 if (req.body.content.length > 9999) {
-                    res.JSON({"err": "CONTENT_TOO_LONG", "status": "failed"});
+                    res.json({"err": "CONTENT_TOO_LONG", "status": "failed"});
                     res.end();
                 }
                 connection.query("SELECT twitter_id, twitter_handle, im_config FROM users WHERE twitter_id = ?", req.body.for_user_id, 
@@ -260,22 +268,23 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                         if (err) throw err;
                         if (sanity_1[0] == undefined) {
                             // user id not found
-                            res.JSON({"err": "USER_ID_NOT_FOUND", "status": "failed"});
+                            res.json({"err": "USER_ID_NOT_FOUND", "status": "failed"});
                             res.end();
                             return;
                         }
-                        connection.query("INSERT INTO tells (for_user_id, by_user_id, content, media_attachment, do_not_share) VALUES ?", [
+                        console.log(req.body, (req.body.do_not_share === "true") ? true : false)
+                        connection.query("INSERT INTO tells (for_user_id, by_user_id, content, media_attachment, do_not_share) VALUES (?)", [[
                             req.body.for_user_id,
                             req.body.by_user_id,
                             req.body.content,
                             req.body.media_attachment,
-                            req.body.do_not_share
-                        ], function(err) {
+                            (req.body.do_not_share === "true") ? true : false
+                        ]], function(err) {
                             if (err) throw err;
                             // Insert Successful: 
                             // 1) Give Feedback to the user
                             // 2) Start Job to check if the user has IM Notifications activated
-                            res.JSON({"err": null, "status": "success"});
+                            res.json({"err": null, "status": "success"});
                             res.end();
                             queue.create("send_instant_msg_notification", {
                                 "twitter_id": sanity_1[0].twitter_id,
@@ -295,7 +304,7 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                 // routine to insert into database
                 // sanity checks: length and check if the user id exists, etc.
                 if (req.body.content.length > 9999) {
-                    res.JSON({"err": "CONTENT_TOO_LONG", "status": "failed"});
+                    res.json({"err": "CONTENT_TOO_LONG", "status": "failed"});
                     res.end();
                 }
                 connection.query("SELECT for_user_id FROM users WHERE id = ?", req.body.for_tell_id, 
@@ -303,13 +312,13 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                         if (err) throw err;
                         if (sanity_1[0] == undefined) {
                             // user id not found
-                            res.JSON({"err": "USER_ID_NOT_FOUND", "status": "failed"});
+                            res.json({"err": "USER_ID_NOT_FOUND", "status": "failed"});
                             res.end();
                             return;
                         }
                         if (req.session.userpayload !== undefined && req.session.userpayload.twitter_id !== sanity_1["for_user_id"]) {
                             // user tries to reply to a tell that is not their own
-                            res.JSON({"err": "WRONG_TELL_OWNER", "status": "failed"});
+                            res.json({"err": "WRONG_TELL_OWNER", "status": "failed"});
                             res.end();
                             return;
                         }
@@ -318,45 +327,69 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                             replyconfig = JSON.parse(req.body.reply_config);
                         } catch (e) {
                             // invalid JSON
-                            res.JSON({"err": "INVALID_SHARE_CONFIG", "status": "failed"});
+                            res.json({"err": "INVALID_SHARE_CONFIG", "status": "failed"});
                             res.end();
                             return;
                         }
 
-                        connection.query("INSERT INTO answers (for_tell_id, content, show_public) VALUES ?", [
+                        connection.query("INSERT INTO answers (for_tell_id, content, show_public) VALUES (?)", [[
                             req.body.for_tell_id,
                             req.body.content,
                             replyconfig.show_on_page
-                        ], function(err) {
+                        ]], function(err) {
                             if (err) throw err;
                             // Insert Successful: 
                             // 1) Give Feedback to the user
                             // 2) Start Job to check if the user has IM Notifications activated
-                            res.JSON({"err": null, "status": "success"});
+                            res.json({"err": null, "status": "success"});
                             res.end();
-                            queue.create("send_instant_msg_notification", {
-                                "twitter_id": sanity_1[0].twitter_id,
-                                "twitter_handle": sanity_1[0].twitter_handle,
-                                "im_config": sanity_1[0].im_config
-                            });
+                            if (replyconfig.send_tweet) {
+                                queue.create("send_tweet", {
+                                    "twitter_id": sanity_1[0].for_user_id,
+                                    "for_tell_id": req.body.for_tell_id,
+                                    "show_on_page": replyconfig.show_on_page,
+                                    "content": req.body.content
+                                });
+                            }
                             return;
                         });
                     });
             }
+    } else if (req.params.endpoint == "delete_tell") {
+        if (req.body.tell_id !== undefined) {
+            connection.query("UPDATE tells SET deleted = 1 WHERE id = ? and for_user_id = ?", [req.body.tell_id, req.session.userpayload.twitter_id], function(err) {
+                if (err) throw err;
+                res.json({"err": null, "status": "success"});
+                res.end();
+            })
+        }
     }
 });
 
 
 app.get("/:userpage", nocache, function(req, res) {
+    if (req.session.token == undefined) {
+        req.session.token =  uuid();
+    }
     if (req.session.userpayload !== undefined && req.params.userpage === req.session.userpayload.twitter_handle) {
         // show template for logged in user
-        res.send(mustache.render(templates.get_tells, {
-            "profile_image_url": req.session.userpayload.profile_pic_original_link,
-            "display_name": req.session.userpayload.twitter_handle,
-            "custom_config": req.session.userpayload.custom_configuration,
-            "custom_page_text": req.session.userpayload.custom_page_text
-        }));
-        res.end();
+        
+        connection.query("SELECT tells.id AS tell_id, tells.timestamp AS timestamp, tells.content AS tell_content, tells.do_not_share AS do_not_share, attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, attachment_media.cdn_path AS cdn_path, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media FROM `tells`"
+        + " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid WHERE deleted = 0 AND tells.for_user_id = ? ORDER BY tells.id DESC LIMIT 10", req.session.userpayload.twitter_id, function (err, tells) {
+            if (err) throw err;
+            
+            res.send(mustache.render(templates.get_tells, {
+                "profile_image_url": req.session.userpayload.profile_pic_original_link,
+                "display_name": req.session.userpayload.twitter_handle,
+                "custom_configuration": req.session.userpayload.custom_configuration,
+                "custom_page_text": req.session.userpayload.custom_page_text,
+                "base_url": appconf.base_url,
+                "token": req.session.token,
+                "tells": tells
+            }, {"tell_list": templates.view_tells}));
+            res.end();
+        })
+        
     } else {
         // show template for telling a new tell
         connection.query("SELECT twitter_id, twitter_handle, profile_pic_original_link, profile_pic_small_link, custom_page_text FROM users WHERE twitter_handle = ?", req.params.userpage, function(err, result) {
@@ -369,7 +402,10 @@ app.get("/:userpage", nocache, function(req, res) {
             res.send(mustache.render(templates.send_tells, {
                 "profile_image_url": result[0].profile_pic_original_link,
                 "display_name": result[0].twitter_handle,
-                "custom_page_text": result[0].custom_page_text
+                "custom_page_text": result[0].custom_page_text,
+                "base_url": appconf.base_url,
+                "twitter_id": result[0].twitter_id,
+                "token": req.session.token
             }));
             res.end();
         })

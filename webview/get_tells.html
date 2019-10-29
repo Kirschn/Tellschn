@@ -18,9 +18,12 @@
     <link rel="stylesheet" href="assets/stylesheets/stylesheet.css" />
     <link rel="icon" href="assets/images/favicon.ico" />
     <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <script src="assets/js/jquery-3.4.1.min.js"></script>
+    <script src="assets/js/tellschn-client.js"></script>
     <script>
         var custom_config = {{{custom_configuration}}};
         var custom_page_text = "{{custom_page_text}}";
+        var token = "{{token}}";
     </script>
 </head>
 
@@ -41,62 +44,12 @@
             <h1>Hallo, @{{display_name}}!</h1>
             <h2>Nachfolgend findest du eine chronologische Übersicht über alle Tells, die du bereits erhalten hast</h2>
             <p id="share_url">Du möchtest mehr Tells? Teile deinen Profillink mit deinen Freunden!</p>
-            <input id="url" class="copyurl" type="text" name="profile-url" value="https://tell.kirschn.de/{{display_name}}" readonly="readonly" /> <button class="copyBtn">Kopieren</button>
+            <input id="url" class="copyurl" type="text" name="profile-url" value="{{{base_url}}}/{{display_name}}" readonly="readonly" /> <button class="copyBtn">Kopieren</button>
         </div>
         <hr/>
-
-        <div class="tell">
-            <div id="tell_content">
-                <p>Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Aber nicht nur als Kurzmeldungen eignen sich diese Texte. Sie werden sie auch als kürzere
-                    Produktbeschreibung in Onlineshops entdecken. Meist verwenden Shopsysteme eine Kurzbeschreibung mit maximal 50 Wörtern.</p>
-                <hr />
-            </div>
-            <div id="tell_additional">
-                <div id="tell_time">01.01.1970 um 00:00 Uhr</div>
-                <div id="button">
-                    <a class="answer" href="#answer">Antworten</a>
-                </div>
-                <div id="button">
-                    <a class="delete" href="#confirm_delete">Löschen</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="tell img_tell">
-            <div id="tell_content">
-                <a href="#show_img">
-                    <img src="assets/images/test_image.jpg">
-                </a>
-                <p>Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Außerdem verfügt dieser Beitrag über ein Testbild!</p>
-                <hr />
-            </div>
-            <div id="tell_additional">
-                <div id="tell_time">01.01.1970 um 00:00 Uhr</div>
-                <div id="button">
-                    <a class="answer" href="#answer">Antworten</a>
-                </div>
-                <div id="button">
-                    <a class="delete" href="#confirm_delete">Löschen</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="tell">
-            <div id="tell_content">
-                <p>Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Aber nicht nur als Kurzmeldungen eignen sich diese Texte. Sie werden sie auch als kürzere
-                    Produktbeschreibung in Onlineshops entdecken. Meist verwenden Shopsysteme eine Kurzbeschreibung mit maximal 50 Wörtern.</p>
-                <hr />
-            </div>
-            <div id="tell_additional">
-                <div id="tell_time">01.01.1970 um 00:00 Uhr</div>
-                <div id="button">
-                    <a class="answer" href="#answer">Antworten</a>
-                </div>
-                <div id="button">
-                    <a class="delete" href="#confirm_delete">Löschen</a>
-                </div>
-            </div>
-        </div>
+        <span id="tells">
+        {{>tell_list}}
+        </span>
 
         <div class="pagination">
             <div class="lds-ripple">
@@ -104,8 +57,8 @@
                 <div></div>
             </div>
         </div>
-        <!-- It's completely okay to remove the annotation in the footer below if it bothers you. -->
-        <footer>Design by <a href="https://arkenau.me" target="_blank">nopeJS</a></footer>
+        
+        <footer>IMPRESSUM HIER ANFÜGEN</footer>
 
         <div id="answer" class="overlay">
             <div class="popup">
@@ -141,7 +94,7 @@
                 <div class="content">
                     <p>Bist du dir sicher, dass du diesen Tell löschen möchtest? Du kannst ihn danach nicht wiederherstellen!
                     </p>
-                    <button class="delete">Weg damit!</button> <button class="cancel">Lieber doch nicht...</button>
+                    <button class="delete" onclick="deleteTell()">Weg damit!</button> <button class="cancel">Lieber doch nicht...</button>
                 </div>
             </div>
         </div>
@@ -150,14 +103,59 @@
             <div class="popup">
                 <a class="close" href="#">&times;</a>
                 <div class="content">
-                    <img src="assets/images/test_image.jpg" />
+                    <img src="assets/images/test_image.jpg" id="lightbox_img"/>
                 </div>
             </div>
+        </div>
+        <div id="show_media" class="overlay">
+                <div class="popup">
+                    <a class="close" href="#">&times;</a>
+                    <div class="content">
+                        <video src="" id="lightbox_media" controls autoplay>
+                            Dein Browser unterstützt leider kein HTML5 Video
+                        </video>
+                    </div>
+                </div>
         </div>
 
     </div>
     <script async src="assets/js/charcounter.js"></script>
     <script async src="assets/js/copy.js"></script>
+    <script>
+        var request_in_progress = false;
+        var at_end = false;
+        var page = 1;
+        var delete_buffer = null;
+        window.onscroll = function (ev) {
+            console.log(window.innerHeight, window.scrollY, document.body.offsetHeight)
+            if ((window.innerHeight+window.scrollY) > (document.body.offsetHeight - window.innerHeight/4)) {
+                // nachladen
+                if (!request_in_progress && ! at_end) {
+                    request_in_progress = true;
+                    $.get("/api/get_own_tells?token=" + token + "&page=" + page, function(next_page) {
+                        document.getElementById("tells").innerHTML += next_page;
+                        if (next_page == "\r\n<p>Hier sind leider keine Tells :c</p>") {
+                            at_end = true;
+                        }
+                        request_in_progress = false;
+                        page++;
+                    })
+                }
+            }
+        }
+        function filldeletemodal(tell_id) {
+            delete_buffer = tell_id;
+
+        }
+        function deleteTell() {
+            delete_tell(delete_buffer, function(response) {
+                if (response.err) throw response.err;
+                window.location.hash = "";
+                document.getElementById("tell-" + delete_buffer).remove();
+                delete_buffer = null;
+            })
+        }
+    </script>
 </body>
 
 </html>

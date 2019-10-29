@@ -1,0 +1,43 @@
+{{#tells}}
+
+        <div class="tell {{#has_media}}img_tell{{/has_media}}" id="tell-{{tell_id}}">
+            <div id="tell_content">
+                {{#has_media}}
+                
+                    {{^is_mp4}}
+                    <a href="#show_img">
+                        <img src="/cdn/{{cdn_path}}" onclick="document.getElementById('lightbox_img').src = this.src">
+                    </a>
+                    
+                    {{/is_mp4}}
+                    {{#is_mp4}} 
+                    <a href="#show_media">
+                            <img src="/assets/images/media.png" onclick="document.getElementById('lightbox_media').src = '/cdn/{{cdn_path}}'">
+                    </a>
+                    
+                    {{/is_mp4}}
+                {{/has_media}}
+                <p>{{tell_content}}</p>
+                <hr />
+            </div>
+            <div id="tell_additional">
+                <div id="tell_time">{{timestamp}}</div>
+                {{#do_not_share}}
+                <div id="button">
+                        <a class="answer_private">Privat</a>
+                </div>
+                {{/do_not_share}}
+                {{^do_not_share}}
+                <div id="button">
+                    <a class="answer" href="#answer">Antworten</a>
+                </div>
+                {{/do_not_share}}
+                
+                <div id="button">
+                    <a class="delete" href="#confirm_delete" onclick="filldeletemodal('{{tell_id}}')">Löschen</a>
+                </div>
+            </div>
+        </div>
+        {{/tells}}
+
+{{^tells}}<p>Hier sind leider keine Tells :c</p>{{/tells}}

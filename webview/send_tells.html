@@ -10,20 +10,69 @@
     <meta name="theme-color" content="#253e59">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta property="og:site_name" content="@AngelaMerkel auf Tellschn">
+    <meta property="og:site_name" content="@{{display_name}} auf Tellschn">
     <meta property="og:title" content="Tellschn">
-    <meta property="og:description" content="Hinterlasse einen Kommentar auf @AngelaMerkel's Tellschn-Profil!">
-    <meta property="og:url" content="https://tell.kirschn.de/AngelaMerkel">
+    <meta property="og:description" content="Hinterlasse einen Kommentar auf @{{display_name}}'s Tellschn-Profil!">
+    <meta property="og:url" content="https://tell.kirschn.de/{{display_name}}">
     <meta property="og:image" content="https://tell.kirschn.de/assets/images/og.png">
     <meta property="og:type" content="article">
     <link rel="stylesheet" href="assets/stylesheets/stylesheet.css" />
     <link rel="icon" href="assets/images/favicon.ico" />
     <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <script src="assets/js/jquery-3.4.1.min.js"></script>
+    <script src="assets/js/tellschn-client.js"></script>
+    <script>
+        var blocked = false;
+        var upload_ready = true;
+        var twitter_id = "{{ twitter_id }}";
+        var token = "{{ token }}";
+        function onload() {
+            /*var enterAnswerElem = document
+                .querySelector("#enter_tell")
+
+            enterAnswerElem
+                .addEventListener("keyup", function () {
+                    checkTextAreaMaxLength(enterAnswerElem);
+                });
+            checkTextAreaMaxLength(enterAnswerElem);
+                */
+            $("#send_tell_button").click(function () {
+                console.log("Send Tell Button was clicked");
+                if (blocked) {
+                    console.log("Input Blocked");
+                    return;
+                }
+                if (!upload_ready) {
+                    console.log("Upload not ready");
+                    return;
+                }
+                // Block input
+                blocked = true;
+                send_tell(twitter_id,
+                    $("#enter_tell").val(),
+                    null, //TODO: MEDIA UUID
+                    $("#tweetable").is(":checked"),
+                    function (call) {
+                        if (call.status == "success") {
+                            $("#send_tell_button").html("Gesendet!");
+                            setTimeout(function () {
+                                window.location = window.location;
+
+                            }, 3000)
+                        } else {
+                            alert(call.err);
+                            blocked = false;
+                        }
+                    });
+            });
+        }
+    </script>
 </head>
 
-<body>
+<body onload="onload()">
     <div class="navbar_centered">
-        <a href="/"><img class="logo" src="assets/images/logo_white.svg" alt="Tellschn" style="height:2em; margin-top: -0.45em;"></a>
+        <a href="/"><img class="logo" src="assets/images/logo_white.svg" alt="Tellschn"
+                style="height:2em; margin-top: -0.45em;"></a>
     </div>
     <div class="loggedin">
         <div id="top">
@@ -33,58 +82,42 @@
             <div class="tell_actions">
                 <div id="file_upload">
                     <label class="fileContainer">
-                    Bild anhängen
-                    <input id="uploadFile" name="file" type="file">
-                </label>
+                        Bild anhängen
+                        <input id="uploadFile" name="file" type="file">
+                    </label>
                 </div>
                 <div id="private_checkbox">
                     <input type="checkbox" id="tweetable">
-                    <label for="tweetable"><div class="tooltip">Als <em>Privat</em> markieren<span class="tooltiptext">Auf diesen Tell kann nicht geantwortet werden!</span></div></label>
+                    <label for="tweetable">
+                        <div class="tooltip">Als <em>Privat</em> markieren<span class="tooltiptext">Auf diesen Tell kann
+                                nicht geantwortet werden!</span></div>
+                    </label>
                 </div>
                 <span class="spacer"></span>
-                <button class="send_tell">Senden</button>
+                <button class="send_tell" id="send_tell_button">Senden</button>
             </div>
         </div>
-        <hr/>
+        <hr />
         <h2>Öffentliche Antworten:</h2>
-
+        {{#publicanswers}}
         <div class="tell">
             <div id="tell_content">
-                Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Aber nicht nur als Kurzmeldungen eignen sich diese Texte. Sie werden sie auch als kürzere Produktbeschreibung
-                in Onlineshops entdecken. Meist verwenden Shopsysteme eine Kurzbeschreibung mit maximal 50 Wörtern.
+                {{tellcontent}}
             </div>
             <div id="tell_additional">
-                <div id="tell_time">01.01.1970 um 00:00 Uhr</div>
+                <div id="tell_time">{{telltime}}</div>
             </div>
             <hr class="hr_tell_answer" />
             <div id="tell_content">
                 <h3>Antwort:</h3>
-                Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Aber nicht nur als Kurzmeldungen eignen sich diese Texte. Sie werden sie auch als kürzere Produktbeschreibung
-                in Onlineshops entdecken. Meist verwenden Shopsysteme eine Kurzbeschreibung mit maximal 50 Wörtern.
+                {{answercontent}}
             </div>
             <div id="tell_additional">
-                <div id="tell_time">01.01.1970 um 00:00 Uhr</div>
+                <div id="tell_time">{{answertime}}</div>
             </div>
         </div>
-
-        <div class="tell">
-            <div id="tell_content">
-                Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Aber nicht nur als Kurzmeldungen eignen sich diese Texte. Sie werden sie auch als kürzere Produktbeschreibung
-                in Onlineshops entdecken. Meist verwenden Shopsysteme eine Kurzbeschreibung mit maximal 50 Wörtern.
-            </div>
-            <div id="tell_additional">
-                <div id="tell_time">01.01.1970 um 00:00 Uhr</div>
-            </div>
-            <hr class="hr_tell_answer" />
-            <div id="tell_content">
-                <h3>Antwort:</h3>
-                Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Aber nicht nur als Kurzmeldungen eignen sich diese Texte. Sie werden sie auch als kürzere Produktbeschreibung
-                in Onlineshops entdecken. Meist verwenden Shopsysteme eine Kurzbeschreibung mit maximal 50 Wörtern.
-            </div>
-            <div id="tell_additional">
-                <div id="tell_time">01.01.1970 um 00:00 Uhr</div>
-            </div>
-        </div>
+        {{/publicanswers}}
+        
 
         <div class="pagination">
             <div class="lds-ripple">
