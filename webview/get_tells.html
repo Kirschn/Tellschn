@@ -21,7 +21,6 @@
     <script src="assets/js/jquery-3.4.1.min.js"></script>
     <script src="assets/js/tellschn-client.js"></script>
     <script>
-        var custom_config = {{{custom_configuration}}};
         var custom_page_text = "{{custom_page_text}}";
         var token = "{{token}}";
     </script>
@@ -58,7 +57,7 @@
             </div>
         </div>
         
-        <footer>IMPRESSUM HIER ANFÜGEN</footer>
+        <footer>Tellschn ist <a href="https://github.com/Kirschn/Tellschn/tree/V2">freie Software</a></footer>
 
         <div id="answer" class="overlay">
             <div class="popup">
@@ -67,26 +66,61 @@
                 <div class="content answer_popup">
                     <div class="answer_tell">
                         <h3>Tell:</h3>
-                        <p>Hier sehen Sie einen Beispieltext mit vielen Wörtern. Auf Texte mit diesen Umfang stoßen Sie im Web, wenn Sie beispielsweise eine Kurzmeldung lesen. Aber nicht nur als Kurzmeldungen eignen sich diese Texte. Sie werden sie auch
-                            als kürzere Produktbeschreibung in Onlineshops entdecken. Meist verwenden Shopsysteme eine Kurzbeschreibung mit maximal 50 Wörtern.</p>
+                        <p id="answer_tellcontent"></p>
                     </div>
                     <div class="answer_container">
                         <textarea data-length="280" id="enter_answer"></textarea>
                         <span class="counter"></span>
                     </div>
                     <div id="button">
-                        <button class="send">Senden</button>
+                        <button class="send" onclick="answerTell()">Senden</button>
                     </div>
                     <div class="checkboxes">
-                        <input type="checkbox" id="tweeting" checked>
+                        <input type="checkbox" id="tweeting" {{#custom_configuration.std_tweet}}checked{{/custom_configuration.std_tweet}}>
                         <label for="tweeting">Auf Twitter antworten</label>
-                        <input type="checkbox" id="profileposting" checked>
+
+                        <input type="checkbox" id="profileposting" {{#custom_configuration.std_post_feed}}checked{{/custom_configuration.std_post_feed}}>
                         <label for="profileposting">Auf deinem Tellschn-Profil antworten</label>
+                    </div>
+                    <div class="checkboxes" id="checkboxes_imagesharing">
+                        <input type="checkbox" id="tweet_image" {{#custom_configuration.std_tweet_image}}checked{{/custom_configuration.std_tweet_image}}>
+                        <label for="tweet_image">Bild auf Twitter posten</label>
+                        
+                        <input type="checkbox" id="post_image" {{#custom_configuration.std_post_image}}checked{{/custom_configuration.std_post_image}}>
+                        <label for="post_image">Bild auf deinem Tellschn-Profil posten</label>
                     </div>
                 </div>
             </div>
         </div>
-
+        <div id="edit" class="overlay">
+                <div class="popup">
+                    <h2>Antwort Bearbeiten</h2>
+                    <a class="close" href="#">&times;</a>
+                    <div class="content answer_popup">
+                        <div class="answer_tell">
+                            <h3>Tell:</h3>
+                            <p id="edit_tellcontent"></p>
+                        </div>
+                        <!-- TODO: Somehow broke class of answer container -->
+                        <div class="answer_container">
+                            <textarea data-length="280" id="edit_answer"></textarea>
+                            <span class="counter"></span>
+                        </div>
+                        <div id="button">
+                            <button class="send" onclick="editTell()">Senden</button>
+                        </div>
+                        <div class="checkboxes">
+                            <input type="checkbox" id="editprofileposting">
+                            <label for="editprofileposting">Auf deinem Tellschn-Profil antworten</label>
+                        </div>
+                        <div class="checkboxes" id="editcheckboxes_imagesharing">
+                            
+                            <input type="checkbox" id="editpost_image">
+                            <label for="editpost_image">Bild auf deinem Tellschn-Profil posten</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
         <div id="confirm_delete" class="overlay">
             <div class="popup">
                 <h2>Willst du diesen Tell wirklich löschen?</h2>
@@ -126,6 +160,7 @@
         var at_end = false;
         var page = 1;
         var delete_buffer = null;
+        var answer_id_buffer = null;
         window.onscroll = function (ev) {
             console.log(window.innerHeight, window.scrollY, document.body.offsetHeight)
             if ((window.innerHeight+window.scrollY) > (document.body.offsetHeight - window.innerHeight/4)) {
@@ -154,6 +189,51 @@
                 document.getElementById("tell-" + delete_buffer).remove();
                 delete_buffer = null;
             })
+        }
+        function fillanswermodal(tell_id, has_img) {
+            if (has_img) {
+                document.getElementById("checkboxes_imagesharing").style.visibility = "visible";
+            } else {
+                document.getElementById("checkboxes_imagesharing").style.visibility = "hidden";
+
+            }
+            document.getElementById("answer_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
+            answer_id_buffer = tell_id;
+        }
+        function filleditmodal(tell_id, has_img, was_public, was_img_public) {
+            if (has_img) {
+                document.getElementById("editcheckboxes_imagesharing").style.visibility = "visible";
+            } else {
+                document.getElementById("editcheckboxes_imagesharing").style.visibility = "hidden";
+
+            }
+            if (was_img_public) {
+                $("#editpost_image").attr("checked", "checked");
+            }
+            if (was_public) {
+                $("#editprofileposting").attr("checked", "checked");
+            }
+            document.getElementById("edit_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
+            $("#edit_answer").val(document.getElementById("answer_content_" + tell_id).innerHTML);
+            answer_id_buffer = tell_id;
+        }
+        function answerTell() {
+            reply_to_tell(
+                answer_id_buffer,
+                $("#enter_answer").val(),
+                $("#tweeting").is(":checked"),
+                $("#profileposting").is(":checked"),
+                $("#tweet_image").is(":checked"),
+                $("#post_image").is(":checked"),
+                function (response) {
+                    if (response.err == null) {
+
+                    } else {
+                        alert(response);
+                        return;
+                    }
+                }
+            )
         }
     </script>
 </body>

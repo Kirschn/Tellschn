@@ -72,6 +72,14 @@ app.get("/", function (req, res) {
 function uuid() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
+
+
+var get_own_tells_sqlstmt = "SELECT tells.id AS tell_id, tells.timestamp AS timestamp, tells.content AS tell_content, tells.do_not_share AS do_not_share,"
++ " attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, attachment_media.cdn_path AS cdn_path, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, "
++ " IF(answers.content IS NULL, FALSE, TRUE) AS was_answered, answers.content AS answer_content, answers.show_public AS answer_show_public,"
++ " answers.tweet_id AS answer_tweet_id, answers.show_media_public AS answer_show_media_public FROM `tells`"
++ " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid"
++ " LEFT JOIN `answers` ON tells.id = answers.for_tell_id WHERE deleted = 0 AND tells.for_user_id = ? ORDER BY tells.id DESC LIMIT ?,10";
 // twitter API Auth callback
 app.get("/login/twitter_callback", function (req, res) {
     util.log(port, " /twitter_callback hit");
@@ -220,9 +228,7 @@ app.get("/api/:endpoint", nocache, function(req, res) {
             if (req.query.page == undefined) {
                 res.end("Es ist einer Fehler aufgetreten.");
             }
-            var request = connection.query("SELECT tells.id AS tell_id, tells.timestamp AS timestamp, tells.content AS tell_content, tells.do_not_share AS do_not_share,"
-                +" attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, attachment_media.cdn_path AS cdn_path, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media FROM `tells`"
-                + " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid WHERE deleted = 0 AND tells.for_user_id = ? ORDER BY tells.id DESC LIMIT ?,10",
+            var request = connection.query(get_own_tells_sqlstmt,
                 [req.session.userpayload.twitter_id, parseInt(req.query.page*appconf.tells_per_page)], function (err, tells) {
                     if (err) throw err; console.log(request.sql);
                     res.send(mustache.render(templates.view_tells, {
@@ -307,7 +313,7 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                     res.json({"err": "CONTENT_TOO_LONG", "status": "failed"});
                     res.end();
                 }
-                connection.query("SELECT for_user_id FROM users WHERE id = ?", req.body.for_tell_id, 
+                connection.query("SELECT for_user_id FROM tells WHERE id = ?", req.body.for_tell_id, 
                     function (err, sanity_1) {
                         if (err) throw err;
                         if (sanity_1[0] == undefined) {
@@ -316,8 +322,9 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                             res.end();
                             return;
                         }
-                        if (req.session.userpayload !== undefined && req.session.userpayload.twitter_id !== sanity_1["for_user_id"]) {
+                        if (req.session.userpayload !== undefined && req.session.userpayload.twitter_id !== sanity_1[0]["for_user_id"]) {
                             // user tries to reply to a tell that is not their own
+                            
                             res.json({"err": "WRONG_TELL_OWNER", "status": "failed"});
                             res.end();
                             return;
@@ -332,10 +339,11 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                             return;
                         }
 
-                        connection.query("INSERT INTO answers (for_tell_id, content, show_public) VALUES (?)", [[
+                        connection.query("INSERT INTO answers (for_tell_id, content, show_public, show_media_public) VALUES (?)", [[
                             req.body.for_tell_id,
                             req.body.content,
-                            replyconfig.show_on_page
+                            replyconfig.show_on_page,
+                            replyconfig.show_image_page
                         ]], function(err) {
                             if (err) throw err;
                             // Insert Successful: 
@@ -374,14 +382,18 @@ app.get("/:userpage", nocache, function(req, res) {
     if (req.session.userpayload !== undefined && req.params.userpage === req.session.userpayload.twitter_handle) {
         // show template for logged in user
         
-        connection.query("SELECT tells.id AS tell_id, tells.timestamp AS timestamp, tells.content AS tell_content, tells.do_not_share AS do_not_share, attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, attachment_media.cdn_path AS cdn_path, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media FROM `tells`"
-        + " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid WHERE deleted = 0 AND tells.for_user_id = ? ORDER BY tells.id DESC LIMIT 10", req.session.userpayload.twitter_id, function (err, tells) {
+        connection.query(get_own_tells_sqlstmt, [req.session.userpayload.twitter_id, 0], function (err, tells) {
             if (err) throw err;
-            
+            var custom_conf = JSON.parse(req.session.userpayload.custom_configuration);
             res.send(mustache.render(templates.get_tells, {
                 "profile_image_url": req.session.userpayload.profile_pic_original_link,
                 "display_name": req.session.userpayload.twitter_handle,
-                "custom_configuration": req.session.userpayload.custom_configuration,
+                "custom_configuration": {
+                    "std_tweet": custom_conf.sharetw,
+                    "std_post_feed": custom_conf.shareloc,
+                    "std_tweet_image": custom_conf.shareimgtw,
+                    "std_post_image": custom_conf.shareimgloc
+                },
                 "custom_page_text": req.session.userpayload.custom_page_text,
                 "base_url": appconf.base_url,
                 "token": req.session.token,

@@ -8,13 +8,15 @@ function send_tell (to_user_id, content, media, do_not_share, cb) {
     }, cb)
 };
 
-function reply_to_tell (to_tell_id, content, send_tweet, on_page, cb) {
+function reply_to_tell (to_tell_id, content, send_tweet, on_page, share_image_twitter, share_image_page, cb) {
     $.post("/api/give_answer?token="+token, {
         "for_tell_id": to_tell_id,
         "content": content, 
         "reply_config": JSON.stringify({
             "send_tweet": send_tweet,
-            "show_on_page": on_page
+            "show_on_page": on_page,
+            "share_image_twtter": share_image_twitter,
+            "show_image_page": share_image_page
         })
     }, cb)
 }

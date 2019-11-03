@@ -17,11 +17,21 @@
                     
                     {{/is_mp4}}
                 {{/has_media}}
-                <p>{{tell_content}}</p>
+                <p id="tell_content_{{tell_id}}">{{tell_content}}</p>
+
+                {{#was_answered}}
+                    <hr>
+                    <h3>Deine Antwort:</h3><br>
+                    <p id="answer_content_{{tell_id}}">{{answer_content}}</p>
+                {{/was_answered}}
                 <hr />
             </div>
             <div id="tell_additional">
                 <div id="tell_time">{{timestamp}}</div>
+                <!-- TODO: Schön machen-->
+                {{#answer_tweet_id}}
+                <a href="https://twitter.com/{{display_name}}/status/{{answer_tweet_id}}">Zum Tweet</a>
+                {{/answer_tweet_id}}
                 {{#do_not_share}}
                 <div id="button">
                         <a class="answer_private">Privat</a>
@@ -29,7 +39,13 @@
                 {{/do_not_share}}
                 {{^do_not_share}}
                 <div id="button">
-                    <a class="answer" href="#answer">Antworten</a>
+                    {{^was_answered}}
+                    <a class="answer" href="#answer" onclick="fillanswermodal('{{tell_id}}', {{has_media}})">Antworten</a>
+                    {{/was_answered}}
+                    {{#was_answered}}
+                    <a class="answer" href="#edit" onclick="filleditmodal('{{tell_id}}', {{has_media}}, {{#answer_show_public}}true{{/answer_show_public}}{{^answer_show_public}}false{{/answer_show_public}}, {{#answer_show_media_public}}true{{/answer_show_media_public}}{{^answer_show_media_public}}false{{/answer_show_media_public}})">Bearbeiten</a>
+                    {{/was_answered}}
+                    
                 </div>
                 {{/do_not_share}}
                 
