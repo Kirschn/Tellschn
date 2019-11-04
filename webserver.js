@@ -80,10 +80,7 @@ var get_own_tells_sqlstmt = "SELECT tells.id AS tell_id, tells.timestamp AS time
 + " answers.tweet_id AS answer_tweet_id, answers.show_media_public AS answer_show_media_public FROM `tells`"
 + " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid"
 + " LEFT JOIN `answers` ON tells.id = answers.for_tell_id WHERE deleted = 0 AND tells.for_user_id = ? ORDER BY tells.id DESC LIMIT ?,10";
-var get_public_answers = "SELECT `answers`.`content` AS answer_text, `answers`.tweet_id AS answer_tweet_id, IF(`anwers`.show_media_public, attachment_media.cdn_path) AS attachment_cdn_path, answers.timestamp AS answer_timestamp"
-+ " tells.content AS tell_content"
-+ " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid"
-+ " LEFT JOIN `tells` ON answers.for_tell_id = tells.id WHERE deleted = 0 AND tells.for_user_id = ? ORDER BY answers.id DESC LIMIT ?,10";
+var get_public_answers = "SELECT `answers`.`content` AS answer_text, `answers`.tweet_id AS answer_tweet_id, attachment_media.cdn_path AS attachment_cdn_path, answers.timestamp AS answer_timestamp, tells.content AS tell_content FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment WHERE tells.deleted = 0 AND tells.for_user_id = ? ORDER BY answers.id DESC LIMIT ?,10";
 
 // twitter API Auth callback
 app.get("/login/twitter_callback", function (req, res) {
