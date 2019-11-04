@@ -59,11 +59,13 @@
         
         <footer>Tellschn ist <a href="https://github.com/Kirschn/Tellschn/tree/V2">freie Software</a></footer>
 
+
+        <!-- TODO: Popups do not close when clicked out of the window and page always scrolls up to the top -->
         <div id="answer" class="overlay">
             <div class="popup">
                 <h2>Antworten</h2>
                 <a class="close" href="#">&times;</a>
-                <div class="content answer_popup">
+                <div class="content answer_popup" id="answer_popup_content">
                     <div class="answer_tell">
                         <h3>Tell:</h3>
                         <p id="answer_tellcontent"></p>
@@ -90,13 +92,14 @@
                         <label for="post_image">Bild auf deinem Tellschn-Profil posten</label>
                     </div>
                 </div>
+                <div class="content answer_popup" id="answer_popup_response" style="display: none">&nbsp;</div>
             </div>
         </div>
         <div id="edit" class="overlay">
                 <div class="popup">
                     <h2>Antwort Bearbeiten</h2>
                     <a class="close" href="#">&times;</a>
-                    <div class="content answer_popup">
+                    <div class="content answer_popup" id="edit_popup_content">
                         <div class="answer_tell">
                             <h3>Tell:</h3>
                             <p id="edit_tellcontent"></p>
@@ -120,7 +123,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+                <div class="content answer_popup" id="edit_popup_response" style="display: none">
+
+                </div>
+        </div>
         <div id="confirm_delete" class="overlay">
             <div class="popup">
                 <h2>Willst du diesen Tell wirklich löschen?</h2>
@@ -192,9 +198,9 @@
         }
         function fillanswermodal(tell_id, has_img) {
             if (has_img) {
-                document.getElementById("checkboxes_imagesharing").style.visibility = "visible";
+                document.getElementById("checkboxes_imagesharing").style.display = "inline";
             } else {
-                document.getElementById("checkboxes_imagesharing").style.visibility = "hidden";
+                document.getElementById("checkboxes_imagesharing").style.display = "none";
 
             }
             document.getElementById("answer_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
@@ -202,9 +208,9 @@
         }
         function filleditmodal(tell_id, has_img, was_public, was_img_public) {
             if (has_img) {
-                document.getElementById("editcheckboxes_imagesharing").style.visibility = "visible";
+                document.getElementById("editcheckboxes_imagesharing").style.display = "inline";
             } else {
-                document.getElementById("editcheckboxes_imagesharing").style.visibility = "hidden";
+                document.getElementById("editcheckboxes_imagesharing").style.display = "none";
 
             }
             if (was_img_public) {
@@ -218,6 +224,10 @@
             answer_id_buffer = tell_id;
         }
         function answerTell() {
+            if (request_in_progress) {
+                return;
+            }
+            request_in_progress = true;
             reply_to_tell(
                 answer_id_buffer,
                 $("#enter_answer").val(),
@@ -226,14 +236,25 @@
                 $("#tweet_image").is(":checked"),
                 $("#post_image").is(":checked"),
                 function (response) {
+                    request_in_progress = false;
                     if (response.err == null) {
-
+                        // answer successful
+                        // display success message
+                        document.getElementById("answer_popup_content").style.display = "none";
+                        document.getElementById("answer_popup_response").style.display = "inline";
+                        document.getElementById("answer_popup_response").innerHTML = "Deine Antwort wurde gesendet.<br><br>";
+                        document.getElementById("answer_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">Okay</a></div>';
                     } else {
                         alert(response);
                         return;
                     }
                 }
             )
+        }
+        function reset_answer_modal () {
+            document.getElementById("answer_popup_response").style.display = "none";
+            document.getElementById("answer_popup_content").style.display = "inline";
+            $("#enter_answer").val(" ");
         }
     </script>
 </body>
