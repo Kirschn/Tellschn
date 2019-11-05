@@ -76,11 +76,11 @@ function uuid() {
 
 var get_own_tells_sqlstmt = "SELECT tells.id AS tell_id, tells.timestamp AS timestamp, tells.content AS tell_content, tells.do_not_share AS do_not_share,"
 + " attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, attachment_media.cdn_path AS cdn_path, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, "
-+ " IF(answers.content IS NULL, FALSE, TRUE) AS was_answered, answers.content AS answer_content, answers.show_public AS answer_show_public,"
++ " IF(answers.content IS NULL, FALSE, TRUE) AS was_answered, answers.content AS answer_content, answers.show_public AS answer_show_public, answers.was_edited AS answer_was_edited,"
 + " answers.tweet_id AS answer_tweet_id, answers.show_media_public AS answer_show_media_public FROM `tells`"
 + " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid"
 + " LEFT JOIN `answers` ON tells.id = answers.for_tell_id WHERE deleted = 0 AND tells.for_user_id = ? ORDER BY tells.id DESC LIMIT ?,10";
-var get_public_answers = "SELECT `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp,  answers.show_media_public AS has_media, attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, tells.content AS tell_content FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment WHERE tells.deleted = 0 AND tells.for_user_id = ? AND answer.show_public = 1 ORDER BY answers.id DESC LIMIT ?,10";
+var get_public_answers = "SELECT `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp, answers.was_edited AS answer_was_edited, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, tells.content AS tell_content FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment WHERE tells.deleted = 0 AND tells.for_user_id = ? AND answers.show_public = 1 ORDER BY answers.id DESC LIMIT ?,10";
 
 // twitter API Auth callback
 app.get("/login/twitter_callback", function (req, res) {
@@ -394,7 +394,60 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                 res.end();
             })
         }
-    }
+    } else if (req.params.endpoint == "edit_answer") {
+        if (req.body.for_tell_id !== undefined &&
+            req.body.content !== undefined) {
+                
+                // routine to insert into database
+                // sanity checks: length and check if the user id exists, etc.
+                if (req.body.content.length > 9999) {
+                    res.json({"err": "CONTENT_TOO_LONG", "status": "failed"});
+                    res.end();
+                }
+                connection.query("SELECT tells.for_user_id, answers.id AS answer_id FROM tells INNER JOIN answers ON answers.for_tell_id = tells.id WHERE tells.id = ?", req.body.for_tell_id, 
+                    function (err, sanity_1) {
+                        if (err) throw err;
+                        if (sanity_1[0] == undefined) {
+                            // user id not found
+                            res.json({"err": "USER_ID_NOT_FOUND", "status": "failed"});
+                            res.end();
+                            return;
+                        }
+                        if (req.session.userpayload !== undefined && req.session.userpayload.twitter_id !== sanity_1[0]["for_user_id"]) {
+                            // user tries to reply to a tell that is not their own
+                            
+                            res.json({"err": "WRONG_TELL_OWNER", "status": "failed"});
+                            res.end();
+                            return;
+                        }
+                        try {
+                        var sharing_conf = JSON.parse(req.body.sharing_conf);
+                        } catch (e) {
+                            console.log(e);
+                            res.json({"err": "INVALID_JSON", "status": "failed"});
+                            res.end();
+                            return;
+                        }
+                        var uffi = connection.query("UPDATE answers SET for_tell_id = ?, content = ?, show_public =?, show_media_public = ?, was_edited = 1 WHERE id = ?", [
+                            req.body.for_tell_id,
+                            req.body.content,
+                            sharing_conf.show_on_page,
+                            sharing_conf.show_image_page,
+                            sanity_1[0]["answer_id"]
+                        ], function(err) {
+                            if (err) throw err;
+                            // Insert Successful: 
+                            // 1) Give Feedback to the user
+                            // 2) Start Job to check if the user has IM Notifications activated
+                            res.json({"err": null, "status": "success"});
+                            res.end();
+                            
+                            return;
+                        });
+                        console.log (uffi.sql)
+                    });
+            }
+        }
 });
 
 

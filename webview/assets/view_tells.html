@@ -21,7 +21,7 @@
 
                 {{#was_answered}}
                     <hr class="hr_tell_answer">
-                    <h3>Antwort:</h3><br>
+                    <h3>Antwort:</h3>{{#answer_was_edited}} <i>Bearbeitet</i>{{/answer_was_edited}}<br>
                     <p id="answer_content_{{tell_id}}">{{answer_content}}</p>
                 {{/was_answered}}
                 <hr />

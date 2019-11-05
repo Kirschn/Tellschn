@@ -122,10 +122,11 @@
                             <label for="editpost_image">Bild auf deinem Tellschn-Profil posten</label>
                         </div>
                     </div>
-                </div>
-                <div class="content answer_popup" id="edit_popup_response" style="display: none">
+                    <div class="content answer_popup" id="edit_popup_response" style="display: none">
 
+                    </div>
                 </div>
+                
         </div>
         <div id="confirm_delete" class="overlay">
             <div class="popup">
@@ -206,6 +207,30 @@
             $("#edit_answer").val(document.getElementById("answer_content_" + tell_id).innerHTML);
             answer_id_buffer = tell_id;
         }
+        function editTell() {
+            if (request_in_progress) {
+                return;
+            }
+            request_in_progress = true;
+            edit_tell(answer_id_buffer,
+                $("#edit_answer").val(),
+                $("#editprofileposting").is(":checked"),
+                $("#editpost_image").is(":checked"), function (response) {
+                    request_in_progress = false;
+                    if (response.err !== null) {
+                        alert(response);
+                        return;
+                    }
+                    
+                    document.getElementById("edit_popup_content").style.display = "none";
+                    document.getElementById("edit_popup_response").style.display = "inline";
+                    document.getElementById("edit_popup_response").innerHTML = "Deine Antwort wurde bearbeitet.<br><br>";
+                    document.getElementById("edit_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">Okay</a></div>';
+            
+
+                }
+            )
+        }
         function answerTell() {
             if (request_in_progress) {
                 return;
@@ -237,6 +262,8 @@
         function reset_answer_modal () {
             document.getElementById("answer_popup_response").style.display = "none";
             document.getElementById("answer_popup_content").style.display = "inline";
+            document.getElementById("edit_popup_response").style.display = "none";
+            document.getElementById("edit_popup_content").style.display = "inline";
             $("#enter_answer").val(" ");
         }
     </script>

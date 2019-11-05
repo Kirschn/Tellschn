@@ -27,10 +27,22 @@ function delete_tell (tell_id, cb) {
         "tell_id": tell_id
     }, cb)
 }
+function edit_tell(tell_id, content, on_page, share_image_page, cb) {
+    $.post("/api/edit_answer?token="+token, {
+        "for_tell_id": tell_id,
+        "content": content,
+        "sharing_conf": JSON.stringify({
+        "show_on_page": on_page,
+        "show_image_page": share_image_page})
+        
+    }, function(response) {
+            cb(response);
+        })
+}
 
 function scrollHandler(apinode, add) {
     if (add == undefined) {add = ""};
-    
+
     window.onscroll = function (ev) {
         console.log(window.innerHeight, window.scrollY, document.body.offsetHeight)
         if ((window.innerHeight+window.scrollY) > (document.body.offsetHeight - window.innerHeight/4)) {
