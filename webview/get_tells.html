@@ -163,27 +163,10 @@
     <script async src="assets/js/copy.js"></script>
     <script>
         var request_in_progress = false;
-        var at_end = false;
-        var page = 1;
         var delete_buffer = null;
         var answer_id_buffer = null;
-        window.onscroll = function (ev) {
-            console.log(window.innerHeight, window.scrollY, document.body.offsetHeight)
-            if ((window.innerHeight+window.scrollY) > (document.body.offsetHeight - window.innerHeight/4)) {
-                // nachladen
-                if (!request_in_progress && ! at_end) {
-                    request_in_progress = true;
-                    $.get("/api/get_own_tells?token=" + token + "&page=" + page, function(next_page) {
-                        document.getElementById("tells").innerHTML += next_page;
-                        if (next_page == "\r\n<p>Hier sind leider keine Tells :c</p>") {
-                            at_end = true;
-                        }
-                        request_in_progress = false;
-                        page++;
-                    })
-                }
-            }
-        }
+        
+        scrollHandler("get_own_tells");
         function filldeletemodal(tell_id) {
             delete_buffer = tell_id;
 

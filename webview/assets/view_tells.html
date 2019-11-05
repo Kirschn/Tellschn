@@ -20,14 +20,15 @@
                 <p id="tell_content_{{tell_id}}">{{tell_content}}</p>
 
                 {{#was_answered}}
-                    <hr>
-                    <h3>Deine Antwort:</h3><br>
+                    <hr class="hr_tell_answer">
+                    <h3>Antwort:</h3><br>
                     <p id="answer_content_{{tell_id}}">{{answer_content}}</p>
                 {{/was_answered}}
                 <hr />
             </div>
             <div id="tell_additional">
                 <div id="tell_time">{{timestamp}}</div>
+                {{#edit_tools}}
                 <!-- TODO: Schön machen-->
                 {{#answer_tweet_id}}
                 <a href="https://twitter.com/{{display_name}}/status/{{answer_tweet_id}}">Zum Tweet</a>
@@ -52,6 +53,7 @@
                 <div id="button">
                     <a class="delete" href="#confirm_delete" onclick="filldeletemodal('{{tell_id}}')">Löschen</a>
                 </div>
+                {{/edit_tools}}
             </div>
         </div>
         {{/tells}}

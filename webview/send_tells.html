@@ -99,24 +99,9 @@
         </div>
         <hr />
         <h2>Öffentliche Antworten:</h2>
-        {{#publicanswers}}
-        <div class="tell">
-            <div id="tell_content">
-                {{tellcontent}}
-            </div>
-            <div id="tell_additional">
-                <div id="tell_time">{{telltime}}</div>
-            </div>
-            <hr class="hr_tell_answer" />
-            <div id="tell_content">
-                <h3>Antwort:</h3>
-                {{answercontent}}
-            </div>
-            <div id="tell_additional">
-                <div id="tell_time">{{answertime}}</div>
-            </div>
-        </div>
-        {{/publicanswers}}
+        <span id="tells">
+        {{>publicanswers}}
+        </span>
         <footer>Tellschn ist <a href="https://github.com/Kirschn/Tellschn/tree/V2">freie Software</a></footer>
 
 
@@ -126,6 +111,12 @@
                 <div></div>
             </div>
         </div>
+        <script>
+            var delete_buffer = null;
+            var answer_id_buffer = null;
+            var request_in_progress = false;
+            scrollHandler("get_public_tells", "&twitter_id={{twitter_id}}");
+        </script>
     </div>
     <script async src="/assets/js/charcounter.js"></script>
 </body>

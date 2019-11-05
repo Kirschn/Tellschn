@@ -80,7 +80,7 @@ var get_own_tells_sqlstmt = "SELECT tells.id AS tell_id, tells.timestamp AS time
 + " answers.tweet_id AS answer_tweet_id, answers.show_media_public AS answer_show_media_public FROM `tells`"
 + " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid"
 + " LEFT JOIN `answers` ON tells.id = answers.for_tell_id WHERE deleted = 0 AND tells.for_user_id = ? ORDER BY tells.id DESC LIMIT ?,10";
-var get_public_answers = "SELECT `answers`.`content` AS answer_text, `answers`.tweet_id AS answer_tweet_id, attachment_media.cdn_path AS attachment_cdn_path, answers.timestamp AS answer_timestamp, tells.content AS tell_content FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment WHERE tells.deleted = 0 AND tells.for_user_id = ? ORDER BY answers.id DESC LIMIT ?,10";
+var get_public_answers = "SELECT `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp,  answers.show_media_public AS has_media, attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, tells.content AS tell_content FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment WHERE tells.deleted = 0 AND tells.for_user_id = ? AND answer.show_public = 1 ORDER BY answers.id DESC LIMIT ?,10";
 
 // twitter API Auth callback
 app.get("/login/twitter_callback", function (req, res) {
@@ -242,6 +242,27 @@ app.get("/api/:endpoint", nocache, function(req, res) {
             res.end("Es ist ein Fehler aufgetreten.")
         }
     } 
+    if (req.params.endpoint == "get_public_tells") {
+            if (req.query.page == undefined || req.query.twitter_id == undefined) {
+                res.end("Es ist einer Fehler aufgetreten.");
+                return;
+
+            }
+            if ((parseInt(req.query.page) - 1) == NaN) {
+                res.end("Es ist einer Fehler aufgetreten.");
+                return;
+            }
+            var request = connection.query(get_public_answers,
+                [req.query.twitter_id, parseInt(req.query.page)*appconf.tells_per_page], function (err, tells) {
+                    if (err) throw err; console.log(request.sql);
+                    tells.has_answer = true;
+                    tells.edit_tools = false;
+                    res.send(mustache.render(templates.view_tells, {
+                        "tells": tells
+                    }));
+                    res.end();
+                })
+    } 
 });
 
 
@@ -399,7 +420,8 @@ app.get("/:userpage", nocache, function(req, res) {
                 "custom_page_text": req.session.userpayload.custom_page_text,
                 "base_url": appconf.base_url,
                 "token": req.session.token,
-                "tells": tells
+                "tells": tells,
+                "edit_tools": true
             }, {"tell_list": templates.view_tells}));
             res.end();
         })
@@ -407,21 +429,29 @@ app.get("/:userpage", nocache, function(req, res) {
     } else {
         // show template for telling a new tell
         connection.query("SELECT twitter_id, twitter_handle, profile_pic_original_link, profile_pic_small_link, custom_page_text FROM users WHERE twitter_handle = ?", req.params.userpage, function(err, result) {
+
             if (err) throw err;
             if (result[0] == undefined) {
                 res.redirect("/");
                 res.end();
                 return;
             }
-            res.send(mustache.render(templates.send_tells, {
-                "profile_image_url": result[0].profile_pic_original_link,
-                "display_name": result[0].twitter_handle,
-                "custom_page_text": result[0].custom_page_text,
-                "base_url": appconf.base_url,
-                "twitter_id": result[0].twitter_id,
-                "token": req.session.token
-            }));
-            res.end();
+            connection.query(get_public_answers, [result[0].twitter_id, 0], function(err, tells) {
+                if (err) throw err;
+                res.send(mustache.render(templates.send_tells, {
+                    "profile_image_url": result[0].profile_pic_original_link,
+                    "display_name": result[0].twitter_handle,
+                    "custom_page_text": result[0].custom_page_text,
+                    "base_url": appconf.base_url,
+                    "twitter_id": result[0].twitter_id,
+                    "token": req.session.token,
+                    "edit_tools": false,
+                    "tells": tells,
+                    "was_answered": true
+                }, {"publicanswers": templates.view_tells}));
+                res.end();
+            });
+            
         })
         
     }
