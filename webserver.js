@@ -17,6 +17,7 @@ var bodyParser     =        require("body-parser");
 var app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+var dateFormat = require("dateformat");
 const session = require('express-session');
 const redis = require('redis');
 const redisClient = redis.createClient();
@@ -48,7 +49,8 @@ var templates = {
     "landing": fs.readFileSync("./webview/landing.html", "utf8"),
     "send_tells": fs.readFileSync("./webview/send_tells.html", "utf8"),
     "get_tells": fs.readFileSync("./webview/get_tells.html", "utf8"),
-    "view_tells": fs.readFileSync("./webview/assets/view_tells.html", "utf8")
+    "view_tells": fs.readFileSync("./webview/assets/view_tells.html", "utf8"),
+    "render_tell": fs.readFileSync("./webview/assets/image_render_tell_template.html", "utf8")
 }
 var connection = mysql.createConnection(accessconf.mysql);
 var token_secret_index = [];
@@ -205,9 +207,6 @@ app.get("/api/:endpoint", nocache, function(req, res) {
             "payload": req.session.userpayload,
             "token": req.session.token}));
         res.end();
-    } else if (req.params.endpoint === "user_info" && req.query.user != undefined && req.query.user != "") {
-        // return info about user req.query.user
-        var sql = "SELECT "
     } else if (req.params.endpoint === "logoff") {
         req.session.destroy(function() {
             res.redirect("/");
@@ -234,6 +233,7 @@ app.get("/api/:endpoint", nocache, function(req, res) {
                 [req.session.userpayload.twitter_id, parseInt(req.query.page*appconf.tells_per_page)], function (err, tells) {
                     if (err) throw err; console.log(request.sql);
                     res.send(mustache.render(templates.view_tells, {
+                        "edit_tools": true,
                         "tells": tells
                     }));
                     res.end();
@@ -320,7 +320,9 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                                 "twitter_handle": sanity_1[0].twitter_handle,
                                 "im_config": sanity_1[0].im_config
                                 
-                            });
+                            }).save( function(err){
+                                if (err) throw err;
+                             });
                             return;
                         });
                     });
@@ -374,13 +376,19 @@ app.post("/api/:endpoint", nocache, function(req, res) {
                             // 2) Start Job to check if the user has IM Notifications activated
                             res.json({"err": null, "status": "success"});
                             res.end();
+                            
                             if (replyconfig.send_tweet) {
+                                util.log("Trigger Job to send Tweet")
                                 queue.create("send_tweet", {
+                                    "title": "Send Answer-Tweet for Tell " + req.body.for_tell_id,
                                     "twitter_id": sanity_1[0].for_user_id,
                                     "for_tell_id": req.body.for_tell_id,
-                                    "show_on_page": replyconfig.show_on_page,
-                                    "content": req.body.content
-                                });
+                                    "share_image_twitter": replyconfig.share_image_twitter
+                                }).save( function(err){
+                                    if (err) throw err;
+                                 });
+                            } else {
+                                util.log("Not sending Tweet because of " + replyconfig.send_tweet)
                             }
                             return;
                         });

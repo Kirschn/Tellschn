@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+    <link rel="stylesheet" href="stylesheets/stylesheet.css" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+        <!-- Todo: Schön machen! -->
+    <style>
+        body {
+            height: 100%;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        .tell {
+            height: 100%;
+            vertical-align: middle;
+        }
+        .footer {
+            position: absolute;
+            bottom: 18pt;
+            display: block;
+            width: 100%
+        }
+        .footer_left {
+            display: block;
+            position: absolute;
+            left: 0;
+            text-align: left;
+        }
+        .footer_right {
+            display: block;
+            position: absolute;
+            right: 0;
+            text-align: right;
+        }
+    </style>
+    </head>
+    <body>
+        <span id="tell">
+            <div class="tell">
+                <i>{{tell_content}}</i>
+                <hr class="hr_tell_answer">
+                {{answer_content}}
+            </div>
+            <div class="footer">
+                <span class="footer_left">{{timestamp}}</span>
+                <span class="footer_right">@{{display_name}}</span>
+                
+            </div>
+        </span>
+    </body>
+
+</html>
