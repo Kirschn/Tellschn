@@ -1,34 +1,48 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        
+
+<head>
+
     <link rel="stylesheet" href="stylesheets/stylesheet.css" />
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-        <!-- Todo: Schön machen! -->
+    <!-- Todo: Schön machen! Probleme: Animation darf nicht laufen weil das chrome sonst den screenshot wärend der animation macht, darkmode muss rein-->
     <style>
+        html {
+            height: 100%
+        }
         body {
             height: 100%;
             width: 100%;
             padding: 0;
             margin: 0;
+            animation: none;
+            -moz-animation: none;
+            /* Firefox */
+            -webkit-animation: none;
+            /* Safari and Chrome */
+            -o-animation: none;
         }
+
         .tell {
-            height: 100%;
             vertical-align: middle;
+            min-width: 50%;
         }
+
         .footer {
             position: absolute;
             bottom: 18pt;
             display: block;
             width: 100%
         }
+
         .footer_left {
             display: block;
             position: absolute;
             left: 0;
             text-align: left;
         }
+
         .footer_right {
             display: block;
             position: absolute;
@@ -36,20 +50,29 @@
             text-align: right;
         }
     </style>
-    </head>
-    <body>
-        <span id="tell">
-            <div class="tell">
-                <i>{{tell_content}}</i>
-                <hr class="hr_tell_answer">
-                {{answer_content}}
-            </div>
-            <div class="footer">
-                <span class="footer_left">{{timestamp}}</span>
-                <span class="footer_right">@{{display_name}}</span>
-                
-            </div>
-        </span>
-    </body>
+</head>
+
+<body>
+
+    <div class="tell" id="tell-{{tell_id}}">
+        <div id="tell_content">
+
+            <p id="tell_content_{{tell_id}}">{{tell_content}}</p>
+
+
+            <hr class="hr_tell_answer">
+            <h3>Antwort:</h3>
+            <p id="answer_content_{{tell_id}}">{{answer_content}}</p>
+
+            <hr />
+        </div>
+        <div id="tell_additional">
+           
+            <div id="tell_time"> @{{display_name}}&nbsp;{{timestamp}}</div>
+
+
+        </div>
+    </div>
+</body>
 
 </html>

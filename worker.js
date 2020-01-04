@@ -27,20 +27,21 @@ var connection = mysql.createConnection(accessconf.mysql);
 const session = require('express-session');
 const redis = require('redis');
 const redisClient = redis.createClient();
+
 const redisStore = require('connect-redis')(session);
 redisClient.on('error', (err) => {
     console.log('Redis error: ', err);
   });
-var sessionStorage = new redisStore;
 var mustache = require("mustache");
+var puppeteer = require("puppeteer");
 var templates = {
     "landing": fs.readFileSync("./webview/landing.html", "utf8"),
     "send_tells": fs.readFileSync("./webview/send_tells.html", "utf8"),
     "get_tells": fs.readFileSync("./webview/get_tells.html", "utf8"),
     "view_tells": fs.readFileSync("./webview/assets/view_tells.html", "utf8"),
-    "render_tell": fs.readFileSync("./webview/assets/image_render_tell_template.html", "utf8")
+    "render_tell": fs.readFileSync("./webview/assets/image_render_tell_template.html", "utf8"),
+    "global_stylesheet": fs.readFileSync("./webview/assets/stylesheets/stylesheet.css", "utf8")
 }
-var puppeteer = require("puppeteer");
 var get_public_tweet = "SELECT `answers`.id AS answer_id, `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, "+
 "attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp, answers.was_edited AS answer_was_edited, "+
 "IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, attachment_media.is_mp4 AS is_mp4, "+
@@ -72,17 +73,19 @@ queue.process("send_tweet", async function(job, done) {
         job.log("HTML Rendered. Starting puppeteer");
         const browser = await puppeteer.launch({
             args: ['--no-sandbox'],
-            headless: true
+            headless: false
         });
     
         var page = await browser.newPage();
         job.log("Navigating to HTML");
-        await page.goto(`data:text/html;charset=UTF-8,${html}`, {
+        var randomNumber = Math.floor(Math.random()*2000);
+        fs.writeFileSync("webview/assets/temp_" + randomNumber + ".html", html, "utf8");
+        await page.goto(appconf["local_path"] + "webview/assets/temp_" + randomNumber + ".html", {
             waitUntil: 'networkidle0'
         });
         var base64_tell_img = await page.screenshot({encoding: 'base64'});
 
-        await browser.close();
+        //await browser.close();
         function uploadTweetImage(uploadData, cb) {
             twitter.uploadMedia(uploadData, result[0].oauth_token, result[0].oauth_secret, function (error, media_1_data, media_1_response) {
                 console.log(media_1_data);
@@ -91,6 +94,7 @@ queue.process("send_tweet", async function(job, done) {
             });
         }
         function tweetOut(media) {
+            
             twitter.statuses("update", {
                 status: appconf.base_url + "/" + result[0].twitter_handle + "/" + result[0].answer_id,
                 "media_ids": media
