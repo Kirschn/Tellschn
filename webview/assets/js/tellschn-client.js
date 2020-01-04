@@ -51,7 +51,7 @@ function scrollHandler(apinode, add) {
                 request_in_progress = true;
                 $.get("/api/"+apinode+"?token=" + token + "&page=" + page + add, function(next_page) {
                     document.getElementById("tells").innerHTML += next_page;
-                    if (next_page == "\r\n<p>Hier sind leider keine Tells :c</p>") {
+                    if (next_page.indexOf("keine Tells") != -1) {
                         at_end = true;
                     }
                     request_in_progress = false;

@@ -86,6 +86,7 @@ queue.process("send_tweet", async function(job, done) {
         var base64_tell_img = await page.screenshot({encoding: 'base64'});
 
         //await browser.close();
+        fs.unlinkSync("webview/assets/temp_" + randomNumber + ".html");
         function uploadTweetImage(uploadData, cb) {
             twitter.uploadMedia(uploadData, result[0].oauth_token, result[0].oauth_secret, function (error, media_1_data, media_1_response) {
                 console.log(media_1_data);
