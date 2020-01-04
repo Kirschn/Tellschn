@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.9.0.1
+-- version 4.9.2
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Erstellungszeit: 04. Nov 2019 um 23:24
--- Server-Version: 10.4.6-MariaDB
--- PHP-Version: 7.3.8
+-- Host: localhost
+-- Erstellungszeit: 04. Jan 2020 um 20:35
+-- Server-Version: 10.4.10-MariaDB
+-- PHP-Version: 7.4.0
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -35,7 +35,8 @@ CREATE TABLE `answers` (
   `content` varchar(10000) COLLATE utf8mb4_unicode_520_ci NOT NULL,
   `show_public` tinyint(1) NOT NULL DEFAULT 1,
   `tweet_id` varchar(64) COLLATE utf8mb4_unicode_520_ci DEFAULT NULL,
-  `show_media_public` tinyint(1) DEFAULT NULL
+  `show_media_public` tinyint(1) DEFAULT NULL,
+  `was_edited` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 -- --------------------------------------------------------
