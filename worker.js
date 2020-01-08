@@ -61,6 +61,12 @@ queue.process("send_tweet", async function(job, done) {
         
         if (err) throw err;
         job.log("Send Tweet: SQL Result Successful. Generating Image");
+        if (result[0].answer_content.length > 230) {
+            result[0].answer_content = result[0].answer_content.substr(0,230) + "[...]";
+        }
+        if (result[0].tell_content.length > 230) {
+            result[0].tell_content = result[0].tell_content.substr(0,230) + "[...]";
+        }
         var html = mustache.render(templates.render_tell, {
             "profile_image_url": result[0].profile_pic_original_link,
             "display_name": result[0].twitter_handle,
@@ -68,12 +74,13 @@ queue.process("send_tweet", async function(job, done) {
             "timestamp": dateFormat(result[0].timestamp, "hh:MM:ss dd.mm.yyyy"),
             "has_video": result[0].is_mp4,
             "answer_content": result[0].answer_content,
-            "tell_content": result[0].tell_content
+            "tell_content": result[0].tell_content,
+            "base_url": appconf.base_url
         })
         job.log("HTML Rendered. Starting puppeteer");
         const browser = await puppeteer.launch({
             args: ['--no-sandbox'],
-            headless: false
+            headless: true
         });
     
         var page = await browser.newPage();
@@ -85,7 +92,7 @@ queue.process("send_tweet", async function(job, done) {
         });
         var base64_tell_img = await page.screenshot({encoding: 'base64'});
 
-        //await browser.close();
+        await browser.close();
         fs.unlinkSync("webview/assets/temp_" + randomNumber + ".html");
         function uploadTweetImage(uploadData, cb) {
             twitter.uploadMedia(uploadData, result[0].oauth_token, result[0].oauth_secret, function (error, media_1_data, media_1_response) {
