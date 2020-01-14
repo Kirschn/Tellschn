@@ -5,7 +5,7 @@ function send_tell (to_user_id, content, media, do_not_share, cb) {
     $.post("/api/send_tell?token="+token, {
         "for_user_id": to_user_id,
         "content": content,
-        "image_uid": media,
+        "media_attachment": media,
         "do_not_share": do_not_share
     }, cb)
 };

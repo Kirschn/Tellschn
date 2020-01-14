@@ -26,6 +26,24 @@
         var upload_ready = true;
         var twitter_id = "{{ twitter_id }}";
         var token = "{{ token }}";
+        var media_uuid = null;
+        function checkUploadedFile() {
+            $.get("/api/upload_status?token=" + token, res => {
+                if (res.error != null) {
+                    alert(res.error);
+                    return;
+                }
+                if (res.uuid !== null) {
+                    console.log(res.uuid);
+                    media_uuid = res.uuid;
+                    $("#uploadbuttonContent").html("Hochgeladen!");
+                    return;
+                }
+                $("#uploadbuttonContent").html(res.progress + "%");
+                setTimeout(checkUploadedFile, 1000);
+            })
+
+        }
         function onload() {
             /*var enterAnswerElem = document
                 .querySelector("#enter_tell")
@@ -50,7 +68,7 @@
                 blocked = true;
                 send_tell(twitter_id,
                     $("#enter_tell").val(),
-                    null, //TODO: MEDIA UUID
+                    media_uuid, //TODO: MEDIA UUID
                     $("#tweetable").is(":checked"),
                     function (call) {
                         if (call.status == "success") {
@@ -64,6 +82,37 @@
                             blocked = false;
                         }
                     });
+            });
+            $('#file').on('change', function () {
+                console.log("Catched FIle Change event")
+                var data = new FormData(); // das ist unser Daten-Objekt ...
+                data.append('media', this.files[0]); // ... an die wir unsere Datei anhängen
+                $.ajax({
+                    url: '/api/upload_media?token=' + token, // Wohin soll die Datei geschickt werden?
+                    data: data,          // Das ist unser Datenobjekt.
+                    type: 'POST',         // HTTP-Methode, hier: POST
+                    processData: false,
+                    contentType: false,
+                    xhr: function () {
+                        var xhr = $.ajaxSettings.xhr();
+                        xhr.upload.onprogress = function (evt) {
+                            /* Hier kann man die Fortschrittsanzeige updaten. Beispielsweise prozent = (evt.loaded/evt.total*100); */
+                            var uploadProgress = (evt.loaded / evt.total * 100);
+                            console.log(uploadProgress);
+                            $("#uploadbuttonContent").html(uploadProgress + "%");
+                        };
+                        xhr.upload.onload = function () { console.log('Upload done.') };
+                        return xhr;
+                    },
+                    // und wenn alles erfolgreich verlaufen ist, schreibe eine Meldung
+                    // in das Response-Div
+                    success: function (result) {
+                        console.log(result);
+                        $("#uploadbuttonContent").html("Konvertiere...");
+
+                        checkUploadedFile();
+                    }
+                });
             });
         }
     </script>
@@ -82,8 +131,8 @@
             <div class="tell_actions">
                 <div id="file_upload">
                     <label class="fileContainer">
-                        Bild anhängen
-                        <input id="uploadFile" name="file" type="file">
+                        <span id="uploadbuttonContent">Bild anhängen</span>
+                        <input name="file" type="file" id="file">
                     </label>
                 </div>
                 <div id="private_checkbox">
@@ -100,7 +149,7 @@
         <hr />
         <h2>Öffentliche Antworten:</h2>
         <span id="tells">
-        {{>publicanswers}}
+            {{>publicanswers}}
         </span>
         <footer>Tellschn ist <a href="https://github.com/Kirschn/Tellschn/tree/V2">freie Software</a></footer>
 

@@ -14,6 +14,7 @@ var appconf = JSON.parse(fs.readFileSync("app-config.json", "utf8"));
 const port = process.argv[2] || appconf.express_port;
 var express = require('express');
 var bodyParser = require("body-parser");
+const fileUpload = require('express-fileupload');
 var app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -33,6 +34,7 @@ app.use(session({
     cookie: { secure: false },
     store: new redisStore({ host: 'localhost', port: 6379, client: redisClient, ttl: 86400 }),
 }));
+app.use(fileUpload());
 var kue = require('kue')
     , queue = kue.createQueue();
 var Twitter = require("node-twitter-api");
@@ -290,6 +292,12 @@ app.get("/api/:endpoint", nocache, function (req, res) {
         }
         connection.query(sql, req.session.own_twitter_id, handleResult);
 
+    } else if (req.params.endpoint == "upload_status") {
+        if (req.session.latestUpload == undefined) {
+            res.json({err: "NO_UPLOAD"}).end();
+        } else {
+            res.json(req.session.latestUpload).end();
+        }
     }
 });
 
@@ -531,7 +539,49 @@ app.post("/api/:endpoint", nocache, function (req, res) {
             })
         });
 
-    }
+    } else if (req.params.endpoint == "upload_media") {
+        util.log("Media Upload");
+        if (!req.files || req.files.media == undefined) {
+            return res.status(400).send({"err": "NO_FILE_UPLOADED"});
+        }
+        var random = Math.floor(Math.random()*1000);
+        req.files.media.mv("./tmp/" + random + req.files.media.name, function (error) {
+            if (error) throw error;
+            res.json({"err":null, "status": "success"}).end();
+            console.log("Created Job");
+            var processUploadJob = queue.create("process_uploaded_file", {
+                "tempFileLocation": "./tmp/" + random + req.files.media.name,
+                "title": "Process Uploaded File " + random + req.files.media.name
+            }).save();
+            req.session.latestUpload = {
+                uuid: null,
+                progress: 0,
+                error: null
+            }
+            req.session.save();
+            processUploadJob.on('complete', function(result){
+                console.log('Job completed with data ', result);
+                req.session.latestUpload = {
+                    uuid: result,
+                    progress: 100,
+                    error: null
+                }
+                req.session.save();
+              }).on('failed', function(errorMessage){
+                console.log('Job failed', errorMessage);
+                req.session.latestUpload.error = "ERR_CONVERTING_VIDEO";
+                req.session.save();
+              }).on('progress', function(progress, data){
+                console.log('\r  job #' + processUploadJob.id + ' ' + progress + '% complete with data ', data );
+                req.session.latestUpload = {
+                    "progress": progress,
+                    error: null,
+                    uuid: null
+                }
+                req.session.save();
+              });
+        });
+    } 
 });
 
 
@@ -545,7 +595,7 @@ app.get("/:userpage", nocache, function (req, res) {
         connection.query(get_own_tells_sqlstmt, [req.session.userpayload.twitter_id, 0], function (err, tells) {
             if (err) throw err;
             var custom_conf = JSON.parse(req.session.userpayload.custom_configuration);
-            res.query("SELECT users.twitter_id AS twitter_id, users.twitter_handle AS twitter_handle, users.profile_pic_original_link AS profile_image_url FROM users, user_access_sharing WHERE " + 
+            connection.query("SELECT users.twitter_id AS twitter_id, users.twitter_handle AS twitter_handle, users.profile_pic_original_link AS profile_image_url FROM users, user_access_sharing WHERE " + 
             "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
             [req.session.own_twitter_id, req.session.own_twitter_id], function(error, allowed_account_results) {
                 if (error) throw error;

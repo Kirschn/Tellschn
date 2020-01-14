@@ -8,7 +8,11 @@ Date.prototype.toMysqlFormat = function() {
     return this.getUTCFullYear() + "-" + twoDigits(1 + this.getUTCMonth()) + "-" + twoDigits(this.getUTCDate()) + " " + twoDigits(this.getHours()) + ":" + twoDigits(this.getUTCMinutes()) + ":" + twoDigits(this.getUTCSeconds());
 };
 var fs = require("fs");
+var FileType = require('file-type');
+var uuid = require("uuid/v4");
 var util = require("util");
+var ffmpeg = require('fluent-ffmpeg');
+var Jimp = require('jimp');
 var accessconf = JSON.parse(fs.readFileSync("access-config.json", "utf8"));
 var appconf = JSON.parse(fs.readFileSync("app-config.json", "utf8"));
 var kue = require('kue')
@@ -42,18 +46,116 @@ var templates = {
     "render_tell": fs.readFileSync("./webview/assets/image_render_tell_template.html", "utf8"),
     "global_stylesheet": fs.readFileSync("./webview/assets/stylesheets/stylesheet.css", "utf8")
 }
-var get_public_tweet = "SELECT `answers`.id AS answer_id, `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, "+
-"attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp, answers.was_edited AS answer_was_edited, "+
-"IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, attachment_media.is_mp4 AS is_mp4, "+
+var get_public_tweet = "SELECT `answers`.id AS answer_id, `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, " +
+"attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp, answers.was_edited AS answer_was_edited, " +
+"IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, attachment_media.is_mp4 AS is_mp4, " +
 " attachment_media.size AS filesize, tells.content AS tell_content, users.oauth_token AS oauth_token, users.oauth_secret AS oauth_secret, "+ 
 " users.twitter_handle AS twitter_handle, users.twitter_id AS twitter_id, users.profile_pic_original_link AS profile_pic_original_link " +
-" FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id "+
-"LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment "+
-"LEFT JOIN `users` ON users.twitter_id = tells.for_user_id "+
+" FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id " +
+"LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment " +
+"LEFT JOIN `users` ON users.twitter_id = tells.for_user_id " +
 "WHERE tells.id = ?";
 
-queue.process("ffmpeg-file", function(job, done) {
-    
+queue.process("process_uploaded_file", function(job, done) {
+    util.log("Starting to process new File " + job.data.tempFileLocation);
+    (async () => {
+        function addFileToDatabase(tempLocation, fileext) {
+            util.log("Adding File " + tempLocation + " to Database...");
+            var mediaUUID = uuid();
+            var size = fs.statSync(tempLocation).size;
+
+            fs.renameSync(tempLocation, "./cdn/" + mediaUUID + "." + fileext);
+            util.log("Renamed File to " + mediaUUID + " ...");
+
+            var isMP4 = false;
+            if (fileext == "mp4") {isMP4 = true;}
+            connection.query("INSERT INTO attachment_media (media_uuid, is_mp4, size, cdn_path) VALUES (?)",
+                [[mediaUUID, isMP4, size, mediaUUID + "." + fileext]], function (error, result) {
+                    if (error) throw error;
+                    util.log("Added File to DB " + mediaUUID );
+
+                    done(null, mediaUUID);
+                    return;
+                })
+        }
+
+        var fileinfo = await FileType.fromFile(job.data.tempFileLocation);
+        if (fileinfo == undefined) {
+            util.log("Unsupported Type by library");
+            fs.unlinkSync(job.data.tempFileLocation);
+
+            done(new Error("Unsupported File Type"));
+            return;
+        }
+        if (fileinfo.mime.indexOf("video") != -1) {
+            util.log("Detected Video")
+            if (fileinfo.mime == "video/mp4") {
+                // no further processing needed
+                util.log("MP4")
+                addFileToDatabase(job.data.tempFileLocation, "mp4");
+            } else {
+                util.log("Spawning hbjs")
+                // Converting Videos! Yay!
+                ffmpeg(job.data.tempFileLocation).toFormat("mp4")
+                    .on('end', function () {
+                        util.log('Finished processing');
+                        addFileToDatabase(job.data.tempFileLocation + ".mp4", "mp4");
+                        return;
+                    })
+                    .on('progress', function(progress) {
+                        util.log('Processing: ' + progress.percent + '% done');
+                        job.progress(progress.percent, 100);
+                      })
+                      .on('error', function(err, stdout, stderr) {
+                        util.log('Cannot process video: ' + err.message);
+                        done(new Error(err.message));
+                        return;
+                      })
+                    .save(job.data.tempFileLocation + ".mp4");
+                
+            }
+        } else if (fileinfo.mime.indexOf("image") != -1) {
+            util.log("Detected Image")
+            if (fileinfo.mime == "image/png") {
+                util.log("Detected PNG")
+
+                addFileToDatabase(job.data.tempFileLocation, "png");
+                return;
+            } else if (fileinfo.mime == "image/jpg" || fileinfo.mime == "image/jpeg") {
+                util.log("Detected JPEG")
+
+                addFileToDatabase(job.data.tempFileLocation, "jpg");
+                return;
+            } else if (fileinfo.mime == "image/gif") {
+                util.log("Detected GIF")
+
+                addFileToDatabase(job.data.tempFileLocation, "gif");
+                return;
+            }
+            util.log("Converting with JIMP")
+
+            // Convert Image to accepted format
+            Jimp.read(job.data.tempFileLocation, (err, file) => {
+                if (err) done(err);
+                util.log("Read Image...")
+
+                file
+                  .write(job.data.tempFileLocation + ".jpg", function (err) {
+                      if (err) throw err;
+                      addFileToDatabase(job.data.tempFileLocation + ".jpg", "jpg");
+                  }); // save
+              });
+        } else {
+            util.log("Unsupported File Type, deleting")
+
+            fs.unlinkSync(job.data.tempFileLocation);
+            done(new Error("Unsupported File Type"));
+
+            return;
+        }
+        //=> {ext: 'mp4', mime: 'image/mp4'}
+    }
+    )();
 });
 queue.process("send_tweet", async function(job, done) {
     job.log("Send Tweet: Task Started");
