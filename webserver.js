@@ -83,7 +83,7 @@ var get_own_tells_sqlstmt = "SELECT tells.id AS tell_id, tells.timestamp AS time
     + " IF(answers.content IS NULL, FALSE, TRUE) AS was_answered, answers.content AS answer_content, answers.show_public AS answer_show_public, answers.was_edited AS answer_was_edited,"
     + " answers.tweet_id AS answer_tweet_id, answers.show_media_public AS answer_show_media_public FROM `tells`"
     + " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid"
-    + " LEFT JOIN `answers` ON tells.id = answers.for_tell_id WHERE deleted = 0 AND tells.for_user_id = ? ORDER BY tells.id DESC LIMIT ?,10";
+    + " LEFT JOIN `answers` ON tells.id = answers.for_tell_id WHERE deleted = 0 AND (tells.for_user_id = ? OR answers.id = ?) ORDER BY tells.id DESC LIMIT ?,10";
 var get_public_answers = "SELECT `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp, answers.was_edited AS answer_was_edited, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, tells.content AS tell_content FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment WHERE tells.deleted = 0 AND tells.for_user_id = ? AND answers.show_public = 1 ORDER BY answers.id DESC LIMIT ?,10";
 
 // twitter API Auth callback
@@ -234,7 +234,7 @@ app.get("/api/:endpoint", nocache, function (req, res) {
                 res.end("Es ist einer Fehler aufgetreten.");
             }
             var request = connection.query(get_own_tells_sqlstmt,
-                [req.session.userpayload.twitter_id, parseInt(req.query.page * appconf.tells_per_page)], function (err, tells) {
+                [req.session.userpayload.twitter_id, null, parseInt(req.query.page * appconf.tells_per_page)], function (err, tells) {
                     if (err) throw err; console.log(request.sql);
                     res.send(mustache.render(templates.view_tells, {
                         "edit_tools": true,
@@ -585,14 +585,38 @@ app.post("/api/:endpoint", nocache, function (req, res) {
 });
 
 
-app.get("/:userpage", nocache, function (req, res) {
+app.get("/:userpage", nocache, usrlandHandler);
+app.get("/:userpage/:tell", nocache, preProcessTellShowbox);
+
+function preProcessTellShowbox(req, res) {
+    if (req.params.tell != undefined && parseInt(req.params.tell) != NaN) {
+        var stmt = connection.query(get_own_tells_sqlstmt, [null, req.params.tell, 0], function (error, sqlRes) {
+            if (error) throw error;
+            if (sqlRes[0] == undefined) {
+                usrlandHandler(req, res);
+                console.log("Tell not found", stmt.sql)
+                return;
+            }
+            console.log("Giving Object: ", sqlRes[0])
+            usrlandHandler(req, res, mustache.render(templates.view_tells, {"tells": sqlRes}));
+        })
+    } else {
+        usrlandHandler(req, res);
+        console.log("No Tell ID given")
+    }
+}
+
+function usrlandHandler (req, res, tell_showbox_html) {
+    console.log(tell_showbox_html);
     if (req.session.token == undefined) {
         req.session.token = uuid();
     }
+    
+    
     if (req.session.userpayload !== undefined && req.params.userpage === req.session.userpayload.twitter_handle) {
         // show template for logged in user
 
-        connection.query(get_own_tells_sqlstmt, [req.session.userpayload.twitter_id, 0], function (err, tells) {
+        connection.query(get_own_tells_sqlstmt, [req.session.userpayload.twitter_id, null, 0], function (err, tells) {
             if (err) throw err;
             var custom_conf = JSON.parse(req.session.userpayload.custom_configuration);
             connection.query("SELECT users.twitter_id AS twitter_id, users.twitter_handle AS twitter_handle, users.profile_pic_original_link AS profile_image_url FROM users, user_access_sharing WHERE " + 
@@ -613,7 +637,8 @@ app.get("/:userpage", nocache, function (req, res) {
                 "token": req.session.token,
                 "tells": tells,
                 "edit_tools": true,
-                "available_accounts": allowed_account_results
+                "available_accounts": allowed_account_results,
+                "showcase": tell_showbox_html
             }, { "tell_list": templates.view_tells }));
             res.end();
             })
@@ -641,7 +666,8 @@ app.get("/:userpage", nocache, function (req, res) {
                     "token": req.session.token,
                     "edit_tools": false,
                     "tells": tells,
-                    "was_answered": true
+                    "was_answered": true,
+                    "showbox": tell_showbox_html
                 }, { "publicanswers": templates.view_tells }));
                 res.end();
             });
@@ -649,4 +675,4 @@ app.get("/:userpage", nocache, function (req, res) {
         })
 
     }
-});
+}

@@ -15,11 +15,11 @@
     <meta property="og:url" content="https://tell.kirschn.de/">
     <meta property="og:image" content="https://tell.kirschn.de/assets/images/og.png">
     <meta property="og:type" content="article">
-    <link rel="stylesheet" href="assets/stylesheets/stylesheet.css" />
-    <link rel="icon" href="assets/images/favicon.ico" />
-    <link rel="icon" type="image/png" href="assets/images/favicon.png">
-    <script src="assets/js/jquery-3.4.1.min.js"></script>
-    <script src="assets/js/tellschn-client.js"></script>
+    <link rel="stylesheet" href="/assets/stylesheets/stylesheet.css" />
+    <link rel="icon" href="/assets/images/favicon.ico" />
+    <link rel="icon" type="/image/png" href="/assets/images/favicon.png">
+    <script src="/assets/js/jquery-3.4.1.min.js"></script>
+    <script src="/assets/js/tellschn-client.js"></script>
     <script>
         var custom_page_text = "{{custom_page_text}}";
         var token = "{{token}}";
@@ -29,7 +29,7 @@
 <body>
     <div class="navbar">
         <a href="/">
-            <img class="logo" src="assets/images/logo_white.svg" alt="Tellschn" style="height:2em; margin-top: -0.45em;">
+            <img class="logo" src="/assets/images/logo_white.svg" alt="Tellschn" style="height:2em; margin-top: -0.45em;">
         </a>
 
         <div id="navbar-right">
@@ -39,6 +39,11 @@
         </div>
     </div>
     <div class="loggedin">
+        {{#showcase}}
+        <span id="tellShowcase">
+            {{{showcase}}}
+        </span>
+        {{/showcase}}
         <div id="top">
             <h1>Hallo, @{{display_name}}!</h1>
             <h2>Nachfolgend findest du eine chronologische Übersicht über alle Tells, die du bereits erhalten hast</h2>
@@ -144,7 +149,7 @@
             <div class="popup">
                 <a class="close" href="#">&times;</a>
                 <div class="content">
-                    <img src="assets/images/test_image.jpg" id="lightbox_img"/>
+                    <img src="/assets/images/test_image.jpg" id="lightbox_img"/>
                 </div>
             </div>
         </div>
@@ -160,8 +165,8 @@
         </div>
 
     </div>
-    <script async src="assets/js/charcounter.js"></script>
-    <script async src="assets/js/copy.js"></script>
+    <script async src="/assets/js/charcounter.js"></script>
+    <script async src="/assets/js/copy.js"></script>
     <script>
         var request_in_progress = false;
         var delete_buffer = null;

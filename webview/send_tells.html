@@ -16,11 +16,11 @@
     <meta property="og:url" content="https://tell.kirschn.de/{{display_name}}">
     <meta property="og:image" content="https://tell.kirschn.de/assets/images/og.png">
     <meta property="og:type" content="article">
-    <link rel="stylesheet" href="assets/stylesheets/stylesheet.css" />
-    <link rel="icon" href="assets/images/favicon.ico" />
-    <link rel="icon" type="image/png" href="assets/images/favicon.png">
-    <script src="assets/js/jquery-3.4.1.min.js"></script>
-    <script src="assets/js/tellschn-client.js"></script>
+    <link rel="stylesheet" href="/assets/stylesheets/stylesheet.css" />
+    <link rel="icon" href="/assets/images/favicon.ico" />
+    <link rel="icon" type="image/png" href="/assets/images/favicon.png">
+    <script src="/assets/js/jquery-3.4.1.min.js"></script>
+    <script src="/assets/js/tellschn-client.js"></script>
     <script>
         var blocked = false;
         var upload_ready = true;
@@ -37,9 +37,10 @@
                     console.log(res.uuid);
                     media_uuid = res.uuid;
                     $("#uploadbuttonContent").html("Hochgeladen!");
+                    blocked = false;
                     return;
                 }
-                $("#uploadbuttonContent").html(res.progress + "%");
+                $("#uploadbuttonContent").html("Konvertiere " + res.progress + "%");
                 setTimeout(checkUploadedFile, 1000);
             })
 
@@ -84,6 +85,8 @@
                     });
             });
             $('#file').on('change', function () {
+                if (blocked) return;
+                blocked = true;
                 console.log("Catched FIle Change event")
                 var data = new FormData(); // das ist unser Daten-Objekt ...
                 data.append('media', this.files[0]); // ... an die wir unsere Datei anhängen
@@ -99,7 +102,7 @@
                             /* Hier kann man die Fortschrittsanzeige updaten. Beispielsweise prozent = (evt.loaded/evt.total*100); */
                             var uploadProgress = (evt.loaded / evt.total * 100);
                             console.log(uploadProgress);
-                            $("#uploadbuttonContent").html(uploadProgress + "%");
+                            $("#uploadbuttonContent").html("Upload " + uploadProgress + "%");
                         };
                         xhr.upload.onload = function () { console.log('Upload done.') };
                         return xhr;
@@ -120,10 +123,15 @@
 
 <body onload="onload()">
     <div class="navbar_centered">
-        <a href="/"><img class="logo" src="assets/images/logo_white.svg" alt="Tellschn"
+        <a href="/"><img class="logo" src="/assets/images/logo_white.svg" alt="Tellschn"
                 style="height:2em; margin-top: -0.45em;"></a>
     </div>
     <div class="loggedin">
+        {{#showcase}}
+        <span id="tellShowcase">
+            {{{showcase}}}
+        </span>
+        {{/showcase}}
         <div id="top">
             <h1>Hinterlasse @{{display_name}} einen Tell!</h1>
             <p>{{custom_page_text}}</p>
