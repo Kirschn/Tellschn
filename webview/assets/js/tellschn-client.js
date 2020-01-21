@@ -61,3 +61,19 @@ function scrollHandler(apinode, add) {
         }
     }
 }
+
+function grantUserAccess(twitter_handle, cb) {
+    $.post("/api/grant_user_access?token=" + token, {"twitter_handle": twitter_handle}, function(result) {
+        console.log(result);
+        
+        cb(result);
+    });
+}
+
+function removeUserAccess(twitter_handle, cb) {
+    $.post("/api/remove_user_access?token=" + token, {"twitter_handle": twitter_handle}, function(result) {
+        console.log(result);
+        
+        cb(result);
+    });
+}

@@ -63,9 +63,15 @@ function nocache(req, res, next) {
     next();
 }
 
-app.use("/assets", express.static("./webview/assets"));
 app.use("/cdn", express.static("./cdn"));
+app.use("/assets", express.static("./webview/assets"));
+
 app.get("/", function (req, res) {
+    if (req.session.userpayload != undefined) {
+        res.redirect("/" + req.session.userpayload.twitter_handle);
+        res.end();
+        return;
+    }
     var debug = "";
     if (appconf.debug) {
         debug = JSON.stringify(req.session, null, 4).replace(new RegExp("[\n]+"), "\n<br>");
@@ -132,6 +138,7 @@ app.get("/login/twitter_callback", function (req, res) {
                                         util.log("Inserted data into Table, building Session");
                                         req.session.own_twitter_id = user.id_str;
                                         req.session.userpayload = data;
+                                        req.session.own_userpayload = data;
                                         req.session.requestSecret = undefined;
                                         util.log("Done with User Verify: new user");
 
@@ -157,6 +164,7 @@ app.get("/login/twitter_callback", function (req, res) {
                                         util.log("Storing to session...")
                                         req.session.userpayload = sqlsearchres[0];
                                         req.session.own_twitter_id = user.id_str;
+                                        req.session.own_userpayload = sqlsearchres[0];
                                         req.session.save(function (err) {
                                             if (err) throw err;
                                         })
@@ -267,34 +275,38 @@ app.get("/api/:endpoint", nocache, function (req, res) {
                 res.end();
             })
     } else if (req.params.endpoint == "switch_user") {
-
+        function shiftUserPayload(payload) {
+            req.session.userpayload = payload;
+            req.session.save(function (err) {
+                if (err) throw err;
+            })
+            res.redirect("/" + req.session.userpayload.screen_name);
+            res.end();
+        }
         function handleResult(error, result) {
             if (error) throw error;
 
             if (result[0] == undefined) {
-                res.end("Leider hast du keinen Zugriff auf diesen Benutzer.");
+                res.end("Leider hast du keinen Zugriff auf diesen Benutzer. ");
+                console.log("Failed Switch: " + req.query.twitter_id + req.session.own_twitter_id)
                 return;
             }
-            
-            req.session.userpayload = result[0];
-            req.session.save(function (err) {
-                if (err) throw err;
-            })
-            res.redirect("/" + result[0].screen_name);
-            res.end();
-        }
-        if (req.query.twitter_id != undefined && req.query.twitter_id != null) {
-            var sql = "SELECT users.* FROM users, user_access_sharing WHERE user_access_sharing.to_user_id = users.twitter_id " +
-                "AND user_access_sharing.from_user_id = ? AND user_access_sharing.to_user_id = ?";
 
-        } else {
-            var sql = "SELECT * FROM users WHERE twitter_id = ?";
+            shiftUserPayload(result[0]);
         }
-        connection.query(sql, req.session.own_twitter_id, handleResult);
+        if (req.query.twitter_id == req.session.own_twitter_id) {
+            // switch back to own account
+            shiftUserPayload(req.session.own_userpayload);
+        } else if (req.query.twitter_id != undefined && req.query.twitter_id != null) {
+            var sql = "SELECT users.* FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
+                "AND user_access_sharing.from_user_id = ? AND user_access_sharing.to_user_id = ?";
+            connection.query(sql, [req.query.twitter_id, req.session.own_twitter_id], handleResult);
+        } 
+        
 
     } else if (req.params.endpoint == "upload_status") {
         if (req.session.latestUpload == undefined) {
-            res.json({err: "NO_UPLOAD"}).end();
+            res.json({ err: "NO_UPLOAD" }).end();
         } else {
             res.json(req.session.latestUpload).end();
         }
@@ -303,7 +315,7 @@ app.get("/api/:endpoint", nocache, function (req, res) {
 
 
 app.post("/api/:endpoint", nocache, function (req, res) {
-
+    console.log("POST ENDPOINT " + req.params.endpoint)
     if (req.query.token !== req.session.token) {
         // Token Invalid, Abort Request
         res.write(JSON.stringify({
@@ -492,7 +504,7 @@ app.post("/api/:endpoint", nocache, function (req, res) {
                 });
         }
     } else if (req.params.endpoint == "grant_user_access") {
-
+        console.log("Granting Access Request")
         // endpoint to grant access from another account to your own
         if (req.body.twitter_handle == undefined) {
             res.json({ "err": "INVALID_HANDLE", "status": "failed" });
@@ -542,12 +554,12 @@ app.post("/api/:endpoint", nocache, function (req, res) {
     } else if (req.params.endpoint == "upload_media") {
         util.log("Media Upload");
         if (!req.files || req.files.media == undefined) {
-            return res.status(400).send({"err": "NO_FILE_UPLOADED"});
+            return res.status(400).send({ "err": "NO_FILE_UPLOADED" });
         }
-        var random = Math.floor(Math.random()*1000);
+        var random = Math.floor(Math.random() * 1000);
         req.files.media.mv("./tmp/" + random + req.files.media.name, function (error) {
             if (error) throw error;
-            res.json({"err":null, "status": "success"}).end();
+            res.json({ "err": null, "status": "success" }).end();
             console.log("Created Job");
             var processUploadJob = queue.create("process_uploaded_file", {
                 "tempFileLocation": "./tmp/" + random + req.files.media.name,
@@ -559,7 +571,7 @@ app.post("/api/:endpoint", nocache, function (req, res) {
                 error: null
             }
             req.session.save();
-            processUploadJob.on('complete', function(result){
+            processUploadJob.on('complete', function (result) {
                 console.log('Job completed with data ', result);
                 req.session.latestUpload = {
                     uuid: result,
@@ -567,83 +579,99 @@ app.post("/api/:endpoint", nocache, function (req, res) {
                     error: null
                 }
                 req.session.save();
-              }).on('failed', function(errorMessage){
+            }).on('failed', function (errorMessage) {
                 console.log('Job failed', errorMessage);
                 req.session.latestUpload.error = "ERR_CONVERTING_VIDEO";
                 req.session.save();
-              }).on('progress', function(progress, data){
-                console.log('\r  job #' + processUploadJob.id + ' ' + progress + '% complete with data ', data );
+            }).on('progress', function (progress, data) {
+                console.log('\r  job #' + processUploadJob.id + ' ' + progress + '% complete with data ', data);
                 req.session.latestUpload = {
                     "progress": progress,
                     error: null,
                     uuid: null
                 }
                 req.session.save();
-              });
+            });
         });
-    } 
+    }
 });
 
 
-app.get("/:userpage", nocache, usrlandHandler);
+app.get("/:userpage", nocache, preProcessTellShowbox);
 app.get("/:userpage/:tell", nocache, preProcessTellShowbox);
 
 function preProcessTellShowbox(req, res) {
-    if (req.params.tell != undefined && parseInt(req.params.tell) != NaN) {
+    if (req.params.userpage == "cdn") {
+        // Express static middleware used next() -> 404
+        res.status(404).end("Not Found");
+        return;
+    } else if (req.params.tell != undefined && parseInt(req.params.tell) != NaN) {
         var stmt = connection.query(get_own_tells_sqlstmt, [null, req.params.tell, 0], function (error, sqlRes) {
             if (error) throw error;
             if (sqlRes[0] == undefined) {
-                usrlandHandler(req, res);
+                usrlandHandler(req, res, null);
                 console.log("Tell not found", stmt.sql)
                 return;
             }
             console.log("Giving Object: ", sqlRes[0])
-            usrlandHandler(req, res, mustache.render(templates.view_tells, {"tells": sqlRes}));
+            usrlandHandler(req, res, mustache.render(templates.view_tells, { "tells": sqlRes }));
+            return;
         })
     } else {
-        usrlandHandler(req, res);
+        usrlandHandler(req, res, null);
         console.log("No Tell ID given")
     }
 }
 
-function usrlandHandler (req, res, tell_showbox_html) {
+function usrlandHandler(req, res, tell_showbox_html) {
     console.log(tell_showbox_html);
     if (req.session.token == undefined) {
         req.session.token = uuid();
     }
-    
-    
+
+
     if (req.session.userpayload !== undefined && req.params.userpage === req.session.userpayload.twitter_handle) {
         // show template for logged in user
-
-        connection.query(get_own_tells_sqlstmt, [req.session.userpayload.twitter_id, null, 0], function (err, tells) {
-            if (err) throw err;
-            var custom_conf = JSON.parse(req.session.userpayload.custom_configuration);
-            connection.query("SELECT users.twitter_id AS twitter_id, users.twitter_handle AS twitter_handle, users.profile_pic_original_link AS profile_image_url FROM users, user_access_sharing WHERE " + 
-            "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
-            [req.session.own_twitter_id, req.session.own_twitter_id], function(error, allowed_account_results) {
+        connection.query("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
+            "AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id, function (error, has_access_to) {
                 if (error) throw error;
-                res.send(mustache.render(templates.get_tells, {
-                "profile_image_url": req.session.userpayload.profile_pic_original_link,
-                "display_name": req.session.userpayload.twitter_handle,
-                "custom_configuration": {
-                    "std_tweet": custom_conf.sharetw,
-                    "std_post_feed": custom_conf.shareloc,
-                    "std_tweet_image": custom_conf.shareimgtw,
-                    "std_post_image": custom_conf.shareimgloc
-                },
-                "custom_page_text": req.session.userpayload.custom_page_text,
-                "base_url": appconf.base_url,
-                "token": req.session.token,
-                "tells": tells,
-                "edit_tools": true,
-                "available_accounts": allowed_account_results,
-                "showcase": tell_showbox_html
-            }, { "tell_list": templates.view_tells }));
-            res.end();
+                connection.query(get_own_tells_sqlstmt, [req.session.userpayload.twitter_id, null, 0], function (err, tells) {
+                    if (err) throw err;
+                    var custom_conf = JSON.parse(req.session.userpayload.custom_configuration);
+                    connection.query("SELECT users.twitter_id AS twitter_id, users.twitter_handle AS twitter_handle, users.profile_pic_original_link AS profile_image_url FROM users, user_access_sharing WHERE " +
+                        "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
+                        [req.session.own_twitter_id, req.session.own_twitter_id], function (error, allowed_account_results) {
+                            if (error) throw error;
+                            res.send(mustache.render(templates.get_tells, {
+                                "profile_image_url": req.session.userpayload.profile_pic_original_link,
+                                "display_name": req.session.userpayload.twitter_handle,
+                                "custom_configuration": {
+                                    "std_tweet": custom_conf.sharetw,
+                                    "std_post_feed": custom_conf.shareloc,
+                                    "std_tweet_image": custom_conf.shareimgtw,
+                                    "std_post_image": custom_conf.shareimgloc
+                                },
+                                "custom_page_text": req.session.userpayload.custom_page_text,
+                                "base_url": appconf.base_url,
+                                "token": req.session.token,
+                                "tells": tells,
+                                "edit_tools": true,
+                                "available_accounts": allowed_account_results,
+                                "showcase": tell_showbox_html,
+                                "account_pool": has_access_to,
+                                "base_user": {
+                                    "profile_image_url": req.session.own_userpayload.profile_pic_original_link,
+                                    "display_name": req.session.own_userpayload.twitter_handle,
+                                    "twitter_id": req.session.own_twitter_id
+                                }
+                            }, { "tell_list": templates.view_tells }));
+                            res.end();
+                            return;
+                        })
+
+                })
             })
-            
-        })
+
 
     } else {
         // show template for telling a new tell
@@ -667,7 +695,7 @@ function usrlandHandler (req, res, tell_showbox_html) {
                     "edit_tools": false,
                     "tells": tells,
                     "was_answered": true,
-                    "showbox": tell_showbox_html
+                    "showcase": tell_showbox_html
                 }, { "publicanswers": templates.view_tells }));
                 res.end();
             });

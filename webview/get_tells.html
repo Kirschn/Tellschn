@@ -33,7 +33,12 @@
         </a>
 
         <div id="navbar-right">
-            <a href="profile.html"><img src="{{profile_image_url}}" style="height:2.2em; margin-top: -0.5em;"></a>
+            <div style="margin-right: 3.3rem">
+            {{#account_pool}}
+                <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img src="{{{shared_profile_image_url}}}" alt="{{{shared_display_name}}}" style="height:2.2em; margin-top: -0.5em;"></a>
+            {{/account_pool}}
+            <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img src="{{{base_user.profile_image_url}}}" alt="{{{base_user.display_name}}}" style="height:2.2em; margin-top: -0.5em;"></a>
+            </div>
             <div id="user"><a href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
             </div>
         </div>
