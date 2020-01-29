@@ -288,7 +288,7 @@ app.get("/api/:endpoint", nocache, function (req, res) {
 
             if (result[0] == undefined) {
                 res.end("Leider hast du keinen Zugriff auf diesen Benutzer. ");
-                console.log("Failed Switch: " + req.query.twitter_id + req.session.own_twitter_id)
+                console.log("Failed Switch: ", req.query.twitter_id, req.session.own_twitter_id)
                 return;
             }
 
@@ -301,8 +301,8 @@ app.get("/api/:endpoint", nocache, function (req, res) {
             var sql = "SELECT users.* FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
                 "AND user_access_sharing.from_user_id = ? AND user_access_sharing.to_user_id = ?";
             connection.query(sql, [req.query.twitter_id, req.session.own_twitter_id], handleResult);
-        } 
-        
+        }
+
 
     } else if (req.params.endpoint == "upload_status") {
         if (req.session.latestUpload == undefined) {
@@ -593,6 +593,135 @@ app.post("/api/:endpoint", nocache, function (req, res) {
                 req.session.save();
             });
         });
+    } else if (req.params.endpoint == "change_setting") {
+
+        /* Params: String custom_page_text Bools: default_share_twitter/local default_share_img_local/twitter*/
+        if (typeof req.body.custom_page_text == "string") {
+            console.log("API SETTING CHANGE: CUSTOM PAGE TEXT")
+            // change Custom Page Text (MySQL Field in user table)
+            var sql = "UPDATE users SET custom_page_text = ? WHERE twitter_id = ?";
+            var quer = connection.query(sql, [req.body.custom_page_text, req.session.userpayload.twitter_id], function (error, result) {
+                console.log(quer.sql);
+                if (error) throw error;
+                req.session.custom_page_text = req.body.custom_page_text;
+                req.session.save(() => {
+                    res.json({ "err": null, "status": "success" });
+                    res.end();
+                })
+
+            });
+        }
+        if (typeof req.body.default_share_twitter == "string") {
+            if (req.body.default_share_twitter == "true") {
+                req.body.default_share_twitter = true;
+            } else {
+                req.body.default_share_twitter = false;
+            }
+            console.log("API SETTING CHANGE: DEFAULT SHARE TWITTER")
+            // change default value (value in config field JSON)
+            connection.query("SELECT custom_configuration FROM users WHERE twitter_id = ?", req.session.userpayload.twitter_id, function (error, sqlRes) {
+                if (error) throw error;
+                var customConfig = JSON.parse(sqlRes[0].custom_configuration);
+                console.log(customConfig);
+                customConfig.sharetw = req.body.default_share_twitter;
+
+                console.log(customConfig);
+                customConfig = JSON.stringify(customConfig)
+
+                console.log(customConfig);
+                var sql = "UPDATE users SET custom_configuration = ? WHERE twitter_id = ?";
+                connection.query(sql, [customConfig, req.session.userpayload.twitter_id], function (error, result) {
+                    if (error) throw error;
+                    console.log(customConfig);
+                    req.session.userpayload.custom_configuration = customConfig;
+
+                
+                    req.session.save((error) => {
+                        if (error) throw error;
+                        res.json({ "err": null, "status": "success" });
+                        res.end();
+                    })
+
+                });
+            });
+        }
+        if (typeof req.body.default_share_local == "string") {
+            if (req.body.default_share_local == "true") {
+                req.body.default_share_local = true;
+            } else {
+                req.body.default_share_local = false;
+            }
+            console.log("API SETTING CHANGE: DEFAULT SHARE LOCAL")
+            // change default value (value in config field JSON)
+            connection.query("SELECT custom_configuration FROM users WHERE twitter_id = ?", req.session.userpayload.twitter_id, function (error, sqlRes) {
+                if (error) throw error;
+                var customConfig = JSON.parse(sqlRes[0].custom_configuration);
+                customConfig.shareloc = req.body.default_share_local;
+                customConfig = JSON.stringify(customConfig)
+                var sql = "UPDATE users SET custom_configuration = ? WHERE twitter_id = ?";
+                connection.query(sql, [customConfig, req.session.userpayload.twitter_id], function (error, result) {
+                    if (error) throw error;
+                    req.session.userpayload.custom_configuration = customConfig;
+                    req.session.save(() => {
+                        res.json({ "err": null, "status": "success" });
+                        res.end();
+                    })
+
+                });
+            });
+        }
+        if (typeof req.body.default_share_img_local == "string") {
+            if (req.body.default_share_img_local == "true") {
+                req.body.default_share_img_local = true;
+            } else {
+                req.body.default_share_img_local = false;
+            }
+            console.log("API SETTING CHANGE: DEFAULT SHARE IMG LOCAL")
+            // change default value (value in config field JSON)
+            connection.query("SELECT custom_configuration FROM users WHERE twitter_id = ?", req.session.userpayload.twitter_id, function (error, sqlRes) {
+                if (error) throw error;
+                var customConfig = JSON.parse(sqlRes[0].custom_configuration);
+                customConfig.shareimgloc = req.body.default_share_img_local;
+                customConfig = JSON.stringify(customConfig)
+                var sql = "UPDATE users SET custom_configuration = ? WHERE twitter_id = ?";
+                connection.query(sql, [customConfig, req.session.userpayload.twitter_id], function (error, result) {
+                    if (error) throw error;
+                    req.session.userpayload.custom_configuration = customConfig;
+                    req.session.save(() => {
+                        res.json({ "err": null, "status": "success" });
+                        res.end();
+                    })
+
+                });
+            });
+        }
+        if (typeof req.body.default_share_img_twitter == "string") {
+            if (req.body.default_share_img_twitter == "true") {
+                req.body.default_share_img_twitter = true;
+            } else {
+                req.body.default_share_img_twitter = false;
+            }
+            console.log("API SETTING CHANGE: DEFAULT SHARE IMAGE TWITTER")
+            // change default value (value in config field JSON)
+            connection.query("SELECT custom_configuration FROM users WHERE twitter_id = ?", req.session.userpayload.twitter_id, function (error, sqlRes) {
+                if (error) throw error;
+                var customConfig = JSON.parse(sqlRes[0].custom_configuration);
+                customConfig.shareimgtw = req.body.default_share_img_twitter;
+                customConfig = JSON.stringify(customConfig)
+                var sql = "UPDATE users SET custom_configuration = ? WHERE twitter_id = ?";
+                connection.query(sql, [customConfig, req.session.userpayload.twitter_id], function (error, result) {
+                    if (error) throw error;
+                    req.session.userpayload.custom_configuration = customConfig;
+                    req.session.save(() => {
+                        res.json({ "err": null, "status": "success" });
+                        res.end();
+                    })
+
+                });
+            });
+
+        }
+
     }
 });
 
@@ -601,6 +730,7 @@ app.get("/:userpage", nocache, preProcessTellShowbox);
 app.get("/:userpage/:tell", nocache, preProcessTellShowbox);
 
 function preProcessTellShowbox(req, res) {
+    if (appconf.debug) console.log(req.session);
     if (req.params.userpage == "cdn") {
         // Express static middleware used next() -> 404
         res.status(404).end("Not Found");

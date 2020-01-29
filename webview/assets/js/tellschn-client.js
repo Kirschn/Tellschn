@@ -77,3 +77,12 @@ function removeUserAccess(twitter_handle, cb) {
         cb(result);
     });
 }
+function setConfigParameter(param, value, cb) {
+    var settings = {};
+    settings[param] = value;
+    $.post("/api/change_setting?token=" + token, settings, function(response) {
+        console.log(result);
+        cb(response);
+        return;
+    })
+}
