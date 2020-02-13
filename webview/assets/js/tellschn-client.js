@@ -20,8 +20,17 @@ function reply_to_tell (to_tell_id, content, send_tweet, on_page, share_image_tw
             "share_image_twtter": share_image_twitter,
             "show_image_page": share_image_page
         })
-    }, cb)
+    }, (result) => {
+        if (result.error != null) cb(result);
+        setConfigParameter({
+            "default_share_twitter": send_tweet,
+            "default_share_local": on_page,
+            "default_share_img_twitter": share_image_twitter,
+            "default_share_img_local": share_image_page
+        }, cb)
+    })
 }
+
 function delete_tell (tell_id, cb) {
     $.post("/api/delete_tell?token=" + token, {
         "tell_id": tell_id
@@ -44,7 +53,6 @@ function scrollHandler(apinode, add) {
     if (add == undefined) {add = ""};
 
     window.onscroll = function (ev) {
-        console.log(window.innerHeight, window.scrollY, document.body.offsetHeight)
         if ((window.innerHeight+window.scrollY) > (document.body.offsetHeight - window.innerHeight/4)) {
             // nachladen
             if (!request_in_progress && ! at_end) {
@@ -77,11 +85,10 @@ function removeUserAccess(twitter_handle, cb) {
         cb(result);
     });
 }
-function setConfigParameter(param, value, cb) {
-    var settings = {};
-    settings[param] = value;
+function setConfigParameter(settings, cb) {
+
     $.post("/api/change_setting?token=" + token, settings, function(response) {
-        console.log(result);
+        console.log(response);
         cb(response);
         return;
     })

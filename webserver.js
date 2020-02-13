@@ -52,7 +52,8 @@ var templates = {
     "send_tells": fs.readFileSync("./webview/send_tells.html", "utf8"),
     "get_tells": fs.readFileSync("./webview/get_tells.html", "utf8"),
     "view_tells": fs.readFileSync("./webview/assets/view_tells.html", "utf8"),
-    "render_tell": fs.readFileSync("./webview/assets/image_render_tell_template.html", "utf8")
+    "render_tell": fs.readFileSync("./webview/assets/image_render_tell_template.html", "utf8"),
+    "settings_page": fs.readFileSync("./webview/settings.html", "utf8")
 }
 var connection = mysql.createConnection(accessconf.mysql);
 var token_secret_index = [];
@@ -91,6 +92,15 @@ var get_own_tells_sqlstmt = "SELECT tells.id AS tell_id, tells.timestamp AS time
     + " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid"
     + " LEFT JOIN `answers` ON tells.id = answers.for_tell_id WHERE deleted = 0 AND (tells.for_user_id = ? OR answers.id = ?) ORDER BY tells.id DESC LIMIT ?,10";
 var get_public_answers = "SELECT `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp, answers.was_edited AS answer_was_edited, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, tells.content AS tell_content FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment WHERE tells.deleted = 0 AND tells.for_user_id = ? AND answers.show_public = 1 ORDER BY answers.id DESC LIMIT ?,10";
+
+function mysql_result_time_to_string(result_object, date_key) {
+    let bufferObject = [];
+    result_object.forEach((currentObject) => {
+        currentObject[date_key] = dateFormat(currentObject[date_key], "dd.mm.yyyy hh:MM") + " Uhr";
+        bufferObject.push(currentObject);
+    });
+    return bufferObject;
+}
 
 // twitter API Auth callback
 app.get("/login/twitter_callback", function (req, res) {
@@ -202,6 +212,44 @@ app.listen(port, function () {
     util.log(port, 'Webserver online on Port ' + port + '!');
 });
 
+app.get("/settings", nocache, (req, res) => {
+    if (req.session.own_twitter_id == undefined) {
+        res.redirect("/");
+        res.end();
+    }
+    connection.query("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
+            "AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id, function (error, has_access_to) {
+                if (error) throw error;
+                
+                    connection.query("SELECT users.twitter_id AS to_twitter_id, users.twitter_handle AS to_user_screen_name, users.profile_pic_original_link AS profile_image_url, user_access_sharing.granted_at AS granted_at FROM users, user_access_sharing WHERE " +
+                        "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
+                        [req.session.own_twitter_id, req.session.own_twitter_id], function (error, allowed_account_results) {
+                            allowed_account_results = mysql_result_time_to_string(allowed_account_results, "granted_at");
+                            if (error) throw error;
+                            res.send(mustache.render(templates.settings_page, {
+                                "profile_image_url": req.session.userpayload.profile_pic_original_link,
+                                "display_name": req.session.userpayload.twitter_handle,
+                                "is_own_account": (req.session.userpayload.twitter_id == req.session.own_twitter_id),
+                                "custom_page_text": req.session.userpayload.custom_page_text,
+                                "base_url": appconf.base_url,
+                                "token": req.session.token,
+                                "edit_tools": true,
+                                "user_access_sharing": allowed_account_results,
+                                "account_pool": has_access_to,
+                                "base_user": {
+                                    "profile_image_url": req.session.own_userpayload.profile_pic_original_link,
+                                    "display_name": req.session.own_userpayload.twitter_handle,
+                                    "twitter_id": req.session.own_twitter_id
+                                }
+                            }));
+                            res.end();
+                            return;
+                        })
+
+                
+            })
+})
+
 app.get("/api/:endpoint", nocache, function (req, res) {
     if (req.params.endpoint === "session_info") {
         // return general information about the logged in user
@@ -243,6 +291,7 @@ app.get("/api/:endpoint", nocache, function (req, res) {
             }
             var request = connection.query(get_own_tells_sqlstmt,
                 [req.session.userpayload.twitter_id, null, parseInt(req.query.page * appconf.tells_per_page)], function (err, tells) {
+                    tells = mysql_result_time_to_string(tells, "timestamp")
                     if (err) throw err; console.log(request.sql);
                     res.send(mustache.render(templates.view_tells, {
                         "edit_tools": true,
@@ -266,6 +315,7 @@ app.get("/api/:endpoint", nocache, function (req, res) {
         }
         var request = connection.query(get_public_answers,
             [req.query.twitter_id, parseInt(req.query.page) * appconf.tells_per_page], function (err, tells) {
+                tells = mysql_result_time_to_string(tells, "timestamp")
                 if (err) throw err; console.log(request.sql);
                 tells.has_answer = true;
                 tells.edit_tools = false;
@@ -598,12 +648,16 @@ app.post("/api/:endpoint", nocache, function (req, res) {
         /* Params: String custom_page_text Bools: default_share_twitter/local default_share_img_local/twitter*/
         if (typeof req.body.custom_page_text == "string") {
             console.log("API SETTING CHANGE: CUSTOM PAGE TEXT")
+            if (req.body.custom_page_text.length > 1000) {
+                res.json({"err": "CUSTOM_PAGE_TEXT_TOO_LONG", status: "failed"}).end();
+                return;
+            }
             // change Custom Page Text (MySQL Field in user table)
             var sql = "UPDATE users SET custom_page_text = ? WHERE twitter_id = ?";
             var quer = connection.query(sql, [req.body.custom_page_text, req.session.userpayload.twitter_id], function (error, result) {
                 console.log(quer.sql);
                 if (error) throw error;
-                req.session.custom_page_text = req.body.custom_page_text;
+                req.session.userpayload.custom_page_text = req.body.custom_page_text;
                 req.session.save(() => {
                     res.json({ "err": null, "status": "success" });
                     res.end();
@@ -726,6 +780,8 @@ app.post("/api/:endpoint", nocache, function (req, res) {
 });
 
 
+
+
 app.get("/:userpage", nocache, preProcessTellShowbox);
 app.get("/:userpage/:tell", nocache, preProcessTellShowbox);
 
@@ -737,6 +793,7 @@ function preProcessTellShowbox(req, res) {
         return;
     } else if (req.params.tell != undefined && parseInt(req.params.tell) != NaN) {
         var stmt = connection.query(get_own_tells_sqlstmt, [null, req.params.tell, 0], function (error, sqlRes) {
+            sqlRes = mysql_result_time_to_string(sqlRes, "timestamp")
             if (error) throw error;
             if (sqlRes[0] == undefined) {
                 usrlandHandler(req, res, null);
@@ -760,12 +817,12 @@ function usrlandHandler(req, res, tell_showbox_html) {
     }
 
 
-    if (req.session.userpayload !== undefined && req.params.userpage === req.session.userpayload.twitter_handle) {
+    if (req.session.userpayload !== undefined && req.params.userpage === req.session.userpayload.twitter_handle && req.session.own_twitter_id !== undefined) {
         // show template for logged in user
-        connection.query("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
-            "AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id, function (error, has_access_to) {
+        connection.query("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id, function (error, has_access_to) {
                 if (error) throw error;
                 connection.query(get_own_tells_sqlstmt, [req.session.userpayload.twitter_id, null, 0], function (err, tells) {
+                    tells = mysql_result_time_to_string(tells, "timestamp")
                     if (err) throw err;
                     var custom_conf = JSON.parse(req.session.userpayload.custom_configuration);
                     connection.query("SELECT users.twitter_id AS twitter_id, users.twitter_handle AS twitter_handle, users.profile_pic_original_link AS profile_image_url FROM users, user_access_sharing WHERE " +
@@ -814,6 +871,7 @@ function usrlandHandler(req, res, tell_showbox_html) {
                 return;
             }
             connection.query(get_public_answers, [result[0].twitter_id, 0], function (err, tells) {
+                tells = mysql_result_time_to_string(tells, "timestamp")
                 if (err) throw err;
                 res.send(mustache.render(templates.send_tells, {
                     "profile_image_url": result[0].profile_pic_original_link,

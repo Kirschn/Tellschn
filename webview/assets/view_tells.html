@@ -30,9 +30,7 @@
                 <div id="tell_time">{{timestamp}}</div>
                 {{#edit_tools}}
                 <!-- TODO: Schön machen-->
-                {{#answer_tweet_id}}
-                <a href="https://twitter.com/{{display_name}}/status/{{answer_tweet_id}}">Zum Tweet</a>
-                {{/answer_tweet_id}}
+                
                 {{#do_not_share}}
                 <div id="button">
                         <a class="answer_private">Privat</a>
@@ -40,6 +38,7 @@
                 {{/do_not_share}}
                 {{^do_not_share}}
                 <div id="button">
+                    
                     {{^was_answered}}
                     <a class="answer" href="#answer" onclick="fillanswermodal('{{tell_id}}', {{has_media}})">Antworten</a>
                     {{/was_answered}}
@@ -51,6 +50,9 @@
                 {{/do_not_share}}
                 
                 <div id="button">
+                    {{#answer_tweet_id}}
+                    <a class="answer" href="https://twitter.com/{{display_name}}/status/{{answer_tweet_id}}">Zum Tweet</a>
+                    {{/answer_tweet_id}}
                     <a class="delete" href="#confirm_delete" onclick="filldeletemodal('{{tell_id}}')">Löschen</a>
                 </div>
                 {{/edit_tools}}
