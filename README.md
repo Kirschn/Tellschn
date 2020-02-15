@@ -1,11 +1,11 @@
 # Tellschn
 
-Eine Open-Source Implementation von "Tellonym"
+Eine Open-Source Implementation von "Tellonym", entwickelt in node.js mithilfe des Express Frameworks.
 
-
-El Link: [tell.kirschn.de](https://tell.kirschn.de)
-
-Info: Dieses Repo enthält nur die Softwarestücke, die ich selbst geschrieben habe. Es werden zwei weitere Bibliotheken genutzt:
-
-- Codebird <https://github.com/jublonet/codebird-php>
-- Login with Twitter PHP Snippet <http://www.codexworld.com/login-with-twitter-using-php/>
+Features:
+- Social Media Share Funktionen
+- Anbindung an Twitter
+- Foto & Video Upload mit automatischem Transcoding
+- Eigene Gestaltung der Profilseite
+- Nutzer kann Zugriff auf den eigenen Account an andere Nutzer teilen
+- Telegram Benachrichtigungen
