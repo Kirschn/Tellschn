@@ -1,12 +1,14 @@
 function twoDigits(d) {
-    if(0 <= d && d < 10) return "0" + d.toString();
-    if(-10 < d && d < 0) return "-0" + (-1*d).toString();
+    if (0 <= d && d < 10) return "0" + d.toString();
+    if (-10 < d && d < 0) return "-0" + (-1 * d).toString();
     return d.toString();
 }
- 
-Date.prototype.toMysqlFormat = function() {
+
+Date.prototype.toMysqlFormat = function () {
     return this.getUTCFullYear() + "-" + twoDigits(1 + this.getUTCMonth()) + "-" + twoDigits(this.getUTCDate()) + " " + twoDigits(this.getHours()) + ":" + twoDigits(this.getUTCMinutes()) + ":" + twoDigits(this.getUTCSeconds());
 };
+const tellschn = require("./tellschn_classes.js");
+var Tellschn = new tellschn.Tellschn();
 var fs = require("fs");
 var FileType = require('file-type');
 var uuid = require("uuid/v4");
@@ -16,7 +18,7 @@ var Jimp = require('jimp');
 var accessconf = JSON.parse(fs.readFileSync("access-config.json", "utf8"));
 var appconf = JSON.parse(fs.readFileSync("app-config.json", "utf8"));
 var kue = require('kue')
-, queue = kue.createQueue();
+    , queue = kue.createQueue();
 var Twitter = require("node-twitter-api");
 var twitter = new Twitter({
     consumerKey: accessconf.twitter["consumer_key"],
@@ -26,7 +28,7 @@ var twitter = new Twitter({
 var dateFormat = require("dateformat");
 accessconf.mysql.encoding = 'utf8';
 accessconf.mysql.charset = 'utf8mb4';
-var mysql      = require('mysql');
+var mysql = require('mysql');
 var connection = mysql.createConnection(accessconf.mysql);
 const session = require('express-session');
 const redis = require('redis');
@@ -35,7 +37,7 @@ const redisClient = redis.createClient();
 const redisStore = require('connect-redis')(session);
 redisClient.on('error', (err) => {
     console.log('Redis error: ', err);
-  });
+});
 var mustache = require("mustache");
 var puppeteer = require("puppeteer");
 var templates = {
@@ -47,16 +49,16 @@ var templates = {
     "global_stylesheet": fs.readFileSync("./webview/assets/stylesheets/stylesheet.css", "utf8")
 }
 var get_public_tweet = "SELECT `answers`.id AS answer_id, `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, " +
-"attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp, answers.was_edited AS answer_was_edited, " +
-"IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, attachment_media.is_mp4 AS is_mp4, " +
-" attachment_media.size AS filesize, tells.content AS tell_content, users.oauth_token AS oauth_token, users.oauth_secret AS oauth_secret, "+ 
-" users.twitter_handle AS twitter_handle, users.twitter_id AS twitter_id, users.profile_pic_original_link AS profile_pic_original_link " +
-" FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id " +
-"LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment " +
-"LEFT JOIN `users` ON users.twitter_id = tells.for_user_id " +
-"WHERE tells.id = ?";
+    "attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp, answers.was_edited AS answer_was_edited, " +
+    "IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, attachment_media.is_mp4 AS is_mp4, " +
+    " attachment_media.size AS filesize, tells.content AS tell_content, users.oauth_token AS oauth_token, users.oauth_secret AS oauth_secret, " +
+    " users.twitter_handle AS twitter_handle, users.twitter_id AS twitter_id, users.profile_pic_original_link AS profile_pic_original_link " +
+    " FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id " +
+    "LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment " +
+    "LEFT JOIN `users` ON users.twitter_id = tells.for_user_id " +
+    "WHERE tells.id = ?";
 
-queue.process("process_uploaded_file", function(job, done) {
+queue.process("process_uploaded_file", function (job, done) {
     util.log("Starting to process new File " + job.data.tempFileLocation);
     (async () => {
         function addFileToDatabase(tempLocation, fileext) {
@@ -68,11 +70,11 @@ queue.process("process_uploaded_file", function(job, done) {
             util.log("Renamed File to " + mediaUUID + " ...");
 
             var isMP4 = false;
-            if (fileext == "mp4") {isMP4 = true;}
+            if (fileext == "mp4") { isMP4 = true; }
             connection.query("INSERT INTO attachment_media (media_uuid, is_mp4, size, cdn_path) VALUES (?)",
                 [[mediaUUID, isMP4, size, mediaUUID + "." + fileext]], function (error, result) {
                     if (error) throw error;
-                    util.log("Added File to DB " + mediaUUID );
+                    util.log("Added File to DB " + mediaUUID);
 
                     done(null, mediaUUID);
                     return;
@@ -102,17 +104,17 @@ queue.process("process_uploaded_file", function(job, done) {
                         addFileToDatabase(job.data.tempFileLocation + ".mp4", "mp4");
                         return;
                     })
-                    .on('progress', function(progress) {
+                    .on('progress', function (progress) {
                         util.log('Processing: ' + progress.percent + '% done');
                         job.progress(progress.percent, 100);
-                      })
-                      .on('error', function(err, stdout, stderr) {
+                    })
+                    .on('error', function (err, stdout, stderr) {
                         util.log('Cannot process video: ' + err.message);
                         done(new Error(err.message));
                         return;
-                      })
+                    })
                     .save(job.data.tempFileLocation + ".mp4");
-                
+
             }
         } else if (fileinfo.mime.indexOf("image") != -1) {
             util.log("Detected Image")
@@ -140,11 +142,11 @@ queue.process("process_uploaded_file", function(job, done) {
                 util.log("Read Image...")
 
                 file
-                  .write(job.data.tempFileLocation + ".jpg", function (err) {
-                      if (err) throw err;
-                      addFileToDatabase(job.data.tempFileLocation + ".jpg", "jpg");
-                  }); // save
-              });
+                    .write(job.data.tempFileLocation + ".jpg", function (err) {
+                        if (err) throw err;
+                        addFileToDatabase(job.data.tempFileLocation + ".jpg", "jpg");
+                    }); // save
+            });
         } else {
             util.log("Unsupported File Type, deleting")
 
@@ -157,17 +159,17 @@ queue.process("process_uploaded_file", function(job, done) {
     }
     )();
 });
-queue.process("send_tweet", async function(job, done) {
+queue.process("send_tweet", async function (job, done) {
     job.log("Send Tweet: Task Started");
-    connection.query(get_public_tweet, job.data.for_tell_id, async function(err, result) {
-        
+    connection.query(get_public_tweet, job.data.for_tell_id, async function (err, result) {
+
         if (err) throw err;
         job.log("Send Tweet: SQL Result Successful. Generating Image");
         if (result[0].answer_content.length > 230) {
-            result[0].answer_content = result[0].answer_content.substr(0,230) + "[...]";
+            result[0].answer_content = result[0].answer_content.substr(0, 230) + "[...]";
         }
         if (result[0].tell_content.length > 230) {
-            result[0].tell_content = result[0].tell_content.substr(0,230) + "[...]";
+            result[0].tell_content = result[0].tell_content.substr(0, 230) + "[...]";
         }
         var html = mustache.render(templates.render_tell, {
             "profile_image_url": result[0].profile_pic_original_link,
@@ -184,15 +186,15 @@ queue.process("send_tweet", async function(job, done) {
             args: ['--no-sandbox'],
             headless: true
         });
-    
+
         var page = await browser.newPage();
         job.log("Navigating to HTML");
-        var randomNumber = Math.floor(Math.random()*2000);
+        var randomNumber = Math.floor(Math.random() * 2000);
         fs.writeFileSync("webview/assets/temp_" + randomNumber + ".html", html, "utf8");
         await page.goto(appconf["local_path"] + "webview/assets/temp_" + randomNumber + ".html", {
             waitUntil: 'networkidle0'
         });
-        var base64_tell_img = await page.screenshot({encoding: 'base64'});
+        var base64_tell_img = await page.screenshot({ encoding: 'base64' });
 
         await browser.close();
         fs.unlinkSync("webview/assets/temp_" + randomNumber + ".html");
@@ -200,30 +202,30 @@ queue.process("send_tweet", async function(job, done) {
             twitter.uploadMedia(uploadData, result[0].oauth_token, result[0].oauth_secret, function (error, media_1_data, media_1_response) {
                 console.log(media_1_data);
                 cb(media_1_data.media_id_string)
-                
+
             });
         }
         function tweetOut(media) {
-            
+
             twitter.statuses("update", {
                 status: appconf.base_url + "/" + result[0].twitter_handle + "/" + result[0].answer_id,
                 "media_ids": media
             },
-            result[0].oauth_token,
-            result[0].oauth_secret,
-            function(error, data, response) {
-                if (error) {
-                    console.log(error);
-                } else {
-                    if (data.id_str !== undefined) {
-                        connection.query("UPDATE answers SET tweet_id = ? where id = ?", [data.id_str, result[0].answer_id], function (err) {
-                            if (err) throw err;
-                            done();
-                        })
+                result[0].oauth_token,
+                result[0].oauth_secret,
+                function (error, data, response) {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        if (data.id_str !== undefined) {
+                            connection.query("UPDATE answers SET tweet_id = ? where id = ?", [data.id_str, result[0].answer_id], function (err) {
+                                if (err) throw err;
+                                done();
+                            })
+                        }
                     }
                 }
-            }
-        );
+            );
         }
         uploadTweetImage({
             media: base64_tell_img,
@@ -241,6 +243,27 @@ queue.process("send_tweet", async function(job, done) {
                 tweetOut(textImgID)
             }
         })
-        
+
     })
+});
+
+queue.process("send_instant_msg_notification", async (job, done) => {
+    util.log("Got Job for delivering Instant Message Jobs");
+    try {
+        let rows = await Tellschn.sqlQuery("SELECT platform, address FROM user_notification_connections WHERE twitter_id = ? AND address IS NOT NULL", job.data.userpayload.twitter_id)
+        rows.forEach(currentRow => {
+            switch (currentRow.platform) {
+                case "telegram": 
+                    job.data.chat_id = currentRow.address;
+                    queue.create("send_telegram_notification_message", job.data).save(done);
+                break;
+                default: 
+                    done();
+                break;
+            }
+        })
+        done()
+    } catch (e) {
+        done(e);
+    }
 });

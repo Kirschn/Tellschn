@@ -28,7 +28,7 @@ Einstellungsoptionen:
     <script src="/assets/js/jquery-3.4.1.min.js"></script>
     <script src="/assets/js/tellschn-client.js"></script>
     <script>
-        var custom_page_text = "{{custom_page_text}}";
+        var custom_page_text = "{{userpayload.custom_page_text}}";
         var token = "{{token}}";
     </script>
 </head>
@@ -54,12 +54,12 @@ Einstellungsoptionen:
     <div class="loggedin">
        
         <div id="top">
-            <h1>Einstellungen</h1>
-            <h2>{{display_name}}, nachfolgend findest ein paar Einstellungen, die du für dein Profil tätigen kannst</h2>
+            <h1>{{text_modules.settings_headline}}</h1>
+            <h2>{{text_modules.settings_general_information}}</h2>
         </div>
         <hr/>
         <div class="tell" id="settings_custom_page_text">
-            Dieser Text wird oben auf deinem Profil angezeigt:
+            {{text_modules.settings_custom_text_information}}
             <br>
 
             <div id="tell_content">
@@ -70,7 +70,7 @@ Einstellungsoptionen:
                 <hr>
                 
                 <div id="button">
-                    <a class="answer" onclick="updateCustomPageText()">Speichern</a>
+                    <a class="answer" onclick="updateCustomPageText()">{{text_modules.save}}</a>
                 </div>
                
             </div>
@@ -80,18 +80,18 @@ Einstellungsoptionen:
         
         <div class="tell" id="settings_list_of_external_accounts_with_access">
             <div id="tell_content">
-                Diesen Accounts hast zu Zugriff auf deinen Account gewährt:<br />
+                {{text_modules.settings_allowed_access_information}}<br />
                 <table>
                     <thead>
                         <tr>
                             <th>
-                                Account
+                                {{text_modules.account}}
                             </th>
                             <th>
-                                Hinzugefügt
+                                {{text_modules.added}}
                             </th>
                             <th>
-                                Aktionen
+                                {{text_modules.actions}}
                             </th>
                         </tr>
                     </thead>
@@ -106,7 +106,7 @@ Einstellungsoptionen:
                                 </td>
                                 <td>
                                     <div id="button">
-                                        <a class="delete" onclick="button_removeUserAccess('{{to_user_screen_name}}')">Entfernen</a>
+                                        <a class="delete" onclick="button_removeUserAccess('{{to_user_screen_name}}')">{{text_modules.remove}}</a>
                                     </div>
                                 </td>
                             </tr>
@@ -114,7 +114,7 @@ Einstellungsoptionen:
                         {{^user_access_sharing}}
                         <tr>
                             <td>
-                                Du hast niemandem Zugriff auf dein Tellschn Profil gewährt.
+                                {{text_modules.settings_no_access_granted}}
                             </td>
 
                         </tr>
@@ -126,13 +126,11 @@ Einstellungsoptionen:
         </div>
         <div class="tell" id="settings_add_external_access">
             <div id="tell_content">
-                Teile diese*r Nutzer*in Zugriff auf deinen Account:
-                Hinweis: Alle eingetragenen Benutzer*innen können Tells sehen, die du bekommst und darauf antworten, sowie alle Einstellungen verändern.
-                Sie können jedoch <b>nicht</b> deinen Account weiteren Benutzer*innen teilen.<br>
+                {{{text_modules.settings_add_allowed_access_information}}}<br>
                 <input type="text" placeholder="@deinFreund" id="addUserAccessHandle"/> 
                 <div id="tell_additional">
                     <div id="button">
-                        <a class="answer" onclick="button_addUserAccess()">Hinzufügen</a>
+                        <a class="answer" onclick="button_addUserAccess()">{{text_modules.add}}</a>
                     </div>
                 </div>
                 
@@ -142,7 +140,7 @@ Einstellungsoptionen:
         {{/is_own_account}}
         
         
-        <footer>Tellschn ist <a href="https://github.com/Kirschn/Tellschn/tree/V2">freie Software</a></footer>
+        <footer><a href="https://github.com/Kirschn/Tellschn/tree/V2">{{text_modules.is_free_software}}</a></footer>
 
 
         

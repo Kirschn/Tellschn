@@ -1,0 +1,34 @@
+{
+    "lang_name": "Deutsch (German)",
+
+    "is_free_software": "Tellschn ist freie Software",
+    "save": "Speichern",
+    "remove": "Entfernen",
+    "add": "Hinzufügen",
+    "copy": "Kopieren",
+    "delete": "Löschen",
+    "answer": "Antworten",
+    "account": "Account",
+    "added": "Hinzugefügt",
+    "actions": "Aktionen",
+
+
+
+    "telegram_welcome_message": "Hallo {{from_username}}! Du bist dabei dein Tellschn-Konto mit Telegram zu verknüpfen. Wenn du dein Telegram anbindest, erhältst du eine Benachrichtigung, sobald du neue Tells erhältst.",
+    "telegram_registration_instructions": "Um mit der Verknüfung fortzufahren, besuche bitte {{{appconf.base_url}}}/telegram_code und gib hier den sechsstelligen Code ein, den du dort findest.",
+    "telegram_registration_success": "Die Verknüfung war erfolgreich. Du erhältst nun Nachrichten, wenn du neue Tells erhältst. Diese Nachrichten enthalten nicht den Inhalt des Tells. Du kannst die Verknüfung jederzeit in deinen Tellschn-Einstellungen aufheben.",
+    "telegram_code_incorrect": "Oh, diesen Code konnte ich leider nicht finden. Bitte probier es erneut!",
+    "telegram_code_duplicate": "Es ist leider ein Fehler aufgetreten. Bitte lass dir einen neuen Code zuweisen",
+    "telegram_new_tell_notification": "{{userpayload.twitter_handle}}, du hast einen neuen Tell erhalten! {{{appconf.base_url}}}",
+    "telegram_invalid_command": "Dieses Kommando kenne ich leider nicht.",
+
+
+
+    "settings_headline": "Einstellungen",
+    "settings_general_information": "@{{userpayload.twitter_handle}}, nachfolgend findest ein paar Einstellungen, die du für dein Profil tätigen kannst.",
+    "settings_custom_text_information": "Dieser Text wird oben auf deinem Profil angezeigt:",
+    "settings_allowed_access_information": "Diesen Accounts hast zu Zugriff auf deinen Account gewährt:",
+    "settings_add_allowed_access_information": "Teile diese*r Nutzer*in Zugriff auf deinen Account: Hinweis: Alle eingetragenen Benutzer*innen können Tells sehen, die du bekommst und darauf antworten, sowie alle Einstellungen verändern. Sie können jedoch nicht deinen Account weiteren Benutzer*innen teilen.",
+    "settings_no_access_granted": "Du hast niemandem Zugriff auf dein Tellschn-Profil gewährt."
+
+}

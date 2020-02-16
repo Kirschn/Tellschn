@@ -1,0 +1,7 @@
+{
+    "general_prefix": "/",
+    "general_commands": {
+        "start_bot": "start"
+
+    }
+}

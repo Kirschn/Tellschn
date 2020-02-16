@@ -7,6 +7,9 @@ function twoDigits(d) {
 Date.prototype.toMysqlFormat = function () {
     return this.getUTCFullYear() + "-" + twoDigits(1 + this.getUTCMonth()) + "-" + twoDigits(this.getUTCDate()) + " " + twoDigits(this.getHours()) + ":" + twoDigits(this.getUTCMinutes()) + ":" + twoDigits(this.getUTCSeconds());
 };
+const tellschnModule = require("./tellschn_classes.js");
+const Tellschn = new tellschnModule.Tellschn();
+const tellschnTemplate = new tellschnModule.tellschnTemplate();
 var fs = require("fs");
 var util = require("util");
 var accessconf = JSON.parse(fs.readFileSync("access-config.json", "utf8"));
@@ -212,42 +215,68 @@ app.listen(port, function () {
     util.log(port, 'Webserver online on Port ' + port + '!');
 });
 
-app.get("/settings", nocache, (req, res) => {
+app.get("/telegram_code", nocache, async (req, res) => {
     if (req.session.own_twitter_id == undefined) {
         res.redirect("/");
         res.end();
+        return;
     }
-    connection.query("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
-            "AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id, function (error, has_access_to) {
-                if (error) throw error;
-                
-                    connection.query("SELECT users.twitter_id AS to_twitter_id, users.twitter_handle AS to_user_screen_name, users.profile_pic_original_link AS profile_image_url, user_access_sharing.granted_at AS granted_at FROM users, user_access_sharing WHERE " +
-                        "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
-                        [req.session.own_twitter_id, req.session.own_twitter_id], function (error, allowed_account_results) {
-                            allowed_account_results = mysql_result_time_to_string(allowed_account_results, "granted_at");
-                            if (error) throw error;
-                            res.send(mustache.render(templates.settings_page, {
-                                "profile_image_url": req.session.userpayload.profile_pic_original_link,
-                                "display_name": req.session.userpayload.twitter_handle,
-                                "is_own_account": (req.session.userpayload.twitter_id == req.session.own_twitter_id),
-                                "custom_page_text": req.session.userpayload.custom_page_text,
-                                "base_url": appconf.base_url,
-                                "token": req.session.token,
-                                "edit_tools": true,
-                                "user_access_sharing": allowed_account_results,
-                                "account_pool": has_access_to,
-                                "base_user": {
-                                    "profile_image_url": req.session.own_userpayload.profile_pic_original_link,
-                                    "display_name": req.session.own_userpayload.twitter_handle,
-                                    "twitter_id": req.session.own_twitter_id
-                                }
-                            }));
-                            res.end();
-                            return;
-                        })
+    let token = String(Math.floor(Math.random() * 999999));
+    while (token.length < 6) {
+        token = "0" + token
+    };
+    await Tellschn.sqlQuery("INSERT INTO user_notification_connections (twitter_id, platform, validation_token) VALUES (?)", [[
+        req.session.userpayload.twitter_id,
+        "telegram",
+        token
+    ]]);
+    res.end(token);
+});
 
-                
-            })
+app.get("/settings", nocache, async (req, res) => {
+    if (req.session.own_twitter_id == undefined) {
+        res.redirect("/");
+        res.end();
+        return;
+    }
+    let has_access_to = await Tellschn.sqlQuery("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
+        "AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id);
+
+    let allowed_account_results = await Tellschn.sqlQuery("SELECT users.twitter_id AS to_twitter_id, users.twitter_handle AS to_user_screen_name, users.profile_pic_original_link AS profile_image_url, user_access_sharing.granted_at AS granted_at FROM users, user_access_sharing WHERE " +
+        "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
+        [req.session.own_twitter_id, req.session.own_twitter_id]);
+
+    allowed_account_results = mysql_result_time_to_string(allowed_account_results, "granted_at");
+
+    let notification_registrations = await Tellschn.sqlQuery("SELECT platform, timestamp FROM user_notification_connections WHERE twitter_id = ?", req.session.userpayload.twitter_id);
+
+    notification_registrations = mysql_result_time_to_string(notification_registrations, "timestamp");
+    try {
+    let templateFiller = {
+        "userpayload": req.session.userpayload,
+        "is_own_account": (req.session.userpayload.twitter_id == req.session.own_twitter_id),
+        "base_url": appconf.base_url,
+        "token": req.session.token,
+        "edit_tools": true,
+        "user_access_sharing": allowed_account_results,
+        "account_pool": has_access_to,
+        "base_user": {
+            "profile_image_url": req.session.own_userpayload.profile_pic_original_link,
+            "display_name": req.session.own_userpayload.twitter_handle,
+            "twitter_id": req.session.own_twitter_id
+        },
+        "notification_registrations": notification_registrations
+    }
+    templateFiller = {...templateFiller, ...{"text_modules": tellschnTemplate.exportText_modules(templateFiller)}};
+    console.log(templateFiller);
+    res.send(mustache.render(templates.settings_page, templateFiller));
+    res.end();
+} catch (e) {throw e;}
+    return;
+
+
+
+
 })
 
 app.get("/api/:endpoint", nocache, function (req, res) {
@@ -390,7 +419,7 @@ app.post("/api/:endpoint", nocache, function (req, res) {
                 res.json({ "err": "CONTENT_TOO_LONG", "status": "failed" });
                 res.end();
             }
-            connection.query("SELECT twitter_id, twitter_handle, im_config FROM users WHERE twitter_id = ?", req.body.for_user_id,
+            connection.query("SELECT * FROM users WHERE twitter_id = ?", req.body.for_user_id,
                 function (err, sanity_1) {
                     if (err) throw err;
                     if (sanity_1[0] == undefined) {
@@ -414,9 +443,8 @@ app.post("/api/:endpoint", nocache, function (req, res) {
                         res.json({ "err": null, "status": "success" });
                         res.end();
                         queue.create("send_instant_msg_notification", {
-                            "twitter_id": sanity_1[0].twitter_id,
-                            "twitter_handle": sanity_1[0].twitter_handle,
-                            "im_config": sanity_1[0].im_config
+                            "userpayload": sanity_1[0],
+                            "title": "Send instant msg notifications for new Tell @" + sanity_1[0].twitter_handle
 
                         }).save(function (err) {
                             if (err) throw err;
@@ -649,7 +677,7 @@ app.post("/api/:endpoint", nocache, function (req, res) {
         if (typeof req.body.custom_page_text == "string") {
             console.log("API SETTING CHANGE: CUSTOM PAGE TEXT")
             if (req.body.custom_page_text.length > 1000) {
-                res.json({"err": "CUSTOM_PAGE_TEXT_TOO_LONG", status: "failed"}).end();
+                res.json({ "err": "CUSTOM_PAGE_TEXT_TOO_LONG", status: "failed" }).end();
                 return;
             }
             // change Custom Page Text (MySQL Field in user table)
@@ -689,7 +717,7 @@ app.post("/api/:endpoint", nocache, function (req, res) {
                     console.log(customConfig);
                     req.session.userpayload.custom_configuration = customConfig;
 
-                
+
                     req.session.save((error) => {
                         if (error) throw error;
                         res.json({ "err": null, "status": "success" });
@@ -785,6 +813,7 @@ app.post("/api/:endpoint", nocache, function (req, res) {
 app.get("/:userpage", nocache, preProcessTellShowbox);
 app.get("/:userpage/:tell", nocache, preProcessTellShowbox);
 
+
 function preProcessTellShowbox(req, res) {
     if (appconf.debug) console.log(req.session);
     if (req.params.userpage == "cdn") {
@@ -810,7 +839,7 @@ function preProcessTellShowbox(req, res) {
     }
 }
 
-function usrlandHandler(req, res, tell_showbox_html) {
+async function usrlandHandler(req, res, tell_showbox_html) {
     console.log(tell_showbox_html);
     if (req.session.token == undefined) {
         req.session.token = uuid();
@@ -819,76 +848,79 @@ function usrlandHandler(req, res, tell_showbox_html) {
 
     if (req.session.userpayload !== undefined && req.params.userpage === req.session.userpayload.twitter_handle && req.session.own_twitter_id !== undefined) {
         // show template for logged in user
-        connection.query("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id, function (error, has_access_to) {
-                if (error) throw error;
-                connection.query(get_own_tells_sqlstmt, [req.session.userpayload.twitter_id, null, 0], function (err, tells) {
-                    tells = mysql_result_time_to_string(tells, "timestamp")
-                    if (err) throw err;
-                    var custom_conf = JSON.parse(req.session.userpayload.custom_configuration);
-                    connection.query("SELECT users.twitter_id AS twitter_id, users.twitter_handle AS twitter_handle, users.profile_pic_original_link AS profile_image_url FROM users, user_access_sharing WHERE " +
-                        "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
-                        [req.session.own_twitter_id, req.session.own_twitter_id], function (error, allowed_account_results) {
-                            if (error) throw error;
-                            res.send(mustache.render(templates.get_tells, {
-                                "profile_image_url": req.session.userpayload.profile_pic_original_link,
-                                "display_name": req.session.userpayload.twitter_handle,
-                                "custom_configuration": {
-                                    "std_tweet": custom_conf.sharetw,
-                                    "std_post_feed": custom_conf.shareloc,
-                                    "std_tweet_image": custom_conf.shareimgtw,
-                                    "std_post_image": custom_conf.shareimgloc
-                                },
-                                "custom_page_text": req.session.userpayload.custom_page_text,
-                                "base_url": appconf.base_url,
-                                "token": req.session.token,
-                                "tells": tells,
-                                "edit_tools": true,
-                                "available_accounts": allowed_account_results,
-                                "showcase": tell_showbox_html,
-                                "account_pool": has_access_to,
-                                "base_user": {
-                                    "profile_image_url": req.session.own_userpayload.profile_pic_original_link,
-                                    "display_name": req.session.own_userpayload.twitter_handle,
-                                    "twitter_id": req.session.own_twitter_id
-                                }
-                            }, { "tell_list": templates.view_tells }));
-                            res.end();
-                            return;
-                        })
+        let has_access_to = await Tellschn.sqlQuery("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id)
 
-                })
-            })
+
+        let tells = await Tellschn.sqlQuery(get_own_tells_sqlstmt, [req.session.userpayload.twitter_id, null, 0])
+        tells = mysql_result_time_to_string(tells, "timestamp")
+
+
+        var custom_conf = JSON.parse(req.session.userpayload.custom_configuration);
+        let allowed_account_results = await Tellschn.sqlQuery("SELECT users.twitter_id AS twitter_id, users.twitter_handle AS twitter_handle, users.profile_pic_original_link AS profile_image_url FROM users, user_access_sharing WHERE " +
+            "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
+            [req.session.own_twitter_id, req.session.own_twitter_id]);
+
+
+        res.send(mustache.render(templates.get_tells, {
+            "profile_image_url": req.session.userpayload.profile_pic_original_link,
+            "display_name": req.session.userpayload.twitter_handle,
+            "custom_configuration": {
+                "std_tweet": custom_conf.sharetw,
+                "std_post_feed": custom_conf.shareloc,
+                "std_tweet_image": custom_conf.shareimgtw,
+                "std_post_image": custom_conf.shareimgloc
+            },
+            "custom_page_text": req.session.userpayload.custom_page_text,
+            "base_url": appconf.base_url,
+            "token": req.session.token,
+            "tells": tells,
+            "edit_tools": true,
+            "available_accounts": allowed_account_results,
+            "showcase": tell_showbox_html,
+            "account_pool": has_access_to,
+            "base_user": {
+                "profile_image_url": req.session.own_userpayload.profile_pic_original_link,
+                "display_name": req.session.own_userpayload.twitter_handle,
+                "twitter_id": req.session.own_twitter_id
+            }
+        }, { "tell_list": templates.view_tells }));
+        res.end();
+        return;
+
+
+
+
 
 
     } else {
         // show template for telling a new tell
-        connection.query("SELECT twitter_id, twitter_handle, profile_pic_original_link, profile_pic_small_link, custom_page_text FROM users WHERE twitter_handle = ?", req.params.userpage, function (err, result) {
+        let result = await Tellschn.sqlQuery("SELECT twitter_id, twitter_handle, profile_pic_original_link, profile_pic_small_link, custom_page_text FROM users WHERE twitter_handle = ?", req.params.userpage);
+        if (result[0] == undefined) {
+            res.redirect("/");
+            res.end();
+            return;
+        }
 
-            if (err) throw err;
-            if (result[0] == undefined) {
-                res.redirect("/");
-                res.end();
-                return;
-            }
-            connection.query(get_public_answers, [result[0].twitter_id, 0], function (err, tells) {
-                tells = mysql_result_time_to_string(tells, "timestamp")
-                if (err) throw err;
-                res.send(mustache.render(templates.send_tells, {
-                    "profile_image_url": result[0].profile_pic_original_link,
-                    "display_name": result[0].twitter_handle,
-                    "custom_page_text": result[0].custom_page_text,
-                    "base_url": appconf.base_url,
-                    "twitter_id": result[0].twitter_id,
-                    "token": req.session.token,
-                    "edit_tools": false,
-                    "tells": tells,
-                    "was_answered": true,
-                    "showcase": tell_showbox_html
-                }, { "publicanswers": templates.view_tells }));
-                res.end();
-            });
+        let tells = await Tellschn.sqlQuery(get_public_answers, [result[0].twitter_id, 0]);
+        tells = mysql_result_time_to_string(tells, "timestamp")
 
-        })
+
+        res.send(mustache.render(templates.send_tells, {
+            "profile_image_url": result[0].profile_pic_original_link,
+            "display_name": result[0].twitter_handle,
+            "custom_page_text": result[0].custom_page_text,
+            "base_url": appconf.base_url,
+            "twitter_id": result[0].twitter_id,
+            "token": req.session.token,
+            "edit_tools": false,
+            "tells": tells,
+            "was_answered": true,
+            "showcase": tell_showbox_html
+        }, { "publicanswers": templates.view_tells }));
+        res.end();
+
+
+
 
     }
 }
