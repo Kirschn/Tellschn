@@ -250,7 +250,7 @@ queue.process("send_tweet", async function (job, done) {
 queue.process("send_instant_msg_notification", async (job, done) => {
     util.log("Got Job for delivering Instant Message Jobs");
     try {
-        let rows = await Tellschn.sqlQuery("SELECT platform, address FROM user_notification_connections WHERE twitter_id = ? AND address IS NOT NULL", job.data.userpayload.twitter_id)
+        let rows = await Tellschn.sqlQuery("SELECT platform, address FROM user_notification_services WHERE twitter_id = ? AND address IS NOT NULL", job.data.userpayload.twitter_id)
         rows.forEach(currentRow => {
             switch (currentRow.platform) {
                 case "telegram": 
@@ -264,6 +264,6 @@ queue.process("send_instant_msg_notification", async (job, done) => {
         })
         done()
     } catch (e) {
-        done(e);
+        throw e;
     }
 });
