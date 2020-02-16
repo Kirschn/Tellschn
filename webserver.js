@@ -239,6 +239,7 @@ app.get("/settings", nocache, async (req, res) => {
         res.end();
         return;
     }
+    try {
     let has_access_to = await Tellschn.sqlQuery("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
         "AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id);
 
@@ -251,27 +252,29 @@ app.get("/settings", nocache, async (req, res) => {
     let notification_registrations = await Tellschn.sqlQuery("SELECT platform, timestamp FROM user_notification_connections WHERE twitter_id = ?", req.session.userpayload.twitter_id);
 
     notification_registrations = mysql_result_time_to_string(notification_registrations, "timestamp");
-    try {
-    let templateFiller = {
-        "userpayload": req.session.userpayload,
-        "is_own_account": (req.session.userpayload.twitter_id == req.session.own_twitter_id),
-        "base_url": appconf.base_url,
-        "token": req.session.token,
-        "edit_tools": true,
-        "user_access_sharing": allowed_account_results,
-        "account_pool": has_access_to,
-        "base_user": {
-            "profile_image_url": req.session.own_userpayload.profile_pic_original_link,
-            "display_name": req.session.own_userpayload.twitter_handle,
-            "twitter_id": req.session.own_twitter_id
-        },
-        "notification_registrations": notification_registrations
+    } catch (e) {
+        throw e;
     }
-    templateFiller = {...templateFiller, ...{"text_modules": tellschnTemplate.exportText_modules(templateFiller)}};
-    console.log(templateFiller);
-    res.send(mustache.render(templates.settings_page, templateFiller));
-    res.end();
-} catch (e) {throw e;}
+    try {
+        let templateFiller = {
+            "userpayload": req.session.userpayload,
+            "is_own_account": (req.session.userpayload.twitter_id == req.session.own_twitter_id),
+            "base_url": appconf.base_url,
+            "token": req.session.token,
+            "edit_tools": true,
+            "user_access_sharing": allowed_account_results,
+            "account_pool": has_access_to,
+            "base_user": {
+                "profile_image_url": req.session.own_userpayload.profile_pic_original_link,
+                "display_name": req.session.own_userpayload.twitter_handle,
+                "twitter_id": req.session.own_twitter_id
+            },
+            "notification_registrations": notification_registrations
+        }
+        templateFiller = { ...templateFiller, ...tellschnTemplate.exportText_modules(templateFiller) };
+        res.send(mustache.render(templates.settings_page, templateFiller));
+        res.end();
+    } catch (e) { throw e; }
     return;
 
 

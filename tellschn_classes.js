@@ -54,7 +54,7 @@ class tellschnTemplate extends Tellschn {
         return buffer;
     }
     exportText_modules(data = {}) {
-        return {...this.static_prop, ...this.renderFullTranslation(data)};
+        return {...this.static_prop, ...{"text_modules": this.renderFullTranslation(data)}};
     }
 }
 
