@@ -99,7 +99,7 @@ var get_public_answers = "SELECT `answers`.`content` AS answer_content, `answers
 function mysql_result_time_to_string(result_object, date_key) {
     let bufferObject = [];
     result_object.forEach((currentObject) => {
-        currentObject[date_key] = dateFormat(currentObject[date_key], "dd.mm.yyyy hh:MM") + " Uhr";
+        currentObject[date_key] = dateFormat(currentObject[date_key], "dd.mm.yyyy HH:MM") + " Uhr";
         bufferObject.push(currentObject);
     });
     return bufferObject;
@@ -225,7 +225,7 @@ app.get("/telegram_code", nocache, async (req, res) => {
     while (token.length < 6) {
         token = "0" + token
     };
-    await Tellschn.sqlQuery("INSERT INTO user_notification_connections (twitter_id, platform, validation_token) VALUES (?)", [[
+    await Tellschn.sqlQuery("INSERT INTO user_notification_services (twitter_id, platform, validation_token) VALUES (?)", [[
         req.session.userpayload.twitter_id,
         "telegram",
         token
@@ -240,22 +240,18 @@ app.get("/settings", nocache, async (req, res) => {
         return;
     }
     try {
-    let has_access_to = await Tellschn.sqlQuery("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
-        "AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id);
+        let has_access_to = await Tellschn.sqlQuery("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
+            "AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id);
 
-    let allowed_account_results = await Tellschn.sqlQuery("SELECT users.twitter_id AS to_twitter_id, users.twitter_handle AS to_user_screen_name, users.profile_pic_original_link AS profile_image_url, user_access_sharing.granted_at AS granted_at FROM users, user_access_sharing WHERE " +
-        "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
-        [req.session.own_twitter_id, req.session.own_twitter_id]);
+        let allowed_account_results = await Tellschn.sqlQuery("SELECT users.twitter_id AS to_twitter_id, users.twitter_handle AS to_user_screen_name, users.profile_pic_original_link AS profile_image_url, user_access_sharing.granted_at AS granted_at FROM users, user_access_sharing WHERE " +
+            "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
+            [req.session.own_twitter_id, req.session.own_twitter_id]);
 
-    allowed_account_results = mysql_result_time_to_string(allowed_account_results, "granted_at");
+        allowed_account_results = mysql_result_time_to_string(allowed_account_results, "granted_at");
 
-    let notification_registrations = await Tellschn.sqlQuery("SELECT platform, timestamp FROM user_notification_connections WHERE twitter_id = ?", req.session.userpayload.twitter_id);
+        let notification_registrations = await Tellschn.sqlQuery("SELECT id, platform, recipient_name, timestamp FROM user_notification_services WHERE twitter_id = ?", req.session.userpayload.twitter_id);
 
-    notification_registrations = mysql_result_time_to_string(notification_registrations, "timestamp");
-    } catch (e) {
-        throw e;
-    }
-    try {
+        notification_registrations = mysql_result_time_to_string(notification_registrations, "timestamp");
         let templateFiller = {
             "userpayload": req.session.userpayload,
             "is_own_account": (req.session.userpayload.twitter_id == req.session.own_twitter_id),
@@ -396,7 +392,7 @@ app.get("/api/:endpoint", nocache, function (req, res) {
 });
 
 
-app.post("/api/:endpoint", nocache, function (req, res) {
+app.post("/api/:endpoint", nocache, async function (req, res) {
     console.log("POST ENDPOINT " + req.params.endpoint)
     if (req.query.token !== req.session.token) {
         // Token Invalid, Abort Request
@@ -685,17 +681,15 @@ app.post("/api/:endpoint", nocache, function (req, res) {
             }
             // change Custom Page Text (MySQL Field in user table)
             var sql = "UPDATE users SET custom_page_text = ? WHERE twitter_id = ?";
-            var quer = connection.query(sql, [req.body.custom_page_text, req.session.userpayload.twitter_id], function (error, result) {
-                console.log(quer.sql);
-                if (error) throw error;
-                req.session.userpayload.custom_page_text = req.body.custom_page_text;
-                req.session.save(() => {
-                    res.json({ "err": null, "status": "success" });
-                    res.end();
-                })
+            await Tellschn.sqlQuery(sql, [req.body.custom_page_text, req.session.userpayload.twitter_id]);
 
-            });
+            req.session.userpayload.custom_page_text = req.body.custom_page_text;
+
+
+
         }
+        let sqlRes = await Tellschn.sqlQuery("SELECT custom_configuration FROM users WHERE twitter_id = ?", req.session.userpayload.twitter_id);
+        var customConfig = JSON.parse(sqlRes[0].custom_configuration);
         if (typeof req.body.default_share_twitter == "string") {
             if (req.body.default_share_twitter == "true") {
                 req.body.default_share_twitter = true;
@@ -704,31 +698,13 @@ app.post("/api/:endpoint", nocache, function (req, res) {
             }
             console.log("API SETTING CHANGE: DEFAULT SHARE TWITTER")
             // change default value (value in config field JSON)
-            connection.query("SELECT custom_configuration FROM users WHERE twitter_id = ?", req.session.userpayload.twitter_id, function (error, sqlRes) {
-                if (error) throw error;
-                var customConfig = JSON.parse(sqlRes[0].custom_configuration);
-                console.log(customConfig);
-                customConfig.sharetw = req.body.default_share_twitter;
 
-                console.log(customConfig);
-                customConfig = JSON.stringify(customConfig)
-
-                console.log(customConfig);
-                var sql = "UPDATE users SET custom_configuration = ? WHERE twitter_id = ?";
-                connection.query(sql, [customConfig, req.session.userpayload.twitter_id], function (error, result) {
-                    if (error) throw error;
-                    console.log(customConfig);
-                    req.session.userpayload.custom_configuration = customConfig;
+            customConfig.sharetw = req.body.default_share_twitter;
 
 
-                    req.session.save((error) => {
-                        if (error) throw error;
-                        res.json({ "err": null, "status": "success" });
-                        res.end();
-                    })
 
-                });
-            });
+
+
         }
         if (typeof req.body.default_share_local == "string") {
             if (req.body.default_share_local == "true") {
@@ -738,22 +714,10 @@ app.post("/api/:endpoint", nocache, function (req, res) {
             }
             console.log("API SETTING CHANGE: DEFAULT SHARE LOCAL")
             // change default value (value in config field JSON)
-            connection.query("SELECT custom_configuration FROM users WHERE twitter_id = ?", req.session.userpayload.twitter_id, function (error, sqlRes) {
-                if (error) throw error;
-                var customConfig = JSON.parse(sqlRes[0].custom_configuration);
-                customConfig.shareloc = req.body.default_share_local;
-                customConfig = JSON.stringify(customConfig)
-                var sql = "UPDATE users SET custom_configuration = ? WHERE twitter_id = ?";
-                connection.query(sql, [customConfig, req.session.userpayload.twitter_id], function (error, result) {
-                    if (error) throw error;
-                    req.session.userpayload.custom_configuration = customConfig;
-                    req.session.save(() => {
-                        res.json({ "err": null, "status": "success" });
-                        res.end();
-                    })
 
-                });
-            });
+            customConfig.shareloc = req.body.default_share_local;
+
+
         }
         if (typeof req.body.default_share_img_local == "string") {
             if (req.body.default_share_img_local == "true") {
@@ -763,22 +727,9 @@ app.post("/api/:endpoint", nocache, function (req, res) {
             }
             console.log("API SETTING CHANGE: DEFAULT SHARE IMG LOCAL")
             // change default value (value in config field JSON)
-            connection.query("SELECT custom_configuration FROM users WHERE twitter_id = ?", req.session.userpayload.twitter_id, function (error, sqlRes) {
-                if (error) throw error;
-                var customConfig = JSON.parse(sqlRes[0].custom_configuration);
-                customConfig.shareimgloc = req.body.default_share_img_local;
-                customConfig = JSON.stringify(customConfig)
-                var sql = "UPDATE users SET custom_configuration = ? WHERE twitter_id = ?";
-                connection.query(sql, [customConfig, req.session.userpayload.twitter_id], function (error, result) {
-                    if (error) throw error;
-                    req.session.userpayload.custom_configuration = customConfig;
-                    req.session.save(() => {
-                        res.json({ "err": null, "status": "success" });
-                        res.end();
-                    })
 
-                });
-            });
+            customConfig.shareimgloc = req.body.default_share_img_local;
+
         }
         if (typeof req.body.default_share_img_twitter == "string") {
             if (req.body.default_share_img_twitter == "true") {
@@ -787,26 +738,37 @@ app.post("/api/:endpoint", nocache, function (req, res) {
                 req.body.default_share_img_twitter = false;
             }
             console.log("API SETTING CHANGE: DEFAULT SHARE IMAGE TWITTER")
-            // change default value (value in config field JSON)
-            connection.query("SELECT custom_configuration FROM users WHERE twitter_id = ?", req.session.userpayload.twitter_id, function (error, sqlRes) {
-                if (error) throw error;
-                var customConfig = JSON.parse(sqlRes[0].custom_configuration);
-                customConfig.shareimgtw = req.body.default_share_img_twitter;
-                customConfig = JSON.stringify(customConfig)
-                var sql = "UPDATE users SET custom_configuration = ? WHERE twitter_id = ?";
-                connection.query(sql, [customConfig, req.session.userpayload.twitter_id], function (error, result) {
-                    if (error) throw error;
-                    req.session.userpayload.custom_configuration = customConfig;
-                    req.session.save(() => {
-                        res.json({ "err": null, "status": "success" });
-                        res.end();
-                    })
 
-                });
-            });
+            customConfig.shareimgtw = req.body.default_share_img_twitter;
+
+
 
         }
+        customConfig = JSON.stringify(customConfig)
+        var sql = "UPDATE users SET custom_configuration = ? WHERE twitter_id = ?";
+        await Tellschn.sqlQuery(sql, [customConfig, req.session.userpayload.twitter_id]);
+        req.session.userpayload.custom_configuration = customConfig;
+        req.session.save(() => {
+            res.json({ "err": null, "status": "success" });
+            res.end();
+        })
 
+
+
+    } else if (req.params.endpoint == "remove_notification_service") {
+        if (req.body.id != undefined) {
+            try {
+                let rows = await Tellschn.sqlQuery("DELETE FROM user_notification_services WHERE id = ? AND twitter_id = ?", [req.body.id, req.session.userpayload.twitter_id]);
+                if (rows.affectedRows == 0) {
+                    res.json({ "err": "SERVICE_NOT_FOUND" }).end();
+                    return;
+                }
+                res.json({ "err": null, "status": "success" }).end();
+                return;
+            } catch (e) {
+                throw e;
+            }
+        }
     }
 });
 

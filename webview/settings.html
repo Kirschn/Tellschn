@@ -138,7 +138,60 @@ Einstellungsoptionen:
             
         </div>
         {{/is_own_account}}
-        
+        <div class="tell" id="settings_list_of_connected_notification_services">
+            <div id="tell_content">
+                {{{text_modules.settings_notification_services_information}}}<br />
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                {{text_modules.service}}
+                            </th>
+                            <th>
+                                {{text_modules.username}}
+                            </th>
+                            <th>
+                                {{text_modules.added}}
+                            </th>
+                            <th>
+                                {{text_modules.actions}}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#notification_registrations}}
+                            <tr>
+                                <td>
+                                    {{platform}}
+                                </td>
+                                <td>
+                                    {{recipient_name}}
+                                </td>
+                                <td>
+                                    {{timestamp}}
+                                </td>
+                                <td>
+                                    <div id="button">
+                                        <a class="delete" onclick="button_removeNotificationService('{{id}}')">{{text_modules.remove}}</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {{/notification_registrations}}
+                        {{^notification_registrations}}
+                        <tr>
+                            <td>
+                                {{text_modules.settings_no_notification_services_registered}}
+                            </td>
+
+                        </tr>
+                        {{/notification_registrations}}
+                    </tbody>
+                </table>
+                <br />
+                {{{text_modules.settings_notification_services_telegram_information}}}
+            </div>
+            
+        </div>
         
         <footer><a href="https://github.com/Kirschn/Tellschn/tree/V2">{{text_modules.is_free_software}}</a></footer>
 
@@ -169,6 +222,10 @@ Einstellungsoptionen:
         }
         function button_addUserAccess() {
             grantUserAccess($("#addUserAccessHandle").val(), showErrorAndReload);
+        }
+
+        function button_removeNotificationService(id = 0) {
+            removeNotificationService(id, showErrorAndReload);
         }
     </script>
 </body>

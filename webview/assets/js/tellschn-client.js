@@ -93,3 +93,9 @@ function setConfigParameter(settings, cb) {
         return;
     })
 }
+
+function removeNotificationService(id, cb) {
+    $.post("/api/remove_notification_service?token=" + token, {id: id}, function(response) {
+        cb(response);
+    });
+}

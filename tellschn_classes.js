@@ -27,7 +27,8 @@ class tellschnTemplate extends Tellschn {
         this.text_modules = JSON.parse(fs.readFileSync("translations/translation_"+lang+".json", "utf8"));
         this.static_prop = {
             text_modules: this.text_modules,
-            appconf: this.appconf
+            appconf: this.appconf,
+            accessconf: this.accessConf
         }
     }
     

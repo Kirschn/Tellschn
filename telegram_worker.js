@@ -45,16 +45,18 @@ class tellschnMessageProcessor extends tellschn.Tellschn {
                                 util.log("Got 6-Digit Code");
                                 // probably 6-digit-code for registration
                                 try {
-                                let rows = await this.sqlQuery("UPDATE user_notification_connections SET validation_token = NULL, address = ? WHERE validation_token = ? AND platform = 'telegram'", [
+                                let rows = await this.sqlQuery("UPDATE user_notification_services SET validation_token = NULL, address = ?, recipient_name = ? WHERE validation_token = ? AND platform = 'telegram'", [
                                     msg.chat.id,
+                                    msg.from.username,
                                     msg.text
+                                    
                                 ]);
                                 if (rows.affectedRows == 1) {
                                     resolve(this.templatingEngine.getTextModule("telegram_registration_success"));
                                     return;
                                 } else if (rows.affectedRows > 1) {
                                     // eh we fucked up. 2 users got generated with the same code. reset both.
-                                    await this.sqlConnection.query("DELETE FROM user_notification_connections WHERE address = ?", msg.text);
+                                    await this.sqlConnection.query("DELETE FROM user_notification_services WHERE address = ?", msg.text);
                                     resolve(this.templatingEngine.getTextModule("telegram_code_duplicate"));
                                     return;
                                 } else if (rows.affectedRows == 0) {
