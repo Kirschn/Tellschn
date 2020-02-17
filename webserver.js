@@ -10,6 +10,7 @@ Date.prototype.toMysqlFormat = function () {
 const tellschnModule = require("./tellschn_classes.js");
 const Tellschn = new tellschnModule.Tellschn();
 const tellschnTemplate = new tellschnModule.tellschnTemplate();
+const tellschnMailer = new tellschnModule.tellschnMailer();
 var fs = require("fs");
 var util = require("util");
 var accessconf = JSON.parse(fs.readFileSync("access-config.json", "utf8"));
@@ -48,7 +49,6 @@ var twitter = new Twitter({
 });
 accessconf.mysql.encoding = 'utf8';
 accessconf.mysql.charset = 'utf8mb4';
-var mysql = require('mysql');
 var mustache = require("mustache");
 var templates = {
     "landing": fs.readFileSync("./webview/landing.html", "utf8"),
@@ -58,7 +58,6 @@ var templates = {
     "render_tell": fs.readFileSync("./webview/assets/image_render_tell_template.html", "utf8"),
     "settings_page": fs.readFileSync("./webview/settings.html", "utf8")
 }
-var connection = mysql.createConnection(accessconf.mysql);
 var token_secret_index = [];
 function nocache(req, res, next) {
     res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
@@ -118,78 +117,70 @@ app.get("/login/twitter_callback", function (req, res) {
         if (err)
             throw err;
         else
-            twitter.verifyCredentials(accessToken, accessSecret, function (err, user) {
-                if (err) {
-                    throw err;
+            twitter.verifyCredentials(accessToken, accessSecret, async function (err, user) {
+                if (err) throw err;
+
+                user.status = null;
+                user.entities = null;
+                let sqlsearchres = await Tellschn.sqlQuery("SELECT * FROM users WHERE `twitter_id` = ?", user.id_str);
+                if (sqlsearchres[0] == undefined) {
+                    util.log("Couldn't find User with ID " + user.id_str + " in user table, inserting new...");
+                    var data = {
+                        "oauth_token": accessToken,
+                        "oauth_secret": accessSecret,
+                        "twitter_handle": user.screen_name,
+                        "twitter_id": user.id_str,
+                        "custom_configuration": JSON.stringify({
+                            "sharetw": true,
+                            "shareloc": true,
+                            "shareimgtw": true,
+                            "shareimgloc": true
+                        }),
+                        "profile_pic_original_link": user.profile_image_url_https,
+                        "profile_pic_small_link": user.profile_image_url_https // TODO: DOWNSCALE!
+
+                    }
+
+                    await Tellschn.sqlQuery("INSERT INTO `users` SET ?", data);
+                    util.log("Inserted data into Table, building Session");
+                    req.session.own_twitter_id = user.id_str;
+                    req.session.userpayload = data;
+                    req.session.own_userpayload = data;
+                    req.session.requestSecret = undefined;
+                    util.log("Done with User Verify: new user");
+
+                    req.session.save(function (err) {
+                        if (err) throw err;
+                        res.redirect("/" + user.screen_name);
+                        res.end();
+                    })
+
+
                 } else {
-                    user.status = null;
-                    user.entities = null;
-                    connection.query("SELECT * FROM users WHERE `twitter_id` = ?", user.id_str,
-                        function (err, sqlsearchres) {
-                            if (err) throw err;
-                            if (sqlsearchres[0] == undefined) {
-                                util.log("Couldn't find User with ID " + user.id_str + " in user table, inserting new...");
-                                var data = {
-                                    "oauth_token": accessToken,
-                                    "oauth_secret": accessSecret,
-                                    "twitter_handle": user.screen_name,
-                                    "twitter_id": user.id_str,
-                                    "custom_configuration": JSON.stringify({
-                                        "sharetw": true,
-                                        "shareloc": true,
-                                        "shareimgtw": true,
-                                        "shareimgloc": true
-                                    }),
-                                    "profile_pic_original_link": user.profile_image_url_https,
-                                    "profile_pic_small_link": user.profile_image_url_https // TODO: DOWNSCALE!
+                    util.log("Found User in Database!")
+                    await Tellschn.sqlQuery("UPDATE `users` SET `oauth_token` = ?, `oauth_secret` = ?, `twitter_handle` = ?, `set_name` = ? WHERE `twitter_id` = ?",
+                        [accessToken, accessSecret, user.screen_name, user.name, user.id_str]);
+                    sqlsearchres[0]["oauth_token"] = accessToken;
+                    sqlsearchres[0]["oauth_secret"] = accessSecret;
+                    sqlsearchres[0]["twitter_handle"] = user.screen_name;
+                    sqlsearchres[0]["set_name"] = user.id_str;
 
-                                }
-
-                                connection.query("INSERT INTO `users` SET ?", data,
-                                    function (err, sqlres) {
-                                        if (err) throw err;
-                                        util.log("Inserted data into Table, building Session");
-                                        req.session.own_twitter_id = user.id_str;
-                                        req.session.userpayload = data;
-                                        req.session.own_userpayload = data;
-                                        req.session.requestSecret = undefined;
-                                        util.log("Done with User Verify: new user");
-
-                                        req.session.save(function (err) {
-                                            if (err) throw err;
-                                            res.redirect("/" + user.screen_name);
-                                            res.end();
-                                        })
-
-                                    }
-
-                                );
-                            } else {
-                                util.log("Found User in Database!")
-                                connection.query("UPDATE `users` SET `oauth_token` = ?, `oauth_secret` = ?, `twitter_handle` = ?, `set_name` = ? WHERE `twitter_id` = ?",
-                                    [accessToken, accessSecret, user.screen_name, user.name, user.id_str], function (err) {
-                                        if (err) throw err;
-                                        sqlsearchres[0]["oauth_token"] = accessToken;
-                                        sqlsearchres[0]["oauth_secret"] = accessSecret;
-                                        sqlsearchres[0]["twitter_handle"] = user.screen_name;
-                                        sqlsearchres[0]["set_name"] = user.id_str;
-
-                                        util.log("Storing to session...")
-                                        req.session.userpayload = sqlsearchres[0];
-                                        req.session.own_twitter_id = user.id_str;
-                                        req.session.own_userpayload = sqlsearchres[0];
-                                        req.session.save(function (err) {
-                                            if (err) throw err;
-                                        })
-                                        res.redirect("/" + user.screen_name);
-                                        res.end();
-                                    });
+                    util.log("Storing to session...")
+                    req.session.userpayload = sqlsearchres[0];
+                    req.session.own_twitter_id = user.id_str;
+                    req.session.own_userpayload = sqlsearchres[0];
+                    req.session.save(function (err) {
+                        if (err) throw err;
+                    })
+                    res.redirect("/" + user.screen_name);
+                    res.end();
 
 
-                            }
-                        })
 
                 }
+
+
+
             });
     });
 })
@@ -233,6 +224,25 @@ app.get("/telegram_code", nocache, async (req, res) => {
     res.end(token);
 });
 
+app.get("/confirm_email", nocache, async (req, res) => {
+    if (req.query.token != undefined) {
+        
+        let rows = await Tellschn.sqlQuery("SELECT address, users.twitter_handle FROM user_notification_services, users WHERE users.twitter_id = user_notification_services.twitter_id AND validation_token = ?", req.query.token);
+        
+        if (rows.length == 1) {
+            await Tellschn.sqlQuery("UPDATE user_notification_services SET validation_token = NULL WHERE validation_token = ?", req.query.token);
+            // success
+            // send notifiction mail 
+            queue.create("send_notification_registration_success_mail", {"title": "Send Notification Registration Success Mail", "address": rows[0].address, "userpayload": rows[0]}).save();
+            res.redirect("/" + req.session.userpayload.twitter_handle).end();
+        } else {
+            // no success
+            res.end("Es ist leider ein Fehler aufgetreten. Bitte versuche es erneut.");
+            
+        }
+    }
+});
+
 app.get("/settings", nocache, async (req, res) => {
     if (req.session.own_twitter_id == undefined) {
         res.redirect("/");
@@ -244,7 +254,7 @@ app.get("/settings", nocache, async (req, res) => {
             "AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id);
 
         let allowed_account_results = await Tellschn.sqlQuery("SELECT users.twitter_id AS to_twitter_id, users.twitter_handle AS to_user_screen_name, users.profile_pic_original_link AS profile_image_url, user_access_sharing.granted_at AS granted_at FROM users, user_access_sharing WHERE " +
-            "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
+            "user_access_sharing.to_user_id = users.twitter_id AND user_access_sharing.from_user_id = ?",
             [req.session.own_twitter_id, req.session.own_twitter_id]);
 
         allowed_account_results = mysql_result_time_to_string(allowed_account_results, "granted_at");
@@ -278,7 +288,7 @@ app.get("/settings", nocache, async (req, res) => {
 
 })
 
-app.get("/api/:endpoint", nocache, function (req, res) {
+app.get("/api/:endpoint", nocache, async function (req, res) {
     if (req.params.endpoint === "session_info") {
         // return general information about the logged in user
 
@@ -317,16 +327,16 @@ app.get("/api/:endpoint", nocache, function (req, res) {
             if (req.query.page == undefined) {
                 res.end("Es ist einer Fehler aufgetreten.");
             }
-            var request = connection.query(get_own_tells_sqlstmt,
-                [req.session.userpayload.twitter_id, null, parseInt(req.query.page * appconf.tells_per_page)], function (err, tells) {
-                    tells = mysql_result_time_to_string(tells, "timestamp")
-                    if (err) throw err; console.log(request.sql);
-                    res.send(mustache.render(templates.view_tells, {
-                        "edit_tools": true,
-                        "tells": tells
-                    }));
-                    res.end();
-                })
+            let tells = await Tellschn.sqlQuery(get_own_tells_sqlstmt,
+                [req.session.userpayload.twitter_id, null, parseInt(req.query.page * appconf.tells_per_page)])
+            tells = mysql_result_time_to_string(tells, "timestamp")
+
+            res.send(mustache.render(templates.view_tells, {
+                "edit_tools": true,
+                "tells": tells
+            }));
+            res.end();
+
         } else {
             res.end("Es ist ein Fehler aufgetreten.")
         }
@@ -341,17 +351,16 @@ app.get("/api/:endpoint", nocache, function (req, res) {
             res.end("Es ist einer Fehler aufgetreten.");
             return;
         }
-        var request = connection.query(get_public_answers,
-            [req.query.twitter_id, parseInt(req.query.page) * appconf.tells_per_page], function (err, tells) {
-                tells = mysql_result_time_to_string(tells, "timestamp")
-                if (err) throw err; console.log(request.sql);
-                tells.has_answer = true;
-                tells.edit_tools = false;
-                res.send(mustache.render(templates.view_tells, {
-                    "tells": tells
-                }));
-                res.end();
-            })
+        let tells = await Tellschn.sqlQuery(get_public_answers,
+            [req.query.twitter_id, parseInt(req.query.page) * appconf.tells_per_page]);
+        tells = mysql_result_time_to_string(tells, "timestamp")
+        tells.has_answer = true;
+        tells.edit_tools = false;
+        res.send(mustache.render(templates.view_tells, {
+            "tells": tells
+        }));
+        res.end();
+
     } else if (req.params.endpoint == "switch_user") {
         function shiftUserPayload(payload) {
             req.session.userpayload = payload;
@@ -361,8 +370,15 @@ app.get("/api/:endpoint", nocache, function (req, res) {
             res.redirect("/" + req.session.userpayload.screen_name);
             res.end();
         }
-        function handleResult(error, result) {
-            if (error) throw error;
+
+        if (req.query.twitter_id == req.session.own_twitter_id) {
+            // switch back to own account
+            shiftUserPayload(req.session.own_userpayload);
+
+        } else if (req.query.twitter_id != undefined && req.query.twitter_id != null) {
+            var sql = "SELECT users.* FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
+                "AND user_access_sharing.from_user_id = ? AND user_access_sharing.to_user_id = ?";
+            let result = await Tellschn.sqlQuery(sql, [req.query.twitter_id, req.session.own_twitter_id]);
 
             if (result[0] == undefined) {
                 res.end("Leider hast du keinen Zugriff auf diesen Benutzer. ");
@@ -371,14 +387,6 @@ app.get("/api/:endpoint", nocache, function (req, res) {
             }
 
             shiftUserPayload(result[0]);
-        }
-        if (req.query.twitter_id == req.session.own_twitter_id) {
-            // switch back to own account
-            shiftUserPayload(req.session.own_userpayload);
-        } else if (req.query.twitter_id != undefined && req.query.twitter_id != null) {
-            var sql = "SELECT users.* FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
-                "AND user_access_sharing.from_user_id = ? AND user_access_sharing.to_user_id = ?";
-            connection.query(sql, [req.query.twitter_id, req.session.own_twitter_id], handleResult);
         }
 
 
@@ -418,39 +426,36 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
                 res.json({ "err": "CONTENT_TOO_LONG", "status": "failed" });
                 res.end();
             }
-            connection.query("SELECT * FROM users WHERE twitter_id = ?", req.body.for_user_id,
-                function (err, sanity_1) {
-                    if (err) throw err;
-                    if (sanity_1[0] == undefined) {
-                        // user id not found
-                        res.json({ "err": "USER_ID_NOT_FOUND", "status": "failed" });
-                        res.end();
-                        return;
-                    }
-                    console.log(req.body, (req.body.do_not_share === "true") ? true : false)
-                    connection.query("INSERT INTO tells (for_user_id, by_user_id, content, media_attachment, do_not_share) VALUES (?)", [[
-                        req.body.for_user_id,
-                        req.body.by_user_id,
-                        req.body.content,
-                        req.body.media_attachment,
-                        (req.body.do_not_share === "true") ? true : false
-                    ]], function (err) {
-                        if (err) throw err;
-                        // Insert Successful: 
-                        // 1) Give Feedback to the user
-                        // 2) Start Job to check if the user has IM Notifications activated
-                        res.json({ "err": null, "status": "success" });
-                        res.end();
-                        queue.create("send_instant_msg_notification", {
-                            "userpayload": sanity_1[0],
-                            "title": "Send instant msg notifications for new Tell @" + sanity_1[0].twitter_handle
+            let sanity_1 = await Tellschn.sqlQuery("SELECT * FROM users WHERE twitter_id = ?", req.body.for_user_id);
+            if (sanity_1[0] == undefined) {
+                // user id not found
+                res.json({ "err": "USER_ID_NOT_FOUND", "status": "failed" });
+                res.end();
+                return;
+            }
+            console.log(req.body, (req.body.do_not_share === "true") ? true : false)
+            await Tellschn.sqlQuery("INSERT INTO tells (for_user_id, by_user_id, content, media_attachment, do_not_share) VALUES (?)", [[
+                req.body.for_user_id,
+                req.body.by_user_id,
+                req.body.content,
+                req.body.media_attachment,
+                (req.body.do_not_share === "true") ? true : false
+            ]]);
+            // Insert Successful: 
+            // 1) Give Feedback to the user
+            // 2) Start Job to check if the user has IM Notifications activated
+            res.json({ "err": null, "status": "success" });
+            res.end();
+            queue.create("send_instant_msg_notification", {
+                "userpayload": sanity_1[0],
+                "title": "Send instant msg notifications for new Tell @" + sanity_1[0].twitter_handle
 
-                        }).save(function (err) {
-                            if (err) throw err;
-                        });
-                        return;
-                    });
-                });
+            }).save(function (err) {
+                if (err) throw err;
+            });
+            return;
+
+
         }
     } else if (req.params.endpoint == "give_answer") {
         if (req.body.for_tell_id !== undefined &&
@@ -463,69 +468,66 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
                 res.json({ "err": "CONTENT_TOO_LONG", "status": "failed" });
                 res.end();
             }
-            connection.query("SELECT for_user_id FROM tells WHERE id = ?", req.body.for_tell_id,
-                function (err, sanity_1) {
+            let sanity_1 = await Tellschn.sqlQuery("SELECT for_user_id FROM tells WHERE id = ?", req.body.for_tell_id);
+            if (sanity_1[0] == undefined) {
+                // user id not found
+                res.json({ "err": "USER_ID_NOT_FOUND", "status": "failed" });
+                res.end();
+                return;
+            }
+            if (req.session.userpayload !== undefined && req.session.userpayload.twitter_id !== sanity_1[0]["for_user_id"]) {
+                // user tries to reply to a tell that is not their own
+
+                res.json({ "err": "WRONG_TELL_OWNER", "status": "failed" });
+                res.end();
+                return;
+            }
+            var replyconfig = [];
+            try {
+                replyconfig = JSON.parse(req.body.reply_config);
+            } catch (e) {
+                // invalid JSON
+                res.json({ "err": "INVALID_SHARE_CONFIG", "status": "failed" });
+                res.end();
+                return;
+            }
+
+            await Tellschn.sqlQuery("INSERT INTO answers (for_tell_id, content, show_public, show_media_public) VALUES (?)", [[
+                req.body.for_tell_id,
+                req.body.content,
+                replyconfig.show_on_page,
+                replyconfig.show_image_page
+            ]]);
+            // Insert Successful: 
+            // 1) Give Feedback to the user
+            // 2) Start Job to check if the user has IM Notifications activated
+            res.json({ "err": null, "status": "success" });
+            res.end();
+
+            if (replyconfig.send_tweet) {
+                util.log("Trigger Job to send Tweet")
+                queue.create("send_tweet", {
+                    "title": "Send Answer-Tweet for Tell " + req.body.for_tell_id,
+                    "twitter_id": sanity_1[0].for_user_id,
+                    "for_tell_id": req.body.for_tell_id,
+                    "share_image_twitter": replyconfig.share_image_twitter
+                }).save(function (err) {
                     if (err) throw err;
-                    if (sanity_1[0] == undefined) {
-                        // user id not found
-                        res.json({ "err": "USER_ID_NOT_FOUND", "status": "failed" });
-                        res.end();
-                        return;
-                    }
-                    if (req.session.userpayload !== undefined && req.session.userpayload.twitter_id !== sanity_1[0]["for_user_id"]) {
-                        // user tries to reply to a tell that is not their own
-
-                        res.json({ "err": "WRONG_TELL_OWNER", "status": "failed" });
-                        res.end();
-                        return;
-                    }
-                    var replyconfig = [];
-                    try {
-                        replyconfig = JSON.parse(req.body.reply_config);
-                    } catch (e) {
-                        // invalid JSON
-                        res.json({ "err": "INVALID_SHARE_CONFIG", "status": "failed" });
-                        res.end();
-                        return;
-                    }
-
-                    connection.query("INSERT INTO answers (for_tell_id, content, show_public, show_media_public) VALUES (?)", [[
-                        req.body.for_tell_id,
-                        req.body.content,
-                        replyconfig.show_on_page,
-                        replyconfig.show_image_page
-                    ]], function (err) {
-                        if (err) throw err;
-                        // Insert Successful: 
-                        // 1) Give Feedback to the user
-                        // 2) Start Job to check if the user has IM Notifications activated
-                        res.json({ "err": null, "status": "success" });
-                        res.end();
-
-                        if (replyconfig.send_tweet) {
-                            util.log("Trigger Job to send Tweet")
-                            queue.create("send_tweet", {
-                                "title": "Send Answer-Tweet for Tell " + req.body.for_tell_id,
-                                "twitter_id": sanity_1[0].for_user_id,
-                                "for_tell_id": req.body.for_tell_id,
-                                "share_image_twitter": replyconfig.share_image_twitter
-                            }).save(function (err) {
-                                if (err) throw err;
-                            });
-                        } else {
-                            util.log("Not sending Tweet because of " + replyconfig.send_tweet)
-                        }
-                        return;
-                    });
                 });
+            } else {
+                util.log("Not sending Tweet because of " + replyconfig.send_tweet)
+            }
+            return;
+
+
         }
     } else if (req.params.endpoint == "delete_tell") {
         if (req.body.tell_id !== undefined) {
-            connection.query("UPDATE tells SET deleted = 1 WHERE id = ? and for_user_id = ?", [req.body.tell_id, req.session.userpayload.twitter_id], function (err) {
-                if (err) throw err;
-                res.json({ "err": null, "status": "success" });
-                res.end();
-            })
+            await Tellschn.sqlQuery("UPDATE tells SET deleted = 1 WHERE id = ? and for_user_id = ?", [req.body.tell_id, req.session.userpayload.twitter_id]);
+
+            res.json({ "err": null, "status": "success" });
+            res.end();
+
         }
     } else if (req.params.endpoint == "edit_answer") {
         if (req.body.for_tell_id !== undefined &&
@@ -537,48 +539,45 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
                 res.json({ "err": "CONTENT_TOO_LONG", "status": "failed" });
                 res.end();
             }
-            connection.query("SELECT tells.for_user_id, answers.id AS answer_id FROM tells INNER JOIN answers ON answers.for_tell_id = tells.id WHERE tells.id = ?", req.body.for_tell_id,
-                function (err, sanity_1) {
-                    if (err) throw err;
-                    if (sanity_1[0] == undefined) {
-                        // user id not found
-                        res.json({ "err": "USER_ID_NOT_FOUND", "status": "failed" });
-                        res.end();
-                        return;
-                    }
-                    if (req.session.userpayload !== undefined && req.session.userpayload.twitter_id !== sanity_1[0]["for_user_id"]) {
-                        // user tries to reply to a tell that is not their own
+            let sanity_1 = await Tellschn.sqlQuery("SELECT tells.for_user_id, answers.id AS answer_id FROM tells INNER JOIN answers ON answers.for_tell_id = tells.id WHERE tells.id = ?", req.body.for_tell_id);
 
-                        res.json({ "err": "WRONG_TELL_OWNER", "status": "failed" });
-                        res.end();
-                        return;
-                    }
-                    try {
-                        var sharing_conf = JSON.parse(req.body.sharing_conf);
-                    } catch (e) {
-                        console.log(e);
-                        res.json({ "err": "INVALID_JSON", "status": "failed" });
-                        res.end();
-                        return;
-                    }
-                    var uffi = connection.query("UPDATE answers SET for_tell_id = ?, content = ?, show_public =?, show_media_public = ?, was_edited = 1 WHERE id = ?", [
-                        req.body.for_tell_id,
-                        req.body.content,
-                        sharing_conf.show_on_page,
-                        sharing_conf.show_image_page,
-                        sanity_1[0]["answer_id"]
-                    ], function (err) {
-                        if (err) throw err;
-                        // Insert Successful: 
-                        // 1) Give Feedback to the user
-                        // 2) Start Job to check if the user has IM Notifications activated
-                        res.json({ "err": null, "status": "success" });
-                        res.end();
+            if (sanity_1[0] == undefined) {
+                // user id not found
+                res.json({ "err": "USER_ID_NOT_FOUND", "status": "failed" });
+                res.end();
+                return;
+            }
+            if (req.session.userpayload !== undefined && req.session.userpayload.twitter_id !== sanity_1[0]["for_user_id"]) {
+                // user tries to reply to a tell that is not their own
 
-                        return;
-                    });
-                    console.log(uffi.sql)
-                });
+                res.json({ "err": "WRONG_TELL_OWNER", "status": "failed" });
+                res.end();
+                return;
+            }
+            try {
+                var sharing_conf = JSON.parse(req.body.sharing_conf);
+            } catch (e) {
+                console.log(e);
+                res.json({ "err": "INVALID_JSON", "status": "failed" });
+                res.end();
+                return;
+            }
+            await Tellschn.sqlQuery("UPDATE answers SET for_tell_id = ?, content = ?, show_public =?, show_media_public = ?, was_edited = 1 WHERE id = ?", [
+                req.body.for_tell_id,
+                req.body.content,
+                sharing_conf.show_on_page,
+                sharing_conf.show_image_page,
+                sanity_1[0]["answer_id"]
+            ]);
+            // Insert Successful: 
+            // 1) Give Feedback to the user
+            // 2) Start Job to check if the user has IM Notifications activated
+            res.json({ "err": null, "status": "success" });
+            res.end();
+
+            return;
+
+
         }
     } else if (req.params.endpoint == "grant_user_access") {
         console.log("Granting Access Request")
@@ -589,20 +588,17 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
             return;
         }
         var sql = "SELECT twitter_id FROM users WHERE twitter_handle = ?";
-        connection.query(sql, req.body.twitter_handle, function (error, id_result) {
-            if (error) throw error;
-            if (id_result[0] == undefined) {
-                res.json({ "err": "INVALID_HANDLE", "status": "failed" });
-                res.end();
-                return;
-            }
-            var sql = "INSERT INTO user_access_sharing (from_user_id, to_user_id) VALUES (?)";
-            connection.query(sql, [[req.session.userpayload.twitter_id, id_result[0].twitter_id]], function (error, result) {
-                if (error) throw error;
-                res.json({ "err": null, "status": "success" });
-                res.end();
-            })
-        });
+        let id_result = await Tellschn.sqlQuery(sql, req.body.twitter_handle);
+        if (id_result[0] == undefined) {
+            res.json({ "err": "INVALID_HANDLE", "status": "failed" });
+            res.end();
+            return;
+        }
+        var sql = "INSERT INTO user_access_sharing (from_user_id, to_user_id) VALUES (?)";
+        await Tellschn.sqlQuery(sql, [[req.session.userpayload.twitter_id, id_result[0].twitter_id]]);
+        res.json({ "err": null, "status": "success" });
+        res.end();
+
 
     } else if (req.params.endpoint == "remove_user_access") {
 
@@ -613,20 +609,18 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
             return;
         }
         var sql = "SELECT twitter_id FROM users WHERE twitter_handle = ?";
-        connection.query(sql, req.body.twitter_handle, function (error, id_result) {
-            if (error) throw error;
-            if (id_result[0] == undefined) {
-                res.json({ "err": "INVALID_HANDLE", "status": "failed" });
-                res.end();
-                return;
-            }
-            var sql = "DELETE FROM user_access_sharing WHERE from_user_id = ? AND to_user_id = ?";
-            connection.query(sql, [req.session.userpayload.twitter_id, id_result[0].twitter_id], function (error, result) {
-                if (error) throw error;
-                res.json({ "err": null, "status": "success" });
-                res.end();
-            })
-        });
+        let id_result = Tellschn.sqlQuery(sql, req.body.twitter_handle);
+        if (id_result[0] == undefined) {
+            res.json({ "err": "INVALID_HANDLE", "status": "failed" });
+            res.end();
+            return;
+        }
+        var sql = "DELETE FROM user_access_sharing WHERE from_user_id = ? AND to_user_id = ?";
+        await Tellschn.sqlQuery(sql, [req.session.userpayload.twitter_id, id_result[0].twitter_id]);
+        res.json({ "err": null, "status": "success" });
+        res.end();
+
+
 
     } else if (req.params.endpoint == "upload_media") {
         util.log("Media Upload");
@@ -769,6 +763,15 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
                 throw e;
             }
         }
+    } else if (req.params.endpoint == "add_email_notification") {
+        if (Tellschn.validateEmail(req.body.email_address)) {
+            
+            queue.create("send_notification_registration_mail", {"address": req.body.email_address, "userpayload": req.session.userpayload}).save();
+            res.json({ "err": null, "status": "success" }).end();
+        } else {
+            res.json({ "err": "MALFORMED_EMAIL_ADDRESS", "status": "failed" }).end();
+
+        }
     }
 });
 
@@ -779,25 +782,23 @@ app.get("/:userpage", nocache, preProcessTellShowbox);
 app.get("/:userpage/:tell", nocache, preProcessTellShowbox);
 
 
-function preProcessTellShowbox(req, res) {
+async function preProcessTellShowbox(req, res) {
     if (appconf.debug) console.log(req.session);
     if (req.params.userpage == "cdn") {
         // Express static middleware used next() -> 404
         res.status(404).end("Not Found");
         return;
     } else if (req.params.tell != undefined && parseInt(req.params.tell) != NaN) {
-        var stmt = connection.query(get_own_tells_sqlstmt, [null, req.params.tell, 0], function (error, sqlRes) {
-            sqlRes = mysql_result_time_to_string(sqlRes, "timestamp")
-            if (error) throw error;
-            if (sqlRes[0] == undefined) {
-                usrlandHandler(req, res, null);
-                console.log("Tell not found", stmt.sql)
-                return;
-            }
-            console.log("Giving Object: ", sqlRes[0])
-            usrlandHandler(req, res, mustache.render(templates.view_tells, { "tells": sqlRes }));
+        let sqlRes = await Tellschn.sqlQuery(get_own_tells_sqlstmt, [null, req.params.tell, 0]);
+        sqlRes = mysql_result_time_to_string(sqlRes, "timestamp")
+        if (sqlRes[0] == undefined) {
+            usrlandHandler(req, res, null);
             return;
-        })
+        }
+        console.log("Giving Object: ", sqlRes[0])
+        usrlandHandler(req, res, mustache.render(templates.view_tells, { "tells": sqlRes }));
+        return;
+
     } else {
         usrlandHandler(req, res, null);
         console.log("No Tell ID given")

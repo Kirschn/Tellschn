@@ -23,6 +23,11 @@
     <script>
         var custom_page_text = "{{custom_page_text}}";
         var token = "{{token}}";
+        var no_more_tells = false;
+        function noMoreTells() {
+            $("#loadingSymbol").hide();
+            no_more_tells=true;
+        }
     </script>
 </head>
 
@@ -62,7 +67,7 @@
         {{>tell_list}}
         </span>
 
-        <div class="pagination">
+        <div class="pagination" id="loadingSymbol">
             <div class="lds-ripple">
                 <div></div>
                 <div></div>
@@ -175,11 +180,13 @@
     <script async src="/assets/js/charcounter.js"></script>
     <script async src="/assets/js/copy.js"></script>
     <script>
+        if (no_more_tells) noMoreTells();
+
         var request_in_progress = false;
         var delete_buffer = null;
         var answer_id_buffer = null;
         
-        scrollHandler("get_own_tells");
+        if (!no_more_tells) scrollHandler("get_own_tells");
         function filldeletemodal(tell_id) {
             delete_buffer = tell_id;
 
@@ -272,11 +279,15 @@
             )
         }
         function reset_answer_modal () {
-            document.getElementById("answer_popup_response").style.display = "none";
+            window.location.hash = "";
+            window.location.reload();
+            // eh just reload the page, so we don't have to fuck with all of the ajax requests to change the local view
+
+            /*document.getElementById("answer_popup_response").style.display = "none";
             document.getElementById("answer_popup_content").style.display = "inline";
             document.getElementById("edit_popup_response").style.display = "none";
             document.getElementById("edit_popup_content").style.display = "inline";
-            $("#enter_answer").val(" ");
+            $("#enter_answer").val(" "); */
         }
     </script>
 </body>

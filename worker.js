@@ -7,8 +7,11 @@ function twoDigits(d) {
 Date.prototype.toMysqlFormat = function () {
     return this.getUTCFullYear() + "-" + twoDigits(1 + this.getUTCMonth()) + "-" + twoDigits(this.getUTCDate()) + " " + twoDigits(this.getHours()) + ":" + twoDigits(this.getUTCMinutes()) + ":" + twoDigits(this.getUTCSeconds());
 };
+
 const tellschn = require("./tellschn_classes.js");
-var Tellschn = new tellschn.Tellschn();
+const Tellschn = new tellschn.Tellschn();
+const templatingEngine = new tellschn.tellschnTemplate(Tellschn.appconf.lang);
+const tellschnMailer = new tellschn.tellschnMailer(Tellschn.appconf.lang);
 var fs = require("fs");
 var FileType = require('file-type');
 var uuid = require("uuid/v4");
@@ -26,18 +29,15 @@ var twitter = new Twitter({
     callback: accessconf.twitter["redirection_url"]
 });
 var dateFormat = require("dateformat");
-accessconf.mysql.encoding = 'utf8';
-accessconf.mysql.charset = 'utf8mb4';
-var mysql = require('mysql');
-var connection = mysql.createConnection(accessconf.mysql);
-const session = require('express-session');
 const redis = require('redis');
 const redisClient = redis.createClient();
 
-const redisStore = require('connect-redis')(session);
 redisClient.on('error', (err) => {
     console.log('Redis error: ', err);
 });
+
+
+
 var mustache = require("mustache");
 var puppeteer = require("puppeteer");
 var templates = {
@@ -58,10 +58,10 @@ var get_public_tweet = "SELECT `answers`.id AS answer_id, `answers`.`content` AS
     "LEFT JOIN `users` ON users.twitter_id = tells.for_user_id " +
     "WHERE tells.id = ?";
 
-queue.process("process_uploaded_file", function (job, done) {
+queue.process("process_uploaded_file", async function (job, done) {
     util.log("Starting to process new File " + job.data.tempFileLocation);
     (async () => {
-        function addFileToDatabase(tempLocation, fileext) {
+        async function addFileToDatabase(tempLocation, fileext) {
             util.log("Adding File " + tempLocation + " to Database...");
             var mediaUUID = uuid();
             var size = fs.statSync(tempLocation).size;
@@ -71,14 +71,13 @@ queue.process("process_uploaded_file", function (job, done) {
 
             var isMP4 = false;
             if (fileext == "mp4") { isMP4 = true; }
-            connection.query("INSERT INTO attachment_media (media_uuid, is_mp4, size, cdn_path) VALUES (?)",
-                [[mediaUUID, isMP4, size, mediaUUID + "." + fileext]], function (error, result) {
-                    if (error) throw error;
-                    util.log("Added File to DB " + mediaUUID);
+            await Tellschn.sqlQuery("INSERT INTO attachment_media (media_uuid, is_mp4, size, cdn_path) VALUES (?)",
+                [[mediaUUID, isMP4, size, mediaUUID + "." + fileext]])
+            util.log("Added File to DB " + mediaUUID);
 
-                    done(null, mediaUUID);
-                    return;
-                })
+            done(null, mediaUUID);
+            return;
+
         }
 
         var fileinfo = await FileType.fromFile(job.data.tempFileLocation);
@@ -161,105 +160,113 @@ queue.process("process_uploaded_file", function (job, done) {
 });
 queue.process("send_tweet", async function (job, done) {
     job.log("Send Tweet: Task Started");
-    connection.query(get_public_tweet, job.data.for_tell_id, async function (err, result) {
+    let result = await Tellschn.sqlQuery(get_public_tweet, job.data.for_tell_id);
+    job.log("Send Tweet: SQL Result Successful. Generating Image");
+    if (result[0].answer_content.length > 230) {
+        result[0].answer_content = result[0].answer_content.substr(0, 230) + "[...]";
+    }
+    if (result[0].tell_content.length > 230) {
+        result[0].tell_content = result[0].tell_content.substr(0, 230) + "[...]";
+    }
+    var html = mustache.render(templates.render_tell, {
+        "profile_image_url": result[0].profile_pic_original_link,
+        "display_name": result[0].twitter_handle,
+        "twitter_id": result[0].twitter_id,
+        "timestamp": dateFormat(result[0].timestamp, "hh:MM:ss dd.mm.yyyy"),
+        "has_video": result[0].is_mp4,
+        "answer_content": result[0].answer_content,
+        "tell_content": result[0].tell_content,
+        "base_url": appconf.base_url
+    })
+    job.log("HTML Rendered. Starting puppeteer");
+    const browser = await puppeteer.launch({
+        args: ['--no-sandbox'],
+        headless: true
+    });
 
-        if (err) throw err;
-        job.log("Send Tweet: SQL Result Successful. Generating Image");
-        if (result[0].answer_content.length > 230) {
-            result[0].answer_content = result[0].answer_content.substr(0, 230) + "[...]";
-        }
-        if (result[0].tell_content.length > 230) {
-            result[0].tell_content = result[0].tell_content.substr(0, 230) + "[...]";
-        }
-        var html = mustache.render(templates.render_tell, {
-            "profile_image_url": result[0].profile_pic_original_link,
-            "display_name": result[0].twitter_handle,
-            "twitter_id": result[0].twitter_id,
-            "timestamp": dateFormat(result[0].timestamp, "hh:MM:ss dd.mm.yyyy"),
-            "has_video": result[0].is_mp4,
-            "answer_content": result[0].answer_content,
-            "tell_content": result[0].tell_content,
-            "base_url": appconf.base_url
-        })
-        job.log("HTML Rendered. Starting puppeteer");
-        const browser = await puppeteer.launch({
-            args: ['--no-sandbox'],
-            headless: true
+    var page = await browser.newPage();
+    job.log("Navigating to HTML");
+    var randomNumber = Math.floor(Math.random() * 2000);
+    fs.writeFileSync("webview/assets/temp_" + randomNumber + ".html", html, "utf8");
+    await page.goto(appconf["local_path"] + "webview/assets/temp_" + randomNumber + ".html", {
+        waitUntil: 'networkidle0'
+    });
+    var base64_tell_img = await page.screenshot({ encoding: 'base64' });
+
+    await browser.close();
+    fs.unlinkSync("webview/assets/temp_" + randomNumber + ".html");
+    function uploadTweetImage(uploadData, cb) {
+        twitter.uploadMedia(uploadData, result[0].oauth_token, result[0].oauth_secret, function (error, media_1_data, media_1_response) {
+            console.log(media_1_data);
+            cb(media_1_data.media_id_string)
+
         });
+    }
+    function tweetOut(media) {
 
-        var page = await browser.newPage();
-        job.log("Navigating to HTML");
-        var randomNumber = Math.floor(Math.random() * 2000);
-        fs.writeFileSync("webview/assets/temp_" + randomNumber + ".html", html, "utf8");
-        await page.goto(appconf["local_path"] + "webview/assets/temp_" + randomNumber + ".html", {
-            waitUntil: 'networkidle0'
-        });
-        var base64_tell_img = await page.screenshot({ encoding: 'base64' });
+        twitter.statuses("update", {
+            status: appconf.base_url + "/" + result[0].twitter_handle + "/" + result[0].answer_id,
+            "media_ids": media
+        },
+            result[0].oauth_token,
+            result[0].oauth_secret,
+            async function (error, data, response) {
+                if (error) {
+                    console.log(error);
+                } else {
+                    if (data.id_str !== undefined) {
+                        await Tellschn.sqlQuery("UPDATE answers SET tweet_id = ? where id = ?", [data.id_str, result[0].answer_id]);
 
-        await browser.close();
-        fs.unlinkSync("webview/assets/temp_" + randomNumber + ".html");
-        function uploadTweetImage(uploadData, cb) {
-            twitter.uploadMedia(uploadData, result[0].oauth_token, result[0].oauth_secret, function (error, media_1_data, media_1_response) {
-                console.log(media_1_data);
-                cb(media_1_data.media_id_string)
+                        done();
 
-            });
-        }
-        function tweetOut(media) {
-
-            twitter.statuses("update", {
-                status: appconf.base_url + "/" + result[0].twitter_handle + "/" + result[0].answer_id,
-                "media_ids": media
-            },
-                result[0].oauth_token,
-                result[0].oauth_secret,
-                function (error, data, response) {
-                    if (error) {
-                        console.log(error);
-                    } else {
-                        if (data.id_str !== undefined) {
-                            connection.query("UPDATE answers SET tweet_id = ? where id = ?", [data.id_str, result[0].answer_id], function (err) {
-                                if (err) throw err;
-                                done();
-                            })
-                        }
                     }
                 }
-            );
-        }
-        uploadTweetImage({
-            media: base64_tell_img,
-            isBase64: true
-        }, function (textImgID) {
-            if (result[0].has_media && !result[0].is_mp4 && job.data.share_image_twitter) {
-                console.log("Has another Image Attached, uploading...");
-                uploadTweetImage({
-                    media: fs.readFileSync("./cdn/" + result[0].cdn_path),
-                    isBase64: false
-                }, function (appendedMediaID) {
-                    tweetOut(textImgID + "," + appendedMediaID);
-                })
-            } else {
-                tweetOut(textImgID)
             }
-        })
-
+        );
+    }
+    uploadTweetImage({
+        media: base64_tell_img,
+        isBase64: true
+    }, function (textImgID) {
+        if (result[0].has_media && !result[0].is_mp4 && job.data.share_image_twitter) {
+            console.log("Has another Image Attached, uploading...");
+            uploadTweetImage({
+                media: fs.readFileSync("./cdn/" + result[0].cdn_path),
+                isBase64: false
+            }, function (appendedMediaID) {
+                tweetOut(textImgID + "," + appendedMediaID);
+            })
+        } else {
+            tweetOut(textImgID)
+        }
     })
+
+
 });
 
 queue.process("send_instant_msg_notification", async (job, done) => {
     util.log("Got Job for delivering Instant Message Jobs");
     try {
-        let rows = await Tellschn.sqlQuery("SELECT platform, address FROM user_notification_services WHERE twitter_id = ? AND address IS NOT NULL", job.data.userpayload.twitter_id)
+        let rows = await Tellschn.sqlQuery("SELECT platform, address FROM user_notification_services WHERE twitter_id = ? AND address IS NOT NULL AND validation_token IS NULL", job.data.userpayload.twitter_id)
         rows.forEach(currentRow => {
             switch (currentRow.platform) {
-                case "telegram": 
+                case "telegram":
                     job.data.chat_id = currentRow.address;
                     queue.create("send_telegram_notification_message", job.data).save(done);
-                break;
-                default: 
-                    done();
-                break;
+                    break;
+                case "email":
+                    let data = {
+                        "title": "Send Notification Mail to " + currentRow.address,
+                        "to": currentRow.address,
+                        "subject": templatingEngine.getTextModule("mail_subject_new_tell", job.data),
+                        "text": templatingEngine.getTextModule("mail_text_new_tell", job.data)
+                           
+                    }
+                    queue.create("send_email", data).save(done);
+                    
+                default:
+                    done(new Error("INVALID_PLATFORM"));
+                    break;
             }
         })
         done()
@@ -267,3 +274,23 @@ queue.process("send_instant_msg_notification", async (job, done) => {
         throw e;
     }
 });
+
+
+
+queue.process("send_email", async (job, done) => {
+    await tellschnMailer.sendMail(job.data.to, job.data.subject, job.data.text);
+    done();
+})
+
+queue.process("send_notification_registration_mail", async (job, done) => {
+    await tellschnMailer.sendValidationMail(job.data.address, job.data.userpayload);
+    done();
+})
+
+queue.process("send_notification_registration_success_mail", async (job, done) => {
+    await tellschnMailer.sendRegistrationNotificationSuccessMail(job.data.address, job.data.userpayload);
+    done();
+})
+    
+
+

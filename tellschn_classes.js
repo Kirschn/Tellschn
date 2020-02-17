@@ -1,4 +1,5 @@
 const fs = require("fs");
+const nodemailer = require("nodemailer");
 class Tellschn {
     constructor() {
         const mysql = require("mysql");
@@ -17,6 +18,13 @@ class Tellschn {
                 }
             })
         })
+    }
+    uuid() {
+        return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    }
+    validateEmail(email) {
+        var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(String(email).toLowerCase());
     }
     
 }
@@ -57,6 +65,44 @@ class tellschnTemplate extends Tellschn {
     exportText_modules(data = {}) {
         return {...this.static_prop, ...{"text_modules": this.renderFullTranslation(data)}};
     }
+    
 }
 
-module.exports = {Tellschn, tellschnTemplate}
+class tellschnMailer extends tellschnTemplate {
+    constructor(lang) {
+        super(lang);
+        
+        this.mailer = nodemailer.createTransport(this.accessConf.mail);
+    }
+    async sendMail(to, subject, text) {
+        let info = await this.mailer.sendMail({
+            "from": this.accessConf.mail.sender,
+            "to": to,
+            "subject": subject,
+            "text": text
+        });
+        return info;
+    }
+    async sendValidationMail(address, userpayload) {
+        let validation_token = this.uuid();
+        await this.sqlQuery("INSERT INTO user_notification_services (twitter_id, address, validation_token, recipient_name, platform) VALUES (?)", [[
+            userpayload.twitter_id,
+            address,
+            validation_token,
+            address,
+            "email"
+        ]])
+        this.sendMail(address,
+            this.getTextModule("mail_subject_register", {"userpayload": userpayload}),
+            this.getTextModule("mail_text_register", {"userpayload": userpayload, "email_token": validation_token}),    
+        );
+    }
+    async sendRegistrationNotificationSuccessMail(address, userpayload) {
+        
+        this.sendMail(address,
+            this.getTextModule("mail_subject_registration_success", {"userpayload": userpayload}),
+            this.getTextModule("mail_text_registration_success", {"userpayload": userpayload}),    
+        );
+    }
+}
+module.exports = {Tellschn, tellschnTemplate, tellschnMailer}

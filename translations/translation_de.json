@@ -24,6 +24,12 @@
     "telegram_new_tell_notification": "{{userpayload.twitter_handle}}, du hast einen neuen Tell erhalten! {{{appconf.base_url}}}",
     "telegram_invalid_command": "Dieses Kommando kenne ich leider nicht.",
 
+    "mail_subject_new_tell": "{{userpayload.twitter_handle}}, du hast einen neuen Tell erhalten!",
+    "mail_text_new_tell": "{{userpayload.twitter_handle}}, du hast einen neuen Tell erhalten. Sieh jetzt nach, was jemand dir mitteilen möchte! {{{appconf.base_url}}}",
+    "mail_subject_register": "{{userpayload.twitter_handle}}, bitte bestätige deine E-Mail Adresse",
+    "mail_text_register": "Hallo {{userpayload.twitter_handle}}!\nUm deinen Tellschn Account mit dieser E-Mail Adresse zu verknüpfen, klicke bitte auf diesen Link:\n{{{appconf.base_url}}}/confirm_email?token={{email_token}}",
+    "mail_subject_registration_success": "E-Mail Adresse erfolgreich hinzugefügt",
+    "mail_text_registration_success": "Hallo {{userpayload.twitter_handle}}! An diese E-Mail Adresse wird nun immer eine E-Mail gesendet, wenn du einen neuen Tell erhältst. Wenn du keine Benachrichtigungen mehr erhalten möchtest, kannst du diese jederzeit auf {{{appconf.base_url}}}/settings ausschalten.",
 
 
     "settings_headline": "Einstellungen",
