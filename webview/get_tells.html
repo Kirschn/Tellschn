@@ -2,18 +2,18 @@
 <html>
 
 <head>
-    <title>{{text_modules.title}}</title>
+    <title>{{translation.title}}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <meta name="description" lang="de" content="{{text_modules.site_description}}">
+    <meta name="description" lang="de" content="{{translation.site_description}}">
     <meta name="theme-color" content="#253e59">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta property="og:site_name" content="{{text_modules.title}}">
-    <meta property="og:title" content="{{text_modules.title}}">
-    <meta property="og:description" content="{{text_modules.site_description}}">
-    <meta property="og:url" content="{{appconf.base_url}}">
-    <meta property="og:image" content="{{appconf.base_url}}/assets/images/og.png">
+    <meta property="og:site_name" content="{{translation.title}}">
+    <meta property="og:title" content="{{translation.title}}">
+    <meta property="og:description" content="{{translation.site_description}}">
+    <meta property="og:url" content="{{[appconf.base_url}}}">
+    <meta property="og:image" content="{{{appconf.base_url}}}/assets/images/og.png">
     <meta property="og:type" content="article">
     <link rel="stylesheet" href="/assets/stylesheets/stylesheet.css" />
     <link rel="icon" href="/assets/images/favicon.ico" />
@@ -150,9 +150,9 @@
                 <h2>{{translation.get_tells_delete_confirm_headline}}</h2>
                 <a class="close" href="#">&times;</a>
                 <div class="content">
-                    <p>Bist du dir sicher, dass du diesen Tell löschen möchtest? Du kannst ihn danach nicht wiederherstellen!
+                    <p>{{translation.get_tells_delete_tell_confirm_text}}
                     </p>
-                    <button class="delete" onclick="deleteTell()">Weg damit!</button> <button class="cancel">Lieber doch nicht...</button>
+                    <button class="delete" onclick="deleteTell()">{{translation.get_tells_delete_tell_confirm_button}}</button> <button class="cancel">{{translation.get_tells_delete_tell_abort_button}}</button>
                 </div>
             </div>
         </div>
@@ -170,7 +170,7 @@
                     <a class="close" href="#">&times;</a>
                     <div class="content">
                         <video src="" id="lightbox_media" controls autoplay>
-                            Dein Browser unterstützt leider kein HTML5 Video
+                            {{translation.no_html5_video_support}}
                         </video>
                     </div>
                 </div>
@@ -243,8 +243,8 @@
                     
                     document.getElementById("edit_popup_content").style.display = "none";
                     document.getElementById("edit_popup_response").style.display = "inline";
-                    document.getElementById("edit_popup_response").innerHTML = "Deine Antwort wurde bearbeitet.<br><br>";
-                    document.getElementById("edit_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">Okay</a></div>';
+                    document.getElementById("edit_popup_response").innerHTML = "{{translation.get_tells_your_answer_was_edited}}<br><br>";
+                    document.getElementById("edit_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">{{translation.okay}}</a></div>';
             
 
                 }
@@ -269,8 +269,8 @@
                         // display success message
                         document.getElementById("answer_popup_content").style.display = "none";
                         document.getElementById("answer_popup_response").style.display = "inline";
-                        document.getElementById("answer_popup_response").innerHTML = "Deine Antwort wurde gesendet.<br><br>";
-                        document.getElementById("answer_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">Okay</a></div>';
+                        document.getElementById("answer_popup_response").innerHTML = "{{translation.get_tells_your_answer_was_sent}}<br><br>";
+                        document.getElementById("answer_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">{{translation.okay}}</a></div>';
                     } else {
                         alert(response);
                         return;

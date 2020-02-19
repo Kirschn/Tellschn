@@ -21,7 +21,7 @@
 
                 {{#was_answered}}
                     <hr class="hr_tell_answer">
-                    <h3>Antwort:</h3>{{#answer_was_edited}} <i>Bearbeitet</i>{{/answer_was_edited}}<br>
+                    <h3>{{translation.answer_noun}}:</h3>{{#answer_was_edited}} <i>{{translation.edited}}</i>{{/answer_was_edited}}<br>
                     <p id="answer_content_{{tell_id}}">{{answer_content}}</p>
                 {{/was_answered}}
                 <hr />
@@ -33,17 +33,17 @@
                 
                 {{#do_not_share}}
                 <div id="button">
-                        <a class="answer_private">Privat</a>
+                        <a class="answer_private">{{translation.private}}</a>
                 </div>
                 {{/do_not_share}}
                 {{^do_not_share}}
                 <div id="button">
                     
                     {{^was_answered}}
-                    <a class="answer" href="#answer" onclick="fillanswermodal('{{tell_id}}', {{has_media}})">Antworten</a>
+                    <a class="answer" href="#answer" onclick="fillanswermodal('{{tell_id}}', {{has_media}})">{{translation.answer}}</a>
                     {{/was_answered}}
                     {{#was_answered}}
-                    <a class="answer" href="#edit" onclick="filleditmodal('{{tell_id}}', {{has_media}}, {{#answer_show_public}}true{{/answer_show_public}}{{^answer_show_public}}false{{/answer_show_public}}, {{#answer_show_media_public}}true{{/answer_show_media_public}}{{^answer_show_media_public}}false{{/answer_show_media_public}})">Bearbeiten</a>
+                    <a class="answer" href="#edit" onclick="filleditmodal('{{tell_id}}', {{has_media}}, {{#answer_show_public}}true{{/answer_show_public}}{{^answer_show_public}}false{{/answer_show_public}}, {{#answer_show_media_public}}true{{/answer_show_media_public}}{{^answer_show_media_public}}false{{/answer_show_media_public}})">{{translation.edit}}</a>
                     {{/was_answered}}
                     
                 </div>
@@ -51,13 +51,13 @@
                 
                 <div id="button">
                     {{#answer_tweet_id}}
-                    <a class="answer" href="https://twitter.com/{{display_name}}/status/{{answer_tweet_id}}">Zum Tweet</a>
+                    <a class="answer" href="https://twitter.com/{{display_name}}/status/{{answer_tweet_id}}">{{translation.link_to_tweet}}</a>
                     {{/answer_tweet_id}}
-                    <a class="delete" href="#confirm_delete" onclick="filldeletemodal('{{tell_id}}')">Löschen</a>
+                    <a class="delete" href="#confirm_delete" onclick="filldeletemodal('{{tell_id}}')">{{translation.delete}}</a>
                 </div>
                 {{/edit_tools}}
             </div>
         </div>
         {{/tells}}
 
-{{^tells}}<p>Hier sind leider keine Tells :c</p><script>noMoreTells();console.log("No more Tells");</script>{{/tells}}
+{{^tells}}<p>{{translation.no_more_tells}}</p><script>noMoreTells();console.log("No more Tells");</script>{{/tells}}

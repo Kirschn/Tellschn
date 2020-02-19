@@ -54,12 +54,12 @@ Einstellungsoptionen:
     <div class="loggedin">
        
         <div id="top">
-            <h1>{{text_modules.settings_headline}}</h1>
-            <h2>{{text_modules.settings_general_information}}</h2>
+            <h1>{{translation.settings_headline}}</h1>
+            <h2>{{translation.settings_general_information}}</h2>
         </div>
         <hr/>
         <div class="tell" id="settings_custom_page_text">
-            {{text_modules.settings_custom_text_information}}
+            {{translation.settings_custom_text_information}}
             <br>
 
             <div id="tell_content">
@@ -70,7 +70,7 @@ Einstellungsoptionen:
                 <hr>
                 
                 <div id="button">
-                    <a class="answer" onclick="updateCustomPageText()">{{text_modules.save}}</a>
+                    <a class="answer" onclick="updateCustomPageText()">{{translation.save}}</a>
                 </div>
                
             </div>
@@ -80,18 +80,18 @@ Einstellungsoptionen:
         
         <div class="tell" id="settings_list_of_external_accounts_with_access">
             <div id="tell_content">
-                {{text_modules.settings_allowed_access_information}}<br />
+                {{translation.settings_allowed_access_information}}<br />
                 <table>
                     <thead>
                         <tr>
                             <th>
-                                {{text_modules.account}}
+                                {{translation.account}}
                             </th>
                             <th>
-                                {{text_modules.added}}
+                                {{translation.added}}
                             </th>
                             <th>
-                                {{text_modules.actions}}
+                                {{translation.actions}}
                             </th>
                         </tr>
                     </thead>
@@ -106,7 +106,7 @@ Einstellungsoptionen:
                                 </td>
                                 <td>
                                     <div id="button">
-                                        <a class="delete" onclick="button_removeUserAccess('{{to_user_screen_name}}')">{{text_modules.remove}}</a>
+                                        <a class="delete" onclick="button_removeUserAccess('{{to_user_screen_name}}')">{{translation.remove}}</a>
                                     </div>
                                 </td>
                             </tr>
@@ -114,7 +114,7 @@ Einstellungsoptionen:
                         {{^user_access_sharing}}
                         <tr>
                             <td>
-                                {{text_modules.settings_no_access_granted}}
+                                {{translation.settings_no_access_granted}}
                             </td>
 
                         </tr>
@@ -126,11 +126,11 @@ Einstellungsoptionen:
         </div>
         <div class="tell" id="settings_add_external_access">
             <div id="tell_content">
-                {{{text_modules.settings_add_allowed_access_information}}}<br>
+                {{{translation.settings_add_allowed_access_information}}}<br>
                 <input type="text" placeholder="@deinFreund" id="addUserAccessHandle"/> 
                 <div id="tell_additional">
                     <div id="button">
-                        <a class="answer" onclick="button_addUserAccess()">{{text_modules.add}}</a>
+                        <a class="answer" onclick="button_addUserAccess()">{{translation.add}}</a>
                     </div>
                 </div>
                 
@@ -140,21 +140,21 @@ Einstellungsoptionen:
         {{/is_own_account}}
         <div class="tell" id="settings_list_of_connected_notification_services">
             <div id="tell_content">
-                {{{text_modules.settings_notification_services_information}}}<br />
+                {{{translation.settings_notification_services_information}}}<br />
                 <table>
                     <thead>
                         <tr>
                             <th>
-                                {{text_modules.service}}
+                                {{translation.service}}
                             </th>
                             <th>
-                                {{text_modules.username}}
+                                {{translation.username}}
                             </th>
                             <th>
-                                {{text_modules.added}}
+                                {{translation.added}}
                             </th>
                             <th>
-                                {{text_modules.actions}}
+                                {{translation.actions}}
                             </th>
                         </tr>
                     </thead>
@@ -172,7 +172,7 @@ Einstellungsoptionen:
                                 </td>
                                 <td>
                                     <div id="button">
-                                        <a class="delete" onclick="button_removeNotificationService('{{id}}')">{{text_modules.remove}}</a>
+                                        <a class="delete" onclick="button_removeNotificationService('{{id}}')">{{translation.remove}}</a>
                                     </div>
                                 </td>
                             </tr>
@@ -180,7 +180,7 @@ Einstellungsoptionen:
                         {{^notification_registrations}}
                         <tr>
                             <td>
-                                {{text_modules.settings_no_notification_services_registered}}
+                                {{translation.settings_no_notification_services_registered}}
                             </td>
 
                         </tr>
@@ -188,12 +188,12 @@ Einstellungsoptionen:
                     </tbody>
                 </table>
                 <br />
-                {{{text_modules.settings_notification_services_telegram_information}}}
+                {{{translation.settings_notification_services_telegram_information}}}
             </div>
             
         </div>
         
-        <footer><a href="https://github.com/Kirschn/Tellschn/tree/V2">{{text_modules.is_free_software}}</a></footer>
+        <footer><a href="https://github.com/Kirschn/Tellschn/tree/V2">{{translation.is_free_software}}</a></footer>
 
 
         

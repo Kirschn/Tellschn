@@ -826,8 +826,7 @@ async function usrlandHandler(req, res, tell_showbox_html) {
             "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
             [req.session.own_twitter_id, req.session.own_twitter_id]);
 
-
-        res.send(mustache.render(templates.get_tells, {
+        let templateFiller = {
             "profile_image_url": req.session.userpayload.profile_pic_original_link,
             "display_name": req.session.userpayload.twitter_handle,
             "custom_configuration": {
@@ -849,7 +848,10 @@ async function usrlandHandler(req, res, tell_showbox_html) {
                 "display_name": req.session.own_userpayload.twitter_handle,
                 "twitter_id": req.session.own_twitter_id
             }
-        }, { "tell_list": templates.view_tells }));
+        }
+        templateFiller = { ...templateFiller, ...tellschnTemplate.exportText_modules(templateFiller) };
+
+        res.send(mustache.render(templates.get_tells, templateFiller, { "tell_list": templates.view_tells }));
         res.end();
         return;
 
@@ -869,9 +871,7 @@ async function usrlandHandler(req, res, tell_showbox_html) {
 
         let tells = await Tellschn.sqlQuery(get_public_answers, [result[0].twitter_id, 0]);
         tells = mysql_result_time_to_string(tells, "timestamp")
-
-
-        res.send(mustache.render(templates.send_tells, {
+        let templateFiller = {
             "profile_image_url": result[0].profile_pic_original_link,
             "display_name": result[0].twitter_handle,
             "custom_page_text": result[0].custom_page_text,
@@ -882,7 +882,9 @@ async function usrlandHandler(req, res, tell_showbox_html) {
             "tells": tells,
             "was_answered": true,
             "showcase": tell_showbox_html
-        }, { "publicanswers": templates.view_tells }));
+        }
+        templateFiller = { ...templateFiller, ...tellschnTemplate.exportText_modules(templateFiller) };
+        res.send(mustache.render(templates.send_tells, templateFiller, { "publicanswers": templates.view_tells }));
         res.end();
 
 

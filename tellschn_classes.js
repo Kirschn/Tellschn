@@ -32,9 +32,9 @@ class tellschnTemplate extends Tellschn {
     constructor (lang = "de") {
         super();
         this.mustache = require("mustache");
-        this.text_modules = JSON.parse(fs.readFileSync("translations/translation_"+lang+".json", "utf8"));
+        this.translation = JSON.parse(fs.readFileSync("translations/translation_"+lang+".json", "utf8"));
         this.static_prop = {
-            text_modules: this.text_modules,
+            translation: this.translation,
             appconf: this.appconf,
             accessconf: this.accessConf
         }
@@ -46,24 +46,24 @@ class tellschnTemplate extends Tellschn {
         
         var combined_prop = {...this.static_prop, ...additionalMoustacheContent};
         
-        return this.mustache.render(this.text_modules[moduleName], combined_prop);
+        return this.mustache.render(this.translation[moduleName], combined_prop);
     }
 
     renderFullTranslation(additionalMoustacheContent = {}) {
         let buffer = {};
-        for (var i in this.text_modules) {
+        for (var i in this.translation) {
 
             //check wether the string actually contains a variable, if not just copy it
-            if (this.text_modules[i].indexOf("{{") != -1) {
+            if (this.translation[i].indexOf("{{") != -1) {
                 buffer[i] = this.getTextModule([i], additionalMoustacheContent);
             } else {
-                buffer[i] = this.text_modules[i];
+                buffer[i] = this.translation[i];
             }
         }
         return buffer;
     }
     exportText_modules(data = {}) {
-        return {...this.static_prop, ...{"text_modules": this.renderFullTranslation(data)}};
+        return {...this.static_prop, ...{"translation": this.renderFullTranslation(data)}};
     }
     
 }

@@ -6,15 +6,15 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <meta name="description" lang="de" content="Der schnelle Weg eine anonyme Meinung zu bekommen">
+    <meta name="description" lang="de" content="{{translation.site_description}}">
     <meta name="theme-color" content="#253e59">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta property="og:site_name" content="@{{display_name}} auf Tellschn">
+    <meta property="og:site_name" content="@{{display_name}} - {{translation.title}}">
     <meta property="og:title" content="Tellschn">
-    <meta property="og:description" content="Hinterlasse einen Kommentar auf @{{display_name}}'s Tellschn-Profil!">
-    <meta property="og:url" content="https://tell.kirschn.de/{{display_name}}">
-    <meta property="og:image" content="https://tell.kirschn.de/assets/images/og.png">
+    <meta property="og:description" content="{{translation.send_tells_og_description}}">
+    <meta property="og:url" content="{{{appconf.base_url}}}/{{display_name}}">
+    <meta property="og:image" content="{{{appconf.base_url}}}assets/images/og.png">
     <meta property="og:type" content="article">
     <link rel="stylesheet" href="/assets/stylesheets/stylesheet.css" />
     <link rel="icon" href="/assets/images/favicon.ico" />
@@ -36,11 +36,11 @@
                 if (res.uuid !== null) {
                     console.log(res.uuid);
                     media_uuid = res.uuid;
-                    $("#uploadbuttonContent").html("Hochgeladen!");
+                    $("#uploadbuttonContent").html("{{translation.uploaded}}!");
                     blocked = false;
                     return;
                 }
-                $("#uploadbuttonContent").html("Konvertiere " + res.progress + "%");
+                $("#uploadbuttonContent").html("{{translation.converting}} " + res.progress + "%");
                 setTimeout(checkUploadedFile, 1000);
             })
 
@@ -73,7 +73,7 @@
                     $("#tweetable").is(":checked"),
                     function (call) {
                         if (call.status == "success") {
-                            $("#send_tell_button").html("Gesendet!");
+                            $("#send_tell_button").html("{{translation.sent}}!");
                             setTimeout(function () {
                                 window.location = window.location;
 
@@ -111,7 +111,7 @@
                     // in das Response-Div
                     success: function (result) {
                         console.log(result);
-                        $("#uploadbuttonContent").html("Konvertiere...");
+                        $("#uploadbuttonContent").html("{{translation.converting}}...");
 
                         checkUploadedFile();
                     }
@@ -123,7 +123,7 @@
 
 <body onload="onload()">
     <div class="navbar_centered">
-        <a href="/"><img class="logo" src="/assets/images/logo_white.svg" alt="Tellschn"
+        <a href="/"><img class="logo" src="/assets/images/logo_white.svg" alt="{{translation.title}}"
                 style="height:2em; margin-top: -0.45em;"></a>
     </div>
     <div class="loggedin">
@@ -139,27 +139,26 @@
             <div class="tell_actions">
                 <div id="file_upload">
                     <label class="fileContainer">
-                        <span id="uploadbuttonContent">Bild anhängen</span>
+                        <span id="uploadbuttonContent">{{translation.send_tells_attach_image}}</span>
                         <input name="file" type="file" id="file">
                     </label>
                 </div>
                 <div id="private_checkbox">
                     <input type="checkbox" id="tweetable">
                     <label for="tweetable">
-                        <div class="tooltip">Als <em>Privat</em> markieren<span class="tooltiptext">Auf diesen Tell kann
-                                nicht geantwortet werden!</span></div>
+                        <div class="tooltip">{{{translation.send_tells_mark_as_private}}}<span class="tooltiptext">{{translation.send_tells_mark_as_private_tooltip}}</span></div>
                     </label>
                 </div>
                 <span class="spacer"></span>
-                <button class="send_tell" id="send_tell_button">Senden</button>
+                <button class="send_tell" id="send_tell_button">{{translation.send}}</button>
             </div>
         </div>
         <hr />
-        <h2>Öffentliche Antworten:</h2>
+        <h2>{{translation.send_tells_public_answers_headline}}</h2>
         <span id="tells">
             {{>publicanswers}}
         </span>
-        <footer>Tellschn ist <a href="https://github.com/Kirschn/Tellschn/tree/V2">freie Software</a></footer>
+        <footer><a href="https://github.com/Kirschn/Tellschn/tree/V2">{{translation.is_free_software}}</a></footer>
 
 
         <div class="pagination">
