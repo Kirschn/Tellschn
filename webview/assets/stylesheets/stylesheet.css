@@ -450,10 +450,10 @@ textarea#enter_tell {
     font-family: Roboto Condensed;
     padding: 0.5rem;
     padding-bottom: 1rem!important;
-    background-color: #393939;
     width: 100%;
-    color: #fff;
     border-radius: 3px;
+    background-color: #ffffffb3;
+    color: #363642;
 }
 
 .answer_tell {
@@ -845,8 +845,8 @@ input[type="checkbox"]:checked+label:before {
         color: #fff;
     }
     textarea#enter_tell {
-        background-color: #ffffffb3;
-        color: #363642;
+        background-color: #393939;
+        color: #fff;
         margin-bottom: 1em;
     }
 }
