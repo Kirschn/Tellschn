@@ -47,7 +47,7 @@ a {
     transition: all 0.3s cubic-bezier(.79, .14, .15, .86);
 }
 
-.profile_pic {
+img.profile_pic {
     height: 2.2em;
     margin-top: -0.5em;
     border-radius: 2.5px;

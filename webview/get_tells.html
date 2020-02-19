@@ -41,9 +41,9 @@
         <div id="navbar-right">
             <div style="margin-right: 5rem">
                 {{#account_pool}}
-                <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img src="{{{shared_profile_image_url}}}" alt="{{{shared_display_name}}}"></a>
+                <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img class="profile_pic" src="{{{shared_profile_image_url}}}" alt="{{{shared_display_name}}}"></a>
                 {{/account_pool}}
-                <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img src="{{{base_user.profile_image_url}}}" alt="{{{base_user.display_name}}}"></a>
+                <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img class="profile_pic" src="{{{base_user.profile_image_url}}}" alt="{{{base_user.display_name}}}"></a>
             </div>
 
             <div id="user"><a href="/settings"><i class="material-icons">settings</i></a><a href="/api/logoff"><i class="material-icons">power_settings_new</i></a>

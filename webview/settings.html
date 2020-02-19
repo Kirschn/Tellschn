@@ -43,9 +43,9 @@ Einstellungsoptionen:
         <div id="navbar-right">
             <div style="margin-right: 5rem">
                 {{#account_pool}}
-                <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img src="{{{shared_profile_image_url}}}" alt="{{{shared_display_name}}}"></a>
+                <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img class="profile_pic" src="{{{shared_profile_image_url}}}" alt="{{{shared_display_name}}}"></a>
                 {{/account_pool}}
-                <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img src="{{{base_user.profile_image_url}}}" alt="{{{base_user.display_name}}}"></a>
+                <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img class="profile_pic" src="{{{base_user.profile_image_url}}}" alt="{{{base_user.display_name}}}"></a>
             </div>
 
             <div id="user"><a href="/settings"><i class="material-icons">settings</i></a><a href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
@@ -64,7 +64,6 @@ Einstellungsoptionen:
 
             <div id="tell_content">
                 <textarea style="margin-bottom: 0em!important;" data-length="9999" id="enter_tell">{{userpayload.custom_page_text}}</textarea>
-                <hr />
             </div>
             <div id="tell_additional">
                 <hr>
@@ -125,7 +124,7 @@ Einstellungsoptionen:
         </div>
         <div class="tell" id="settings_add_external_access">
             <div id="tell_content">
-                {{{translation.settings_add_allowed_access_information}}}<br>
+                <p>{{{translation.settings_add_allowed_access_information}}}</p>
                 <input type="text" class="text" placeholder="@username" id="addUserAccessHandle" />
                 <a class="answer" onclick="button_addUserAccess()">{{translation.add}}</a>
             </div>
