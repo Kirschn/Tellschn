@@ -604,12 +604,13 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
 
         // endpoint to grant access from another account to your own
         if (req.body.twitter_handle == undefined) {
+            Tellschn.dbg("No twitter_handle in request body found")
             res.json({ "err": "INVALID_HANDLE", "status": "failed" });
             res.end();
             return;
         }
         var sql = "SELECT twitter_id FROM users WHERE twitter_handle = ?";
-        let id_result = Tellschn.sqlQuery(sql, req.body.twitter_handle);
+        let id_result = await Tellschn.sqlQuery(sql, req.body.twitter_handle);
         if (id_result[0] == undefined) {
             res.json({ "err": "INVALID_HANDLE", "status": "failed" });
             res.end();
