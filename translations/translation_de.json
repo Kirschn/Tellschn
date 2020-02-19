@@ -10,14 +10,24 @@
     "copy": "Kopieren",
     "delete": "Löschen",
     "answer": "Antworten",
+    "answer_noun": "Antwort",
+    "edit": "Bearbeiten",
+    "edited": "Bearbeitet",
     "account": "Account",
     "added": "Hinzugefügt",
     "actions": "Aktionen",
     "service": "Dienst",
     "send": "Senden",
+    "sent": "Gesendet",
     "username": "Name",
     "tell": "Tell",
-
+    "okay": "Okay",
+    "uploaded": "Hochgeladen",
+    "converting": "Konvertiere",
+    "no_html5_video_support": "Dein Browser unterstützt leider kein HTML5 Video",
+    "private": "Privat",
+    "link_to_tweet": "Zum Tweet",
+    "no_more_tells": "Hier sind leider keine Tells :c",
 
 
     "telegram_welcome_message": "Hallo {{from_username}}! Du bist dabei dein Tellschn-Konto mit Telegram zu verknüpfen. Wenn du dein Telegram anbindest, erhältst du eine Benachrichtigung, sobald du neue Tells erhältst.",
@@ -55,9 +65,18 @@
     "get_tells_answer_image_on_own_profile": "Bild auf deinem Tellschn-Profil posten",
     "get_tells_edit_answer_headline": "Antwort Bearbeiten",
     "get_tells_delete_confirm_headline": "Willst du diesen Tell wirklich löschen?",
-    "get_tells_": "",
-    "get_tells_": ""
+    "get_tells_delete_tell_confirm_text": "Bist du dir sicher, dass du diesen Tell löschen möchtest? Du kannst ihn danach nicht wiederherstellen!",
+    "get_tells_delete_tell_confirm_button": "Weg damit!",
+    "get_tells_delete_tell_abort_button": "Lieber doch nicht...",
+    "get_tells_your_answer_was_edited": "Deine Antwort wurde bearbeitet.",
+    "get_tells_your_answer_was_sent": "Deine Antwort wurde gesendet.",
 
+    "send_tells_og_description": "Hinterlasse einen Kommentar auf @{{display_name}}'s Tellschn-Profil!",
+    "send_tells_headline": "Hinterlasse @{{display_name}} einen Tell!",
+    "send_tells_attach_image": "Bild anhängen",
+    "send_tells_mark_as_private": "Als <em>Privat</em> markieren",
+    "send_tells_mark_as_private_tooltip": "Auf diesen Tell kann nicht geantwortet werden!",
+    "send_tells_public_answers_headline": "Öffentliche Antworten"
 
 
 }
