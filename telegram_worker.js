@@ -82,7 +82,7 @@ class tellschnMessageProcessor extends tellschn.Tellschn {
         })
 
     }
-    templatingEngine = this.templatingEngine;
+    
 }
 
 var bot = new TelegramTellschnBot();
