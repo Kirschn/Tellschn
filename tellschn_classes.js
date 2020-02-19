@@ -1,5 +1,6 @@
 const fs = require("fs");
 const nodemailer = require("nodemailer");
+const util = require("util");
 class Tellschn {
     constructor() {
         const mysql = require("mysql");
@@ -9,7 +10,8 @@ class Tellschn {
     }
     sqlQuery(query, data) {
         return new Promise((resolve, reject) => {
-            this.sqlConnection.query(query, data, function(error, result) {
+            let sqlQueryObejct = this.sqlConnection.query(query, data, function(error, result) {
+                
                 if (error) {
                     reject(error);
                     return
@@ -17,6 +19,9 @@ class Tellschn {
                     resolve(result);
                 }
             })
+            if (this.appconf.debug) {
+                util.log(sqlQueryObejct.sql);
+            }
         })
     }
     uuid() {
