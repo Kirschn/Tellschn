@@ -43,8 +43,30 @@ body {
 }
 
 a {
-    color: #000;
+    color: #d5cfcf;
     transition: all 0.3s cubic-bezier(.79, .14, .15, .86);
+}
+
+.profile_pic {
+    height: 2.2em;
+    margin-top: -0.5em;
+    border-radius: 2.5px;
+}
+
+.settings_btn:hover {
+    transform: rotate(123deg) !important;
+}
+
+.settings_btn {
+    transition: 0.5s !important;
+}
+
+input.text {
+    background: #171616;
+    border: none;
+    padding: 8px;
+    border-radius: 2px;
+    color: #fff;
 }
 
 hr {
@@ -125,18 +147,20 @@ button {
 }
 
 #user {
-    /*margin-right: 3.3rem;*/
-    margin-top: -2rem;
+    margin-top: -2.05rem;
 }
 
 #user a {
+    margin-left: 0.75em;
+    transition: 0.3s;
     text-decoration: none;
     color: #fff;
 }
 
 #user a:hover {
-    color: #c3cdd4;
     text-decoration: none;
+    color: #dfd8d8;
+    text-shadow: 0px 0px 12px #ccc7c7;
 }
 
 .loggedin {
@@ -418,17 +442,18 @@ textarea#enter_answer {
 }
 
 textarea#enter_tell {
-    background-color: #ffffffb3;
     box-shadow: 0 0.4rem 0.7rem rgba(0, 0, 0, 0.30), 0 1rem 0.75rem rgba(0, 0, 0, 0.22);
     resize: none;
     border: none;
-    width: 80%;
     height: 10rem;
     margin-bottom: 3.5em;
-    color: #363642;
     font-family: Roboto Condensed;
     padding: 0.5rem;
     padding-bottom: 1rem!important;
+    background-color: #393939;
+    width: 100%;
+    color: #fff;
+    border-radius: 3px;
 }
 
 .answer_tell {
