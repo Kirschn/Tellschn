@@ -29,12 +29,7 @@ var twitter = new Twitter({
     callback: accessconf.twitter["redirection_url"]
 });
 var dateFormat = require("dateformat");
-const redis = require('redis');
-const redisClient = redis.createClient();
 
-redisClient.on('error', (err) => {
-    console.log('Redis error: ', err);
-});
 
 
 
