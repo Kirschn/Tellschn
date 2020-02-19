@@ -2,18 +2,18 @@
 <html>
 
 <head>
-    <title>Tellschn</title>
+    <title>{{text_modules.title}}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <meta name="description" lang="de" content="Der schnelle Weg eine anonyme Meinung zu bekommen">
+    <meta name="description" lang="de" content="{{text_modules.site_description}}">
     <meta name="theme-color" content="#253e59">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta property="og:site_name" content="Tellschn">
-    <meta property="og:title" content="Tellschn">
-    <meta property="og:description" content="Der schnelle Weg eine anonyme Meinung zu bekommen">
-    <meta property="og:url" content="https://tell.kirschn.de/">
-    <meta property="og:image" content="https://tell.kirschn.de/assets/images/og.png">
+    <meta property="og:site_name" content="{{text_modules.title}}">
+    <meta property="og:title" content="{{text_modules.title}}">
+    <meta property="og:description" content="{{text_modules.site_description}}">
+    <meta property="og:url" content="{{appconf.base_url}}">
+    <meta property="og:image" content="{{appconf.base_url}}/assets/images/og.png">
     <meta property="og:type" content="article">
     <link rel="stylesheet" href="/assets/stylesheets/stylesheet.css" />
     <link rel="icon" href="/assets/images/favicon.ico" />
@@ -57,10 +57,10 @@
         </span>
         {{/showcase}}
         <div id="top">
-            <h1>Hallo, @{{display_name}}!</h1>
-            <h2>Nachfolgend findest du eine chronologische Übersicht über alle Tells, die du bereits erhalten hast</h2>
-            <p id="share_url">Du möchtest mehr Tells? Teile deinen Profillink mit deinen Freunden!</p>
-            <input id="url" class="copyurl" type="text" name="profile-url" value="{{{base_url}}}/{{display_name}}" readonly="readonly" /> <button class="copyBtn">Kopieren</button>
+            <h1>{{translation.get_tells_headline}}</h1>
+            <h2>{{translation.get_tells_site_description}}</h2>
+            <p id="share_url">{{translation.get_tells_want_more_tells}}</p>
+            <input id="url" class="copyurl" type="text" name="profile-url" value="{{{base_url}}}/{{display_name}}" readonly="readonly" /> <button class="copyBtn">{{translation.copy}}</button>
         </div>
         <hr/>
         <span id="tells">
@@ -74,17 +74,17 @@
             </div>
         </div>
         
-        <footer>Tellschn ist <a href="https://github.com/Kirschn/Tellschn/tree/V2">freie Software</a></footer>
+        <footer><a href="https://github.com/Kirschn/Tellschn/tree/V2">{{translation.is_free_software}}<a></footer>
 
 
         <!-- TODO: Popups do not close when clicked out of the window and page always scrolls up to the top -->
         <div id="answer" class="overlay">
             <div class="popup">
-                <h2>Antworten</h2>
+                <h2>{{translation.answer}}</h2>
                 <a class="close" href="#">&times;</a>
                 <div class="content answer_popup" id="answer_popup_content">
                     <div class="answer_tell">
-                        <h3>Tell:</h3>
+                        <h3>{{translation.tell}}:</h3>
                         <p id="answer_tellcontent"></p>
                     </div>
                     <div class="answer_container">
@@ -92,21 +92,21 @@
                         <span class="counter"></span>
                     </div>
                     <div id="button">
-                        <button class="send" onclick="answerTell()">Senden</button>
+                        <button class="send" onclick="answerTell()">{{translation.send}}</button>
                     </div>
                     <div class="checkboxes">
                         <input type="checkbox" id="tweeting" {{#custom_configuration.std_tweet}}checked{{/custom_configuration.std_tweet}}>
-                        <label for="tweeting">Auf Twitter antworten</label>
+                        <label for="tweeting">{{translation.get_tells_answer_on_twitter}}</label>
 
                         <input type="checkbox" id="profileposting" {{#custom_configuration.std_post_feed}}checked{{/custom_configuration.std_post_feed}}>
-                        <label for="profileposting">Auf deinem Tellschn-Profil antworten</label>
+                        <label for="profileposting">{{translation.get_tells_answer_on_own_profile}}</label>
                     </div>
                     <div class="checkboxes" id="checkboxes_imagesharing">
                         <input type="checkbox" id="tweet_image" {{#custom_configuration.std_tweet_image}}checked{{/custom_configuration.std_tweet_image}}>
-                        <label for="tweet_image">Bild auf Twitter posten</label>
+                        <label for="tweet_image">{{translation.get_tells_answer_image_on_twitter}}</label>
                         
                         <input type="checkbox" id="post_image" {{#custom_configuration.std_post_image}}checked{{/custom_configuration.std_post_image}}>
-                        <label for="post_image">Bild auf deinem Tellschn-Profil posten</label>
+                        <label for="post_image">{{translation.get_tells_answer_image_on_own_profile}}</label>
                     </div>
                 </div>
                 <div class="content answer_popup" id="answer_popup_response" style="display: none">&nbsp;</div>
@@ -114,11 +114,11 @@
         </div>
         <div id="edit" class="overlay">
                 <div class="popup">
-                    <h2>Antwort Bearbeiten</h2>
+                    <h2>{{translation.get_tells_edit_answer_headine}}</h2>
                     <a class="close" href="#">&times;</a>
                     <div class="content answer_popup" id="edit_popup_content">
                         <div class="answer_tell">
-                            <h3>Tell:</h3>
+                            <h3>{{translation.tell}}:</h3>
                             <p id="edit_tellcontent"></p>
                         </div>
                         <!-- TODO: Somehow broke class of answer container -->
@@ -127,16 +127,16 @@
                             <span class="counter"></span>
                         </div>
                         <div id="button">
-                            <button class="send" onclick="editTell()">Senden</button>
+                            <button class="send" onclick="editTell()">{{translation.send}}</button>
                         </div>
                         <div class="checkboxes">
                             <input type="checkbox" id="editprofileposting">
-                            <label for="editprofileposting">Auf deinem Tellschn-Profil antworten</label>
+                            <label for="editprofileposting">{{translation.get_tells_answer_on_own_profile}}</label>
                         </div>
                         <div class="checkboxes" id="editcheckboxes_imagesharing">
                             
                             <input type="checkbox" id="editpost_image">
-                            <label for="editpost_image">Bild auf deinem Tellschn-Profil posten</label>
+                            <label for="editpost_image">{{translation.get_tells_answer_image_on_own_profile}}</label>
                         </div>
                     </div>
                     <div class="content answer_popup" id="edit_popup_response" style="display: none">
@@ -147,7 +147,7 @@
         </div>
         <div id="confirm_delete" class="overlay">
             <div class="popup">
-                <h2>Willst du diesen Tell wirklich löschen?</h2>
+                <h2>{{translation.get_tells_delete_confirm_headline}}</h2>
                 <a class="close" href="#">&times;</a>
                 <div class="content">
                     <p>Bist du dir sicher, dass du diesen Tell löschen möchtest? Du kannst ihn danach nicht wiederherstellen!

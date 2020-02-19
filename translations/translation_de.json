@@ -1,6 +1,8 @@
 {
     "lang_name": "Deutsch (German)",
 
+    "title": "Tellschn",
+    "site_description": "Der schnelle Weg eine anonyme Meinung zu bekommen",
     "is_free_software": "Tellschn ist freie Software",
     "save": "Speichern",
     "remove": "Entfernen",
@@ -12,7 +14,9 @@
     "added": "Hinzugefügt",
     "actions": "Aktionen",
     "service": "Dienst",
+    "send": "Senden",
     "username": "Name",
+    "tell": "Tell",
 
 
 
@@ -40,6 +44,20 @@
     "settings_no_access_granted": "Du hast niemandem Zugriff auf dein Tellschn-Profil gewährt.",
     "settings_notification_services_information": "Benachrichtigungen<br>Du kannst in Tellschn Dienste hinterlegen, über die du Benachrichtigungen erhältst, sobald dir ein neuer Tell geschickt wird. Über diese Dienste erhältst du Benachrichtigungen:",
     "settings_no_notification_services_registered": "Du hast keine Dienste registriert.",
-    "settings_notification_services_telegram_information": "Über Telegram kannst du dich über den Tellschn-Bot benachrichtigen lassen. Schreibe dazu @{{accessconf.telegram.handle}} an: <a href='https://t.me/{{accessconf.telegram.handle}}'>https://t.me/{{accessconf.telegram.handle}}</a>"
+    "settings_notification_services_telegram_information": "Über Telegram kannst du dich über den Tellschn-Bot benachrichtigen lassen. Schreibe dazu @{{accessconf.telegram.handle}} an: <a href='https://t.me/{{accessconf.telegram.handle}}'>https://t.me/{{accessconf.telegram.handle}}</a>",
+
+    "get_tells_headline": "Hallo, @{{display_name}}!",
+    "get_tells_site_description": "Nachfolgend findest du eine chronologische Übersicht über alle Tells, die du bereits erhalten hast",
+    "get_tells_want_more_tells": "Du möchtest mehr Tells? Teile deinen Profillink mit deinen Freunden!",
+    "get_tells_answer_on_twitter": "Auf Twitter antworten",
+    "get_tells_answer_on_own_profile": "Auf deinem Tellschn-Profil antworten",
+    "get_tells_answer_image_on_twitter": "Bild auf Twitter posten",
+    "get_tells_answer_image_on_own_profile": "Bild auf deinem Tellschn-Profil posten",
+    "get_tells_edit_answer_headline": "Antwort Bearbeiten",
+    "get_tells_delete_confirm_headline": "Willst du diesen Tell wirklich löschen?",
+    "get_tells_": "",
+    "get_tells_": ""
+
+
 
 }
