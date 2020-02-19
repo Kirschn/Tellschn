@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.9.2
+-- version 5.0.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Erstellungszeit: 04. Jan 2020 um 20:35
--- Server-Version: 10.4.10-MariaDB
--- PHP-Version: 7.4.0
+-- Erstellungszeit: 19. Feb 2020 um 21:40
+-- Server-Version: 10.4.12-MariaDB
+-- PHP-Version: 7.4.2
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -93,6 +93,35 @@ CREATE TABLE `users` (
   `im_config` varchar(512) COLLATE utf8mb4_unicode_520_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `user_access_sharing`
+--
+
+CREATE TABLE `user_access_sharing` (
+  `id` int(11) NOT NULL,
+  `from_user_id` varchar(128) COLLATE utf8mb4_unicode_520_ci NOT NULL,
+  `to_user_id` varchar(128) COLLATE utf8mb4_unicode_520_ci NOT NULL,
+  `granted_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `user_notification_services`
+--
+
+CREATE TABLE `user_notification_services` (
+  `id` int(11) NOT NULL,
+  `twitter_id` varchar(64) COLLATE utf8mb4_unicode_520_ci NOT NULL,
+  `platform` varchar(32) COLLATE utf8mb4_unicode_520_ci NOT NULL,
+  `address` varchar(255) COLLATE utf8mb4_unicode_520_ci DEFAULT NULL,
+  `validation_token` varchar(64) COLLATE utf8mb4_unicode_520_ci DEFAULT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
+  `recipient_name` varchar(255) COLLATE utf8mb4_unicode_520_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
 --
 -- Indizes der exportierten Tabellen
 --
@@ -122,6 +151,18 @@ ALTER TABLE `users`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indizes für die Tabelle `user_access_sharing`
+--
+ALTER TABLE `user_access_sharing`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indizes für die Tabelle `user_notification_services`
+--
+ALTER TABLE `user_notification_services`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- AUTO_INCREMENT für exportierte Tabellen
 --
 
@@ -147,6 +188,18 @@ ALTER TABLE `tells`
 -- AUTO_INCREMENT für Tabelle `users`
 --
 ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT für Tabelle `user_access_sharing`
+--
+ALTER TABLE `user_access_sharing`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT für Tabelle `user_notification_services`
+--
+ALTER TABLE `user_notification_services`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
