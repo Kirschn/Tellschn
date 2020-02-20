@@ -70,7 +70,7 @@ function scrollHandler(apinode, add) {
                     "statusCode": {
                         200: next,
                         404: next_page => {
-                            next(next_page);
+                            next(next_page.responseText);
                             this.noMoreTells()
                             at_end=true;
                         }
