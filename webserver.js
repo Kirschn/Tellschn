@@ -331,6 +331,10 @@ app.get("/api/:endpoint", nocache, async function (req, res) {
                 [req.session.userpayload.twitter_id, null, parseInt(req.query.page * appconf.tells_per_page)])
             tells = mysql_result_time_to_string(tells, "timestamp")
             
+            if (tells.length == 0) {
+                res.status(404);
+            }
+
             let templateFiller = {
                 "edit_tools": true,
                 "tells": tells
