@@ -99,7 +99,7 @@ function removeNotificationService(id, cb) {
         cb(response);
     });
 }
-function addEmailNotifiction(email_address, cb) {
+function addEmailNotification(email_address, cb) {
     $.post("/api/add_email_notification?token=" + token, {email_address: email_address}, function(response) {
         cb(response);
     });

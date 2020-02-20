@@ -330,11 +330,14 @@ app.get("/api/:endpoint", nocache, async function (req, res) {
             let tells = await Tellschn.sqlQuery(get_own_tells_sqlstmt,
                 [req.session.userpayload.twitter_id, null, parseInt(req.query.page * appconf.tells_per_page)])
             tells = mysql_result_time_to_string(tells, "timestamp")
-
-            res.send(mustache.render(templates.view_tells, {
+            
+            let templateFiller = {
                 "edit_tools": true,
                 "tells": tells
-            }));
+            }
+            templateFiller = { ...templateFiller, ...tellschnTemplate.exportText_modules(templateFiller) };
+
+            res.send(mustache.render(templates.view_tells, templateFiller));
             res.end();
 
         } else {
@@ -356,9 +359,13 @@ app.get("/api/:endpoint", nocache, async function (req, res) {
         tells = mysql_result_time_to_string(tells, "timestamp")
         tells.has_answer = true;
         tells.edit_tools = false;
-        res.send(mustache.render(templates.view_tells, {
+
+        let templateFiller = {
             "tells": tells
-        }));
+        };
+        templateFiller = { ...templateFiller, ...tellschnTemplate.exportText_modules(templateFiller) };
+
+        res.send(mustache.render(templates.view_tells, templateFiller));
         res.end();
 
     } else if (req.params.endpoint == "switch_user") {
@@ -401,7 +408,7 @@ app.get("/api/:endpoint", nocache, async function (req, res) {
 
 
 app.post("/api/:endpoint", nocache, async function (req, res) {
-    console.log("POST ENDPOINT " + req.params.endpoint)
+    Tellschn.dbg("POST ENDPOINT " + req.params.endpoint)
     if (req.query.token !== req.session.token) {
         // Token Invalid, Abort Request
         res.write(JSON.stringify({
@@ -433,7 +440,6 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
                 res.end();
                 return;
             }
-            console.log(req.body, (req.body.do_not_share === "true") ? true : false)
             await Tellschn.sqlQuery("INSERT INTO tells (for_user_id, by_user_id, content, media_attachment, do_not_share) VALUES (?)", [[
                 req.body.for_user_id,
                 req.body.by_user_id,
@@ -580,7 +586,7 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
 
         }
     } else if (req.params.endpoint == "grant_user_access") {
-        console.log("Granting Access Request")
+        Tellschn.dbg("Granting Access Request")
         // endpoint to grant access from another account to your own
         if (req.body.twitter_handle == undefined) {
             res.json({ "err": "INVALID_HANDLE", "status": "failed" });
@@ -632,7 +638,7 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
         req.files.media.mv("./tmp/" + random + req.files.media.name, function (error) {
             if (error) throw error;
             res.json({ "err": null, "status": "success" }).end();
-            console.log("Created Job");
+            Tellschn.dbg("Created Job for uploading Media");
             var processUploadJob = queue.create("process_uploaded_file", {
                 "tempFileLocation": "./tmp/" + random + req.files.media.name,
                 "title": "Process Uploaded File " + random + req.files.media.name
@@ -797,7 +803,12 @@ async function preProcessTellShowbox(req, res) {
             return;
         }
         console.log("Giving Object: ", sqlRes[0])
-        usrlandHandler(req, res, mustache.render(templates.view_tells, { "tells": sqlRes }));
+        let templateFiller = {
+            "tells": tells
+        };
+        templateFiller = { ...templateFiller, ...tellschnTemplate.exportText_modules(templateFiller) };
+
+        usrlandHandler(req, res, mustache.render(templates.view_tells, templateFiller));
         return;
 
     } else {

@@ -60,7 +60,7 @@ Einstellungsoptionen:
         </div>
         <hr/>
         <div class="tell" id="settings_custom_page_text">
-            <p>{{translation.settings_custom_text_information}}</p>
+            <p>{{{translation.settings_custom_text_information}}}</p>
 
             <div id="tell_content">
                 <textarea style="margin-bottom: 0em!important;" data-length="9999" id="enter_tell">{{userpayload.custom_page_text}}</textarea>
@@ -79,7 +79,7 @@ Einstellungsoptionen:
 
         <div class="tell" id="settings_list_of_external_accounts_with_access">
             <div id="tell_content">
-                <p>{{translation.settings_allowed_access_information}}</p>
+                <p>{{{translation.settings_allowed_access_information}}}</p>
                 <table>
                     <thead>
                         <tr>
@@ -172,7 +172,7 @@ Einstellungsoptionen:
                         {{/notification_registrations}} {{^notification_registrations}}
                         <tr>
                             <td>
-                                {{translation.settings_no_notification_services_registered}}
+                                {{{translation.settings_no_notification_services_registered}}}
                             </td>
 
                         </tr>
@@ -180,6 +180,15 @@ Einstellungsoptionen:
                     </tbody>
                 </table>
                 <br /> {{{translation.settings_notification_services_telegram_information}}}
+            </div>
+
+        </div>
+
+        <div class="tell" id="settings_add_notification_mail">
+            <div id="tell_content">
+                <p>{{{translation.settings_add_email_information}}}</p>
+                <input type="text" class="text" placeholder="email@example.org" id="addNotificationMail" />
+                <a class="answer" onclick="button_addNotificationEmail()">{{translation.add}}</a>
             </div>
 
         </div>
@@ -223,6 +232,10 @@ Einstellungsoptionen:
 
         function button_removeNotificationService(id = 0) {
             removeNotificationService(id, showErrorAndReload);
+        }
+
+        function button_addNotificationEmail() {
+            addEmailNotification($("#addNotificationMail").val(), showErrorAndReload);
         }
     </script>
 </body>
