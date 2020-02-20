@@ -226,19 +226,19 @@ app.get("/telegram_code", nocache, async (req, res) => {
 
 app.get("/confirm_email", nocache, async (req, res) => {
     if (req.query.token != undefined) {
-        
+
         let rows = await Tellschn.sqlQuery("SELECT address, users.twitter_handle FROM user_notification_services, users WHERE users.twitter_id = user_notification_services.twitter_id AND validation_token = ?", req.query.token);
-        
+
         if (rows.length == 1) {
             await Tellschn.sqlQuery("UPDATE user_notification_services SET validation_token = NULL WHERE validation_token = ?", req.query.token);
             // success
             // send notifiction mail 
-            queue.create("send_notification_registration_success_mail", {"title": "Send Notification Registration Success Mail", "address": rows[0].address, "userpayload": rows[0]}).save();
+            queue.create("send_notification_registration_success_mail", { "title": "Send Notification Registration Success Mail", "address": rows[0].address, "userpayload": rows[0] }).save();
             res.redirect("/" + req.session.userpayload.twitter_handle).end();
         } else {
             // no success
             res.end("Es ist leider ein Fehler aufgetreten. Bitte versuche es erneut.");
-            
+
         }
     }
 });
@@ -330,8 +330,10 @@ app.get("/api/:endpoint", nocache, async function (req, res) {
             let tells = await Tellschn.sqlQuery(get_own_tells_sqlstmt,
                 [req.session.userpayload.twitter_id, null, parseInt(req.query.page * appconf.tells_per_page)])
             tells = mysql_result_time_to_string(tells, "timestamp")
-            
+
+            Tellschn.dbg("Showing " + tells.length + " more Tells");
             if (tells.length == 0) {
+
                 res.status(404);
             }
 
@@ -361,6 +363,11 @@ app.get("/api/:endpoint", nocache, async function (req, res) {
         let tells = await Tellschn.sqlQuery(get_public_answers,
             [req.query.twitter_id, parseInt(req.query.page) * appconf.tells_per_page]);
         tells = mysql_result_time_to_string(tells, "timestamp")
+        Tellschn.dbg("Showing " + tells.length + " more Tells");
+        if (tells.length == 0) {
+
+            res.status(404);
+        }
         tells.has_answer = true;
         tells.edit_tools = false;
 
@@ -776,8 +783,8 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
         }
     } else if (req.params.endpoint == "add_email_notification") {
         if (Tellschn.validateEmail(req.body.email_address)) {
-            
-            queue.create("send_notification_registration_mail", {"address": req.body.email_address, "userpayload": req.session.userpayload}).save();
+
+            queue.create("send_notification_registration_mail", { "address": req.body.email_address, "userpayload": req.session.userpayload }).save();
             res.json({ "err": null, "status": "success" }).end();
         } else {
             res.json({ "err": "MALFORMED_EMAIL_ADDRESS", "status": "failed" }).end();
