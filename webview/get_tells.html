@@ -24,8 +24,6 @@
         var custom_page_text = "{{custom_page_text}}";
         var token = "{{token}}";
         var no_more_tells = false;
-
-        
     </script>
 </head>
 
@@ -43,7 +41,7 @@
                 <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img class="profile_pic" src="{{{base_user.profile_image_url}}}" alt="{{{base_user.display_name}}}"></a>
             </div>
 
-            <div id="user"><a href="/settings"><i class="material-icons">settings</i></a><a href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
+            <div id="user"><a href="/settings"><i id="settings_btn" class="material-icons">settings</i></a><a href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
 
             </div>
         </div>
@@ -156,7 +154,7 @@
 
     <div id="show_img" class="overlay">
         <div class="popup">
-            <a class="close" href="#">&times;</a>
+            <a class="close" href="#" onclick='$("#lightbox_media").attr("src", "");'>&times;</a>
             <div class="content">
                 <img src="/assets/images/test_image.jpg" id="lightbox_img" />
             </div>
