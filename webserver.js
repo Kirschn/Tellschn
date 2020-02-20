@@ -804,7 +804,7 @@ async function preProcessTellShowbox(req, res) {
         }
         console.log("Giving Object: ", sqlRes[0])
         let templateFiller = {
-            "tells": tells
+            "tells": sqlRes
         };
         templateFiller = { ...templateFiller, ...tellschnTemplate.exportText_modules(templateFiller) };
 
