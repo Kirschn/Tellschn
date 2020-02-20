@@ -5,6 +5,7 @@
   "main": "webserver.js",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "commander": "^4.1.1",
     "connect-redis": "^4.0.3",
     "dateformat": "^3.0.3",
     "express": "^4.17.1",

@@ -36,7 +36,11 @@ class Tellschn {
             util.log(logging);
         }
     }
-    
+    async sleep(time) {
+        setTimeout(() => {
+            Promise.resolve()
+        }, time)
+    }
 }
 class tellschnTemplate extends Tellschn {
     constructor (lang = "de") {
