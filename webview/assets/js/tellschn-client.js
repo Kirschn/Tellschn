@@ -104,3 +104,7 @@ function addEmailNotification(email_address, cb) {
         cb(response);
     });
 }
+function noMoreTells() {
+    $("#loadingSymbol").hide();
+    no_more_tells = true;
+}
