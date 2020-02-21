@@ -10,7 +10,6 @@ Date.prototype.toMysqlFormat = function () {
 const tellschnModule = require("./tellschn_classes.js");
 const Tellschn = new tellschnModule.Tellschn();
 const tellschnTemplate = new tellschnModule.tellschnTemplate();
-const tellschnMailer = new tellschnModule.tellschnMailer();
 var fs = require("fs");
 var util = require("util");
 var accessconf = JSON.parse(fs.readFileSync("access-config.json", "utf8"));
@@ -92,8 +91,8 @@ var get_own_tells_sqlstmt = "SELECT tells.id AS tell_id, tells.timestamp AS time
     + " IF(answers.content IS NULL, FALSE, TRUE) AS was_answered, answers.content AS answer_content, answers.show_public AS answer_show_public, answers.was_edited AS answer_was_edited,"
     + " answers.tweet_id AS answer_tweet_id, answers.show_media_public AS answer_show_media_public FROM `tells`"
     + " LEFT JOIN `attachment_media` ON tells.media_attachment = attachment_media.media_uuid"
-    + " LEFT JOIN `answers` ON tells.id = answers.for_tell_id WHERE deleted = 0 AND (tells.for_user_id = ? OR answers.id = ?) ORDER BY tells.id DESC LIMIT ?,10";
-var get_public_answers = "SELECT `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp, answers.was_edited AS answer_was_edited, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, tells.content AS tell_content FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment WHERE tells.deleted = 0 AND tells.for_user_id = ? AND answers.show_public = 1 ORDER BY answers.id DESC LIMIT ?,10";
+    + " LEFT JOIN `answers` ON tells.id = answers.for_tell_id WHERE deleted = 0 AND (tells.for_user_id = ? OR answers.id = ?) ORDER BY tells.timestamp DESC LIMIT ?,10";
+var get_public_answers = "SELECT `answers`.`content` AS answer_content, `answers`.tweet_id AS answer_tweet_id, attachment_media.cdn_path AS cdn_path, answers.timestamp AS timestamp, answers.was_edited AS answer_was_edited, IF(attachment_media.cdn_path IS NULL, FALSE, TRUE) AS has_media, attachment_media.is_mp4 AS is_mp4, attachment_media.size AS filesize, tells.content AS tell_content FROM answers LEFT JOIN `tells` ON answers.for_tell_id = tells.id LEFT JOIN `attachment_media` ON attachment_media.media_uuid = tells.media_attachment WHERE tells.deleted = 0 AND tells.for_user_id = ? AND answers.show_public = 1 ORDER BY answers.timestamp DESC LIMIT ?,10";
 
 function mysql_result_time_to_string(result_object, date_key) {
     let bufferObject = [];

@@ -128,13 +128,14 @@ try {
                         console.log(image_data);
                         image_uuid = image_data.uniqid;
                         let splitURL = image_data.imageurl.split("/");
-                        let fileName = splitURL[splitURL.length];
+                        let fileName = splitURL[splitURL.length -1];
+                        Tellschn.dbg("File name " + splitURL)
                         await Tellschn.sqlQuery("INSERT INTO attachment_media (media_uuid, is_mp4, timestamp, cdn_path) VALUES (?)", [[
 
                             image_data.uniqid,
                             image_data.video,
                             image_data.timestamp,
-                            fileName,
+                            fileName
 
                         ]])
 
@@ -165,7 +166,28 @@ try {
             console.timeEnd("tell_migration")
 
         });
+    program.command("media-calculate-size")
+        .description("Will add all unknown file sizes to the media database")
+        .option("-a", "--all", "Recalculate the size of all media in the database")
+        .action(async () => {
+            let sql = "SELECT * FROM attachment_media WHERE size = 0 OR size IS NULL";
+            if (program.commands[0].all) {
+                sql = "SELECT * FROM attachment_media"
+            }
+            try {
+            let media_rows = await Tellschn.sqlQuery(sql);
+            util.log("Found " + media_rows.length + " Images");
+            
+            media_rows.forEach(async currentFile => {
+                let size = fs.statSync("cdn/" + currentFile.cdn_path)["size"];
+                await Tellschn.sqlQuery("UPDATE attachment_media SET size = ? WHERE id = ?", [size, currentFile.id]);
+            })
+            util.log("Done");
 
+            } catch (e) {
+                throw e;
+            }
+        })
 
 
     program.parse(process.argv);
