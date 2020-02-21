@@ -53,12 +53,20 @@ img.profile_pic {
     border-radius: 2.5px;
 }
 
-.settings_btn:hover {
+#settings_btn:hover {
     transform: rotate(123deg) !important;
 }
 
-.settings_btn {
+#settings_btn {
     transition: 0.5s !important;
+}
+
+#logout_btn:hover {
+    transform: rotate(360deg);
+}
+
+#logout_btn {
+    transition: 0.25s;
 }
 
 input.text {
@@ -76,18 +84,6 @@ hr {
 
 button {
     cursor: pointer;
-}
-
-#settings_btn:hover {
-    transform: rotate(180deg);
-}
-
-#logout_btn:hover {
-    transform: rotate(360deg);
-}
-
-#logout_btn {
-    transition: 0.25s;
 }
 
 
@@ -272,7 +268,7 @@ input#url {
 
 .hr_tell_answer {
     visibility: visible!important;
-    border-top: 1px solid #8080807d;
+    border: 1px solid #79797966;
 }
 
 .img_tell hr {
@@ -527,7 +523,6 @@ textarea#edit_answer {
 .tell_actions {
     display: flex;
     text-align: left;
-    width: 80%;
     margin-left: auto;
     margin-right: auto;
     align-items: center;
@@ -694,7 +689,7 @@ input[type="checkbox"]:checked+label:before {
 
 .answer_container {
     width: 80%;
-    height: 5rem;
+    height: 7rem;
     margin-left: auto;
     margin-right: auto;
     position: relative;
@@ -759,9 +754,6 @@ input[type="checkbox"]:checked+label:before {
         margin-top: 17.5vh;
         max-width: 90vw;
     }
-    .logo {
-        width: 300px;
-    }
     .loggedin {
         min-width: 100vw;
     }
@@ -799,7 +791,7 @@ input[type="checkbox"]:checked+label:before {
         margin-bottom: 1em;
     }
     .checkboxes {
-        margin: 1rem 0 0 2.5rem;
+        margin: 0 0 0 2.5rem;
         position: relative;
         max-width: 85%;
     }

@@ -1,63 +1,58 @@
 {{#tells}}
 
-        <div class="tell {{#has_media}}img_tell{{/has_media}}" id="tell-{{tell_id}}">
-            <div id="tell_content">
-                {{#has_media}}
-                
-                    {{^is_mp4}}
-                    <a href="#show_img">
-                        <img src="/cdn/{{cdn_path}}" onclick="document.getElementById('lightbox_img').src = this.src">
-                    </a>
-                    
-                    {{/is_mp4}}
-                    {{#is_mp4}} 
-                    <a href="#show_media">
-                            <img src="/assets/images/media.png" onclick="document.getElementById('lightbox_media').src = '/cdn/{{cdn_path}}'">
-                    </a>
-                    
-                    {{/is_mp4}}
-                {{/has_media}}
-                <p id="tell_content_{{tell_id}}">{{tell_content}}</p>
+<div class="tell {{#has_media}}img_tell{{/has_media}}" id="tell-{{tell_id}}">
+    <div id="tell_content">
+        {{#has_media}} {{^is_mp4}}
+        <a href="#show_img">
+            <img src="/cdn/{{cdn_path}}" onclick="document.getElementById('lightbox_img').src = this.src">
+        </a>
 
-                {{#was_answered}}
-                    <hr class="hr_tell_answer">
-                    <h3>{{translation.answer_noun}}:</h3>{{#answer_was_edited}} <i>{{translation.edited}}</i>{{/answer_was_edited}}<br>
-                    <p id="answer_content_{{tell_id}}">{{answer_content}}</p>
-                {{/was_answered}}
-                <hr />
-            </div>
-            <div id="tell_additional">
-                <div id="tell_time">{{timestamp}}</div>
-                {{#edit_tools}}
-                <!-- TODO: Schön machen-->
-                
-                {{#do_not_share}}
-                <div id="button">
-                        <a class="answer_private">{{translation.private}}</a>
-                </div>
-                {{/do_not_share}}
-                {{^do_not_share}}
-                <div id="button">
-                    
-                    {{^was_answered}}
-                    <a class="answer" href="#answer" onclick="fillanswermodal('{{tell_id}}', {{has_media}})">{{translation.answer}}</a>
-                    {{/was_answered}}
-                    {{#was_answered}}
-                    <a class="answer" href="#edit" onclick="filleditmodal('{{tell_id}}', {{has_media}}, {{#answer_show_public}}true{{/answer_show_public}}{{^answer_show_public}}false{{/answer_show_public}}, {{#answer_show_media_public}}true{{/answer_show_media_public}}{{^answer_show_media_public}}false{{/answer_show_media_public}})">{{translation.edit}}</a>
-                    {{/was_answered}}
-                    
-                </div>
-                {{/do_not_share}}
-                
-                <div id="button">
-                    {{#answer_tweet_id}}
-                    <a class="answer" href="https://twitter.com/{{display_name}}/status/{{answer_tweet_id}}">{{translation.link_to_tweet}}</a>
-                    {{/answer_tweet_id}}
-                    <a class="delete" href="#confirm_delete" onclick="filldeletemodal('{{tell_id}}')">{{translation.delete}}</a>
-                </div>
-                {{/edit_tools}}
-            </div>
+        {{/is_mp4}} {{#is_mp4}}
+        <a href="#show_media">
+            <img src="/assets/images/media.png" onclick="document.getElementById('lightbox_media').src = '/cdn/{{cdn_path}}'">
+        </a>
+
+        {{/is_mp4}} {{/has_media}}
+        <p id="tell_content_{{tell_id}}">{{tell_content}}</p>
+
+        {{#was_answered}}
+        <hr class="hr_tell_answer">
+        <h3>{{translation.answer_noun}}:</h3>{{#answer_was_edited}} <i>{{translation.edited}}</i>{{/answer_was_edited}}
+        <p id="answer_content_{{tell_id}}">{{answer_content}}</p>
+        {{/was_answered}}
+        <hr />
+    </div>
+    <div id="tell_additional">
+        <div id="tell_time">{{timestamp}}</div>
+        {{#edit_tools}}
+        <!-- TODO: Schön machen-->
+
+        {{#do_not_share}}
+        <div id="button">
+            <a class="answer_private">{{translation.private}}</a>
         </div>
-        {{/tells}}
+        {{/do_not_share}} {{^do_not_share}}
+        <div id="button">
 
-{{^tells}}<p>{{translation.no_more_tells}}</p><script>noMoreTells();console.log("No more Tells");</script>{{/tells}}
+            {{^was_answered}}
+            <a class="answer" href="#answer" onclick="fillanswermodal('{{tell_id}}', {{has_media}})">{{translation.answer}}</a> {{/was_answered}} {{#was_answered}}
+            <a class="answer" href="#edit" onclick="filleditmodal('{{tell_id}}', {{has_media}}, {{#answer_show_public}}true{{/answer_show_public}}{{^answer_show_public}}false{{/answer_show_public}}, {{#answer_show_media_public}}true{{/answer_show_media_public}}{{^answer_show_media_public}}false{{/answer_show_media_public}})">{{translation.edit}}</a>            {{/was_answered}}
+
+        </div>
+        {{/do_not_share}}
+
+        <div id="button">
+            {{#answer_tweet_id}}
+            <a class="answer" href="https://twitter.com/{{display_name}}/status/{{answer_tweet_id}}">{{translation.link_to_tweet}}</a> {{/answer_tweet_id}}
+            <a class="delete" href="#confirm_delete" onclick="filldeletemodal('{{tell_id}}')">{{translation.delete}}</a>
+        </div>
+        {{/edit_tools}}
+    </div>
+</div>
+{{/tells}} {{^tells}}
+
+<p>{{translation.no_more_tells}}</p>
+<script>
+    noMoreTells();
+    console.log("No more Tells");
+</script>{{/tells}}
