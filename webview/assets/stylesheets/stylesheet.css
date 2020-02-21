@@ -523,7 +523,6 @@ textarea#edit_answer {
 .tell_actions {
     display: flex;
     text-align: left;
-    width: 80%;
     margin-left: auto;
     margin-right: auto;
     align-items: center;
