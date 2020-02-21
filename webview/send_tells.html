@@ -27,6 +27,7 @@
         var twitter_id = "{{ twitter_id }}";
         var token = "{{ token }}";
         var media_uuid = null;
+
         function checkUploadedFile() {
             $.get("/api/upload_status?token=" + token, res => {
                 if (res.error != null) {
@@ -45,6 +46,7 @@
             })
 
         }
+
         function onload() {
             /*var enterAnswerElem = document
                 .querySelector("#enter_tell")
@@ -55,7 +57,7 @@
                 });
             checkTextAreaMaxLength(enterAnswerElem);
                 */
-            $("#send_tell_button").click(function () {
+            $("#send_tell_button").click(function() {
                 console.log("Send Tell Button was clicked");
                 if (blocked) {
                     console.log("Input Blocked");
@@ -71,10 +73,10 @@
                     $("#enter_tell").val(),
                     media_uuid, //TODO: MEDIA UUID
                     $("#tweetable").is(":checked"),
-                    function (call) {
+                    function(call) {
                         if (call.status == "success") {
                             $("#send_tell_button").html("{{translation.sent}}!");
-                            setTimeout(function () {
+                            setTimeout(function() {
                                 window.location = window.location;
 
                             }, 3000)
@@ -84,7 +86,7 @@
                         }
                     });
             });
-            $('#file').on('change', function () {
+            $('#file').on('change', function() {
                 if (blocked) return;
                 blocked = true;
                 console.log("Catched FIle Change event")
@@ -92,24 +94,26 @@
                 data.append('media', this.files[0]); // ... an die wir unsere Datei anhängen
                 $.ajax({
                     url: '/api/upload_media?token=' + token, // Wohin soll die Datei geschickt werden?
-                    data: data,          // Das ist unser Datenobjekt.
-                    type: 'POST',         // HTTP-Methode, hier: POST
+                    data: data, // Das ist unser Datenobjekt.
+                    type: 'POST', // HTTP-Methode, hier: POST
                     processData: false,
                     contentType: false,
-                    xhr: function () {
+                    xhr: function() {
                         var xhr = $.ajaxSettings.xhr();
-                        xhr.upload.onprogress = function (evt) {
+                        xhr.upload.onprogress = function(evt) {
                             /* Hier kann man die Fortschrittsanzeige updaten. Beispielsweise prozent = (evt.loaded/evt.total*100); */
                             var uploadProgress = (evt.loaded / evt.total * 100);
                             console.log(uploadProgress);
                             $("#uploadbuttonContent").html("Upload " + uploadProgress + "%");
                         };
-                        xhr.upload.onload = function () { console.log('Upload done.') };
+                        xhr.upload.onload = function() {
+                            console.log('Upload done.')
+                        };
                         return xhr;
                     },
                     // und wenn alles erfolgreich verlaufen ist, schreibe eine Meldung
                     // in das Response-Div
-                    success: function (result) {
+                    success: function(result) {
                         console.log(result);
                         $("#uploadbuttonContent").html("{{translation.converting}}...");
 
@@ -123,15 +127,13 @@
 
 <body onload="onload()">
     <div class="navbar_centered">
-        <a href="/"><img class="logo" src="/assets/images/logo_white.svg" alt="{{translation.title}}"
-                style="height:2em; margin-top: -0.45em;"></a>
+        <a href="/"><img class="logo" src="/assets/images/logo_white.svg" alt="{{translation.title}}" style="height:2em; margin-top: -0.45em;"></a>
     </div>
     <div class="loggedin">
         {{#showcase}}
         <span id="tellShowcase">
             {{{showcase}}}
-        </span>
-        {{/showcase}}
+        </span> {{/showcase}}
         <div id="top">
             <h1>Hinterlasse @{{display_name}} einen Tell!</h1>
             <p>{{custom_page_text}}</p>
@@ -160,6 +162,24 @@
         </span>
         <footer><a href="https://github.com/Kirschn/Tellschn/tree/V2">{{translation.is_free_software}}</a></footer>
 
+        <div id="show_img" class="overlay">
+            <div class="popup">
+                <a class="close" href="#">&times;</a>
+                <div class="content">
+                    <img src="/assets/images/test_image.jpg" id="lightbox_img" />
+                </div>
+            </div>
+        </div>
+        <div id="show_media" class="overlay">
+            <div class="popup">
+                <a class="close" href="#" onclick='$("#lightbox_media").attr("src", "");'>&times;</a>
+                <div class="content">
+                    <video src="" id="lightbox_media" controls autoplay>
+                        {{translation.no_html5_video_support}}
+                    </video>
+                </div>
+            </div>
+        </div>
 
         <div class="pagination" id="loadingSymbol">
             <div class="lds-ripple">
