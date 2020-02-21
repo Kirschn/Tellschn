@@ -1,0 +1,31 @@
+{
+    "mysql": {
+        "host": "",
+        "user": "",
+        "password": "",
+        "database": "tellschn_v2",
+        "encoding": "utf8",
+        "charset": "utf8mb4"
+    },
+    "cookie_secret": "",
+    "twitter": {
+        "consumer_key": "",
+        "consumer_secret": "",
+        "redirection_url": ""
+    },
+    "telegram": {
+        "enabled": true,
+        "token": "",
+        "handle": ""
+    },
+    "mail": {
+        "sender": "\"Tellschn\" <noreply@tellschn.de>",
+        "host": "",
+        "port": 587,
+        "secure": false,
+        "auth": {
+            "user": "noreply@tellschn.de",
+            "pass": ""
+        }
+    }
+}

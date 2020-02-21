@@ -1,0 +1,8 @@
+{
+    "express_port": 8081,
+    "base_url": "http://localhost:8081",
+    "debug": true,
+    "tells_per_page": 10,
+    "local_path": "file:///home/wolff/Tellschn/",
+    "lang": "de"
+}

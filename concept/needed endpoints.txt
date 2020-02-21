@@ -1,0 +1,10 @@
+Diese Web Endpunkte werden gebraucht:
+/ - Servt die Login Page. Ist der User eingeloggt redirect an /[username]
+/[username]: Eingeloggter User = [username]: Ausgabe Template eigene Tells; Nicht eingeloggt: Tell-Abschick-Seite
+/api - {}
+API GETs
+/api/session_info: Gibt informationen über den eigeloggten Benutzer zurück
+/api/user_info?user=: Gibt Informationen über [user] zurück
+/media/upload: Mediendatei hochladen, raw wird hochgeladen und gecached, kue job erstellt mit ffmpeg, dann eingetragen in datenbank
+/api/tells?max_id: Eigene Tells bekommen, wenn max_id nicht gegeben einfach die letzten
+

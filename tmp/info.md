@@ -1,0 +1,1 @@
+# This file only exists for git to create this folder. In this folder all uploaded files will be stored before being converted and moved to the cdn location.
