@@ -154,7 +154,7 @@
 
     <div id="show_img" class="overlay">
         <div class="popup">
-            <a class="close" href="#" onclick='$("#lightbox_media").attr("src", "");'>&times;</a>
+            <a class="close" href="#">&times;</a>
             <div class="content">
                 <img src="/assets/images/test_image.jpg" id="lightbox_img" />
             </div>
@@ -162,7 +162,7 @@
     </div>
     <div id="show_media" class="overlay">
         <div class="popup">
-            <a class="close" href="#">&times;</a>
+            <a class="close" href="#" onclick='$("#lightbox_media").attr("src", "");'>&times;</a>
             <div class="content">
                 <video src="" id="lightbox_media" controls autoplay>
                             {{translation.no_html5_video_support}}
