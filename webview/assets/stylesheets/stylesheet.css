@@ -53,12 +53,20 @@ img.profile_pic {
     border-radius: 2.5px;
 }
 
-.settings_btn:hover {
+#settings_btn:hover {
     transform: rotate(123deg) !important;
 }
 
-.settings_btn {
+#settings_btn {
     transition: 0.5s !important;
+}
+
+#logout_btn:hover {
+    transform: rotate(360deg);
+}
+
+#logout_btn {
+    transition: 0.25s;
 }
 
 input.text {
@@ -76,18 +84,6 @@ hr {
 
 button {
     cursor: pointer;
-}
-
-#settings_btn:hover {
-    transform: rotate(180deg);
-}
-
-#logout_btn:hover {
-    transform: rotate(360deg);
-}
-
-#logout_btn {
-    transition: 0.25s;
 }
 
 
