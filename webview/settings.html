@@ -69,7 +69,7 @@ Einstellungsoptionen:
                 <hr>
 
                 <div id="button">
-                    <a class="answer" onclick="updateCustomPageText()">{{translation.save}}</a>
+                    <a class="button answer" onclick="updateCustomPageText()">{{translation.save}}</a>
                 </div>
 
             </div>
@@ -105,7 +105,7 @@ Einstellungsoptionen:
                             </td>
                             <td>
                                 <div id="button">
-                                    <a class="delete" onclick="button_removeUserAccess('{{to_user_screen_name}}')">{{translation.remove}}</a>
+                                    <a class="button delete" onclick="button_removeUserAccess('{{to_user_screen_name}}')">{{translation.remove}}</a>
                                 </div>
                             </td>
                         </tr>
@@ -126,7 +126,7 @@ Einstellungsoptionen:
             <div id="tell_content">
                 <p>{{{translation.settings_add_allowed_access_information}}}</p>
                 <input type="text" class="text" placeholder="@username" id="addUserAccessHandle" />
-                <a class="answer" onclick="button_addUserAccess()">{{translation.add}}</a>
+                <a class="button answer" onclick="button_addUserAccess()">{{translation.add}}</a>
             </div>
 
         </div>
@@ -165,7 +165,7 @@ Einstellungsoptionen:
                             </td>
                             <td>
                                 <div id="button">
-                                    <a class="delete" onclick="button_removeNotificationService('{{id}}')">{{translation.remove}}</a>
+                                    <a class="button delete" onclick="button_removeNotificationService('{{id}}')">{{translation.remove}}</a>
                                 </div>
                             </td>
                         </tr>
@@ -188,7 +188,7 @@ Einstellungsoptionen:
             <div id="tell_content">
                 <p>{{{translation.settings_add_email_information}}}</p>
                 <input type="text" class="text" placeholder="email@example.org" id="addNotificationMail" />
-                <a class="answer" onclick="button_addNotificationEmail()">{{translation.add}}</a>
+                <a class="button answer" onclick="button_addNotificationEmail()">{{translation.add}}</a>
             </div>
 
         </div>

@@ -674,6 +674,10 @@ input[type="checkbox"]:checked+label:before {
     margin-left: 73%;
 }
 
+.button {
+    cursor: pointer;
+}
+
 .fileContainer {
     overflow: hidden;
     position: relative;
