@@ -282,8 +282,7 @@ app.get("/settings", nocache, async (req, res) => {
         return;
     }
     try {
-        let has_access_to = await Tellschn.sqlQuery("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id " +
-            "AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id);
+        let has_access_to = await Tellschn.sqlQuery("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, attachment_media.cdn_path AS profile_pic_cdn_link FROM users LEFT JOIN user_access_sharing ON user_access_sharing.from_user_id = users.twitter_id LEFT JOIN attachment_media ON attachment_media.media_uuid = users.profile_pic_uuid WHERE user_access_sharing.to_user_id = ?", req.session.own_twitter_id)
 
         let allowed_account_results = await Tellschn.sqlQuery("SELECT users.twitter_id AS to_twitter_id, users.twitter_handle AS to_user_screen_name, users.profile_pic_original_link AS profile_image_url, user_access_sharing.granted_at AS granted_at FROM users, user_access_sharing WHERE " +
             "user_access_sharing.to_user_id = users.twitter_id AND user_access_sharing.from_user_id = ?",
@@ -303,7 +302,7 @@ app.get("/settings", nocache, async (req, res) => {
             "user_access_sharing": allowed_account_results,
             "account_pool": has_access_to,
             "base_user": {
-                "profile_image_url": req.session.own_userpayload.profile_pic_original_link,
+                "profile_image_url": appconf.cdn_path + req.session.own_userpayload.profile_pic_cdn_link,
                 "display_name": req.session.own_userpayload.twitter_handle,
                 "twitter_id": req.session.own_twitter_id
             },
@@ -876,7 +875,7 @@ async function usrlandHandler(req, res, tell_showbox_html) {
     if (req.session.userpayload !== undefined && req.params.userpage === req.session.userpayload.twitter_handle && req.session.own_twitter_id !== undefined) {
         // show template for logged in 
         tellschnMetrics.webHit("logged_in_user")
-        let has_access_to = await Tellschn.sqlQuery("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id)
+        let has_access_to = await Tellschn.sqlQuery("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, attachment_media.cdn_path AS profile_pic_cdn_link FROM users LEFT JOIN user_access_sharing ON user_access_sharing.from_user_id = users.twitter_id LEFT JOIN attachment_media ON attachment_media.media_uuid = users.profile_pic_uuid WHERE user_access_sharing.to_user_id = ?", req.session.own_twitter_id)
 
 
         let tells = await Tellschn.sqlQuery(get_own_tells_sqlstmt, [req.session.userpayload.twitter_id, null, 0])
@@ -884,12 +883,14 @@ async function usrlandHandler(req, res, tell_showbox_html) {
 
 
         var custom_conf = JSON.parse(req.session.userpayload.custom_configuration);
+        /*
+        
         let allowed_account_results = await Tellschn.sqlQuery("SELECT users.twitter_id AS twitter_id, users.twitter_handle AS twitter_handle, users.profile_pic_original_link AS profile_image_url FROM users, user_access_sharing WHERE " +
             "user_access_sharing.to_user_id = users.twitter_id AND (user_access_sharing.from_user_id = ? OR users.twitter_id = ?)",
             [req.session.own_twitter_id, req.session.own_twitter_id]);
-
+        */
         let templateFiller = {
-            "profile_image_url": req.session.userpayload.profile_pic_original_link,
+            "profile_image_url": appconf.cdn_path + req.session.userpayload.profile_pic_cdn_link,
             "display_name": req.session.userpayload.twitter_handle,
             "custom_configuration": {
                 "std_tweet": custom_conf.sharetw,
@@ -902,11 +903,10 @@ async function usrlandHandler(req, res, tell_showbox_html) {
             "token": req.session.token,
             "tells": tells,
             "edit_tools": true,
-            "available_accounts": allowed_account_results,
             "showcase": tell_showbox_html,
             "account_pool": has_access_to,
             "base_user": {
-                "profile_image_url": req.session.own_userpayload.profile_pic_original_link,
+                "profile_image_url": appconf.cdn_path + req.session.own_userpayload.profile_pic_cdn_link,
                 "display_name": req.session.own_userpayload.twitter_handle,
                 "twitter_id": req.session.own_twitter_id
             }

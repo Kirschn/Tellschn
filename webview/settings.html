@@ -44,7 +44,7 @@ Einstellungsoptionen:
         <div style="margin-right: 5rem">
             {{#account_pool}}
             <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img class="profile_pic"
-                                                                                             src="{{{shared_profile_image_url}}}"
+                                                                                             src="{{{appconf.cdn_path}}}{{{profile_pic_cdn_link}}}"
                                                                                              alt="{{{shared_display_name}}}"></a>
             {{/account_pool}}
             <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img class="profile_pic"
