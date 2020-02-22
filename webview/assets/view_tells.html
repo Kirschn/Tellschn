@@ -17,13 +17,13 @@
 
         {{#was_answered}}
         <hr class="hr_tell_answer">
-        <h3>{{translation.answer_noun}}:</h3>{{#answer_was_edited}} <i>{{translation.edited}}</i>{{/answer_was_edited}}
+        <h3>{{translation.answer_noun}}:</h3>
         <p id="answer_content_{{tell_id}}">{{answer_content}}</p>
         {{/was_answered}}
         <hr />
     </div>
     <div id="tell_additional">
-        <div id="tell_time">{{timestamp}}</div>
+        <div id="tell_time">{{timestamp}}{{#answer_was_edited}} <i>{{translation.edited}}</i>{{/answer_was_edited}}</div>
         {{#edit_tools}}
         <!-- TODO: Schön machen-->
 
