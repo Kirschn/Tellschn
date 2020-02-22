@@ -35,209 +35,213 @@ Einstellungsoptionen:
 </head>
 
 <body>
-    <div class="navbar">
-        <a href="/">
-            <img class="logo" src="/assets/images/logo_white.svg" alt="Tellschn" style="height:2em; margin-top: -0.45em;">
-        </a>
+<div class="navbar">
+    <a href="/">
+        <img class="logo" src="/assets/images/logo_white.svg" alt="Tellschn" style="height:2em; margin-top: -0.45em;">
+    </a>
 
-        <div id="navbar-right">
-            <div style="margin-right: 5rem">
-                {{#account_pool}}
-                <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img class="profile_pic" src="{{{shared_profile_image_url}}}" alt="{{{shared_display_name}}}"></a>
-                {{/account_pool}}
-                <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img class="profile_pic" src="{{{base_user.profile_image_url}}}" alt="{{{base_user.display_name}}}"></a>
-            </div>
+    <div id="navbar-right">
+        <div style="margin-right: 5rem">
+            {{#account_pool}}
+            <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img class="profile_pic"
+                                                                                             src="{{{shared_profile_image_url}}}"
+                                                                                             alt="{{{shared_display_name}}}"></a>
+            {{/account_pool}}
+            <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img class="profile_pic"
+                                                                                                src="{{{base_user.profile_image_url}}}"
+                                                                                                alt="{{{base_user.display_name}}}"></a>
+        </div>
 
-            <div id="user"><a href="/settings"><i id="settings_btn" class="material-icons">settings</i></a><a href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
-            </div>
+        <div id="user"><a href="/settings"><i id="settings_btn" class="material-icons">settings</i></a><a
+                href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
         </div>
     </div>
-    <div class="loggedin">
+</div>
+<div class="loggedin">
 
-        <div id="top">
-            <h1>{{translation.settings_headline}}</h1>
-            <h2>{{translation.settings_general_information}}</h2>
+    <div id="top">
+        <h1>{{translation.settings_headline}}</h1>
+        <h2>{{translation.settings_general_information}}</h2>
+    </div>
+    <hr />
+    <div class="tell" id="settings_custom_page_text">
+        <p>{{{translation.settings_custom_text_information}}}</p>
+
+        <div id="tell_content">
+            <textarea style="margin-bottom: 0em!important;" data-length="9999" id="enter_tell">{{userpayload.custom_page_text}}</textarea>
         </div>
-        <hr/>
-        <div class="tell" id="settings_custom_page_text">
-            <p>{{{translation.settings_custom_text_information}}}</p>
+        <div id="tell_additional">
+            <hr>
 
-            <div id="tell_content">
-                <textarea style="margin-bottom: 0em!important;" data-length="9999" id="enter_tell">{{userpayload.custom_page_text}}</textarea>
-            </div>
-            <div id="tell_additional">
-                <hr>
-
-                <div id="button">
-                    <a class="button answer" onclick="updateCustomPageText()">{{translation.save}}</a>
-                </div>
-
-            </div>
-        </div>
-        {{#is_own_account}}
-        <!-- Using Tell Template because it's easy and works -->
-
-        <div class="tell" id="settings_list_of_external_accounts_with_access">
-            <div id="tell_content">
-                <p>{{{translation.settings_allowed_access_information}}}</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>
-                                {{translation.account}}
-                            </th>
-                            <th>
-                                {{translation.added}}
-                            </th>
-                            <th>
-                                {{translation.actions}}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#user_access_sharing}}
-                        <tr>
-                            <td>
-                                {{to_user_screen_name}}
-                            </td>
-                            <td>
-                                {{granted_at}}
-                            </td>
-                            <td>
-                                <div id="button">
-                                    <a class="button delete" onclick="button_removeUserAccess('{{to_user_screen_name}}')">{{translation.remove}}</a>
-                                </div>
-                            </td>
-                        </tr>
-                        {{/user_access_sharing}} {{^user_access_sharing}}
-                        <tr>
-                            <td>
-                                {{translation.settings_no_access_granted}}
-                            </td>
-
-                        </tr>
-                        {{/user_access_sharing}}
-                    </tbody>
-                </table>
+            <div id="button">
+                <a class="button answer" onclick="updateCustomPageText()">{{translation.save}}</a>
             </div>
 
         </div>
-        <div class="tell" id="settings_add_external_access">
-            <div id="tell_content">
-                <p>{{{translation.settings_add_allowed_access_information}}}</p>
-                <input type="text" class="text" placeholder="@username" id="addUserAccessHandle" />
-                <a class="button answer" onclick="button_addUserAccess()">{{translation.add}}</a>
-            </div>
+    </div>
+    {{#is_own_account}}
+    <!-- Using Tell Template because it's easy and works -->
 
+    <div class="tell" id="settings_list_of_external_accounts_with_access">
+        <div id="tell_content">
+            <p>{{{translation.settings_allowed_access_information}}}</p>
+            <table>
+                <thead>
+                <tr>
+                    <th>
+                        {{translation.account}}
+                    </th>
+                    <th>
+                        {{translation.added}}
+                    </th>
+                    <th>
+                        {{translation.actions}}
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {{#user_access_sharing}}
+                <tr>
+                    <td>
+                        {{to_user_screen_name}}
+                    </td>
+                    <td>
+                        {{granted_at}}
+                    </td>
+                    <td>
+                        <div id="button">
+                            <a class="button delete" onclick="button_removeUserAccess('{{to_user_screen_name}}')">{{translation.remove}}</a>
+                        </div>
+                    </td>
+                </tr>
+                {{/user_access_sharing}} {{^user_access_sharing}}
+                <tr>
+                    <td>
+                        {{translation.settings_no_access_granted}}
+                    </td>
+
+                </tr>
+                {{/user_access_sharing}}
+                </tbody>
+            </table>
         </div>
-        {{/is_own_account}}
-        <div class="tell" id="settings_list_of_connected_notification_services">
-            <div id="tell_content">
-                <p>{{{translation.settings_notification_services_information}}}</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>
-                                {{translation.service}}
-                            </th>
-                            <th>
-                                {{translation.username}}
-                            </th>
-                            <th>
-                                {{translation.added}}
-                            </th>
-                            <th>
-                                {{translation.actions}}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#notification_registrations}}
-                        <tr>
-                            <td>
-                                {{platform}}
-                            </td>
-                            <td>
-                                {{recipient_name}}
-                            </td>
-                            <td>
-                                {{timestamp}}
-                            </td>
-                            <td>
-                                <div id="button">
-                                    <a class="button delete" onclick="button_removeNotificationService('{{id}}')">{{translation.remove}}</a>
-                                </div>
-                            </td>
-                        </tr>
-                        {{/notification_registrations}} {{^notification_registrations}}
-                        <tr>
-                            <td>
-                                {{{translation.settings_no_notification_services_registered}}}
-                            </td>
-
-                        </tr>
-                        {{/notification_registrations}}
-                    </tbody>
-                </table>
-                <br /> {{{translation.settings_notification_services_telegram_information}}}
-            </div>
-
-        </div>
-
-        <div class="tell" id="settings_add_notification_mail">
-            <div id="tell_content">
-                <p>{{{translation.settings_add_email_information}}}</p>
-                <input type="text" class="text" placeholder="email@example.org" id="addNotificationMail" />
-                <a class="button answer" onclick="button_addNotificationEmail()">{{translation.add}}</a>
-            </div>
-
-        </div>
-
-        <footer><a href="{{{appconf.gitURL}}}">{{translation.is_free_software}}</a></footer>
-
-
 
     </div>
-    <script async src="/assets/js/charcounter.js"></script>
-    <script async src="/assets/js/copy.js"></script>
-    <script>
-        var request_in_progress = false;
-        var delete_buffer = null;
-        var answer_id_buffer = null;
+    <div class="tell" id="settings_add_external_access">
+        <div id="tell_content">
+            <p>{{{translation.settings_add_allowed_access_information}}}</p>
+            <input type="text" class="text" placeholder="@username" id="addUserAccessHandle" />
+            <a class="button answer" onclick="button_addUserAccess()">{{translation.add}}</a>
+        </div>
 
-        function showErrorAndReload(resp) {
-            console.log(resp);
-            if (resp.error != null) {
-                alert(resp.error);
-                return;
-            }
-            window.location.reload();
+    </div>
+    {{/is_own_account}}
+    <div class="tell" id="settings_list_of_connected_notification_services">
+        <div id="tell_content">
+            <p>{{{translation.settings_notification_services_information}}}</p>
+            <table>
+                <thead>
+                <tr>
+                    <th>
+                        {{translation.service}}
+                    </th>
+                    <th>
+                        {{translation.username}}
+                    </th>
+                    <th>
+                        {{translation.added}}
+                    </th>
+                    <th>
+                        {{translation.actions}}
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {{#notification_registrations}}
+                <tr>
+                    <td>
+                        {{platform}}
+                    </td>
+                    <td>
+                        {{recipient_name}}
+                    </td>
+                    <td>
+                        {{timestamp}}
+                    </td>
+                    <td>
+                        <div id="button">
+                            <a class="button delete" onclick="button_removeNotificationService('{{id}}')">{{translation.remove}}</a>
+                        </div>
+                    </td>
+                </tr>
+                {{/notification_registrations}} {{^notification_registrations}}
+                <tr>
+                    <td>
+                        {{{translation.settings_no_notification_services_registered}}}
+                    </td>
+
+                </tr>
+                {{/notification_registrations}}
+                </tbody>
+            </table>
+            <br /> {{{translation.settings_notification_services_telegram_information}}}
+        </div>
+
+    </div>
+
+    <div class="tell" id="settings_add_notification_mail">
+        <div id="tell_content">
+            <p>{{{translation.settings_add_email_information}}}</p>
+            <input type="text" class="text" placeholder="email@example.org" id="addNotificationMail" />
+            <a class="button answer" onclick="button_addNotificationEmail()">{{translation.add}}</a>
+        </div>
+
+    </div>
+
+    <footer><a href="{{{appconf.gitURL}}}">{{translation.is_free_software}}</a></footer>
+
+
+</div>
+<script async src="/assets/js/charcounter.js"></script>
+<script async src="/assets/js/copy.js"></script>
+<script>
+    var request_in_progress = false;
+    var delete_buffer = null;
+    var answer_id_buffer = null;
+
+    function showErrorAndReload(resp){
+        console.log(resp);
+        if(resp.error != null){
+            alert(resp.error);
+            return;
         }
+        window.location.reload();
+    }
 
-        function updateCustomPageText() {
-            setConfigParameter({
-                "custom_page_text": $("#enter_tell").val()
-            }, showErrorAndReload)
-        }
+    function updateCustomPageText(){
+        setConfigParameter({
+            "custom_page_text": $("#enter_tell").val()
+        }, showErrorAndReload)
+    }
 
-        function button_removeUserAccess(userID = null) {
-            if (userID == null) return;
-            removeUserAccess(userID, showErrorAndReload)
+    function button_removeUserAccess(userID = null){
+        if(userID == null) return;
+        removeUserAccess(userID, showErrorAndReload)
 
-        }
+    }
 
-        function button_addUserAccess() {
-            grantUserAccess($("#addUserAccessHandle").val(), showErrorAndReload);
-        }
+    function button_addUserAccess(){
+        grantUserAccess($("#addUserAccessHandle").val(), showErrorAndReload);
+    }
 
-        function button_removeNotificationService(id = 0) {
-            removeNotificationService(id, showErrorAndReload);
-        }
+    function button_removeNotificationService(id = 0){
+        removeNotificationService(id, showErrorAndReload);
+    }
 
-        function button_addNotificationEmail() {
-            addEmailNotification($("#addNotificationMail").val(), showErrorAndReload);
-        }
-    </script>
+    function button_addNotificationEmail(){
+        addEmailNotification($("#addNotificationMail").val(), showErrorAndReload);
+    }
+</script>
 </body>
 
 </html>

@@ -2,12 +2,12 @@ var enterAnswerElem = document
     .querySelector("#enter_answer")
 
 enterAnswerElem
-    .addEventListener("keyup", function() {
+    .addEventListener("keyup", function(){
         checkTextAreaMaxLength(this);
     });
 
 
-function checkTextAreaMaxLength(textBox) {
+function checkTextAreaMaxLength(textBox){
     var maxLength = parseInt(textBox.dataset.length);
 
     var rest = maxLength - textBox.value.length;
@@ -17,7 +17,7 @@ function checkTextAreaMaxLength(textBox) {
 
     if(rest === maxLength || rest < 0){
         disableSendButton()
-    } else {
+    } else{
         activateSendButton()
     }
 
