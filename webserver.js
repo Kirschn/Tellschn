@@ -130,7 +130,7 @@ app.get("/login/twitter_callback", function (req, res) {
 
                 user.status = null;
                 user.entities = null;
-                let sqlsearchres = await Tellschn.sqlQuery("SELECT users.*, attachment_media.cdn_path AS profile_pic_cdn_link FROM users, attachment_media WHERE attachment_media.media_uuid = users.profile_pic_uuid AND `twitter_id` = ?", user.id_str);
+                let sqlsearchres = await Tellschn.sqlQuery("SELECT users.*, attachment_media.cdn_path AS profile_pic_cdn_link FROM users LEFT JOIN attachment_media ON attachment_media.media_uuid = users.profile_pic_uuid WHERE `twitter_id` = ?", user.id_str);
                 Tellschn.dbg(sqlsearchres)
                 if (sqlsearchres[0] == undefined) {
                     let profile_pic_uuid = await tellschnMedia.downloadMediaToDatabase(user.profile_image_url_https);
