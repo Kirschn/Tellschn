@@ -11,6 +11,7 @@ const tellschnModule = require("./tellschn_classes.js");
 const Tellschn = new tellschnModule.Tellschn();
 const tellschnTemplate = new tellschnModule.tellschnTemplate();
 const tellschnMetrics = new tellschnModule.tellschnMetrics();
+const tellschnMedia = new tellschnModule.tellschnMedia();
 var fs = require("fs");
 var util = require("util");
 var accessconf = JSON.parse(fs.readFileSync("access-config.json", "utf8"));
@@ -120,16 +121,19 @@ app.get("/login/twitter_callback", function (req, res) {
     // verify user login
     util.log("Processing Login Verification for " + req.query.oauth_token);
     twitter.getAccessToken(req.query.oauth_token, req.session.requestSecret, req.query.oauth_verifier, function (err, accessToken, accessSecret) {
-        if (err)
-            throw err;
-        else
+        if (err) {
+            res.status(401)
+            res.send("Es ist ein Fehler aufgetreten").end();
+        } else {
             twitter.verifyCredentials(accessToken, accessSecret, async function (err, user) {
                 if (err) throw err;
 
                 user.status = null;
                 user.entities = null;
-                let sqlsearchres = await Tellschn.sqlQuery("SELECT * FROM users WHERE `twitter_id` = ?", user.id_str);
+                let sqlsearchres = await Tellschn.sqlQuery("SELECT users.*, attachment_media.cdn_path AS profile_pic_cdn_link FROM users, attachment_media WHERE attachment_media.media_uuid = users.profile_pic_uuid AND `twitter_id` = ?", user.id_str);
+                Tellschn.dbg(sqlsearchres)
                 if (sqlsearchres[0] == undefined) {
+                    let profile_pic_uuid = await tellschnMedia.downloadMediaToDatabase(user.profile_image_url_https);
                     util.log("Couldn't find User with ID " + user.id_str + " in user table, inserting new...");
                     var data = {
                         "oauth_token": accessToken,
@@ -143,7 +147,8 @@ app.get("/login/twitter_callback", function (req, res) {
                             "shareimgloc": true
                         }),
                         "profile_pic_original_link": user.profile_image_url_https,
-                        "profile_pic_small_link": user.profile_image_url_https // TODO: DOWNSCALE!
+                        "profile_pic_small_link": user.profile_image_url_https, // TODO: DOWNSCALE!
+                        "profile_pic_uuid": profile_pic_uuid
 
                     }
 
@@ -164,15 +169,30 @@ app.get("/login/twitter_callback", function (req, res) {
 
                 } else {
                     util.log("Found User in Database!")
-                    await Tellschn.sqlQuery("UPDATE `users` SET `oauth_token` = ?, `oauth_secret` = ?, `twitter_handle` = ?, `set_name` = ?, `profile_pic_original_link` = ?, `profile_pic_small_link` = ? WHERE `twitter_id` = ?",
-                        [accessToken, accessSecret, user.screen_name, user.name, user.profile_image_url_https, user.profile_image_url_https, user.id_str]);
+                    let sql = "UPDATE `users` SET `oauth_token` = ?, `oauth_secret` = ?, `twitter_handle` = ?, `set_name` = ?, `profile_pic_original_link` = ?, `profile_pic_small_link` = ? ";
+                    let value_sql = [accessToken, accessSecret, user.screen_name, user.name, user.profile_image_url_https, user.profile_image_url_https];
+                    if (sqlsearchres[0].profile_pic_original_link != user.profile_image_url_https) {
+                        util.log("Profile Pic Updated");
+                        sql += ", profile_pic_uuid = ? "
+                        let uuid = await tellschnMedia.downloadMediaToDatabase(user.profile_image_url_https);
+                        user.profile_pic_uuid = uuid;
+                        let profilePicCdnLink = await Tellschn.sqlQuery("SELECT cdn_path FROM attachment_media WHERE media_uuid = ?", user.profile_pic_uuid);
+
+                        sqlsearchres[0]["profile_pic_cdn_link"] = profilePicCdnLink[0].cdn_path;
+
+                        value_sql.push(uuid);
+                    }
+                    sql += "WHERE `twitter_id` = ?"
+                    value_sql.push(user.id_str);
+                    await Tellschn.sqlQuery(sql, value_sql);
+
                     sqlsearchres[0]["oauth_token"] = accessToken;
                     sqlsearchres[0]["oauth_secret"] = accessSecret;
                     sqlsearchres[0]["twitter_handle"] = user.screen_name;
                     sqlsearchres[0]["set_name"] = user.id_str;
                     sqlsearchres[0]["profile_pic_original_link"] = user.profile_image_url_https;
                     sqlsearchres[0]["profile_pic_small_link"] = user.profile_image_url_https;
-                    
+
 
                     util.log("Storing to session...")
                     req.session.userpayload = sqlsearchres[0];
@@ -191,7 +211,9 @@ app.get("/login/twitter_callback", function (req, res) {
 
 
             });
+        }
     });
+
 })
 
 // redirect user to 
@@ -299,6 +321,10 @@ app.get("/settings", nocache, async (req, res) => {
 })
 
 app.get("/api/:endpoint", nocache, async function (req, res) {
+    if (appconf.debug && req.params.endpoint == "debug") {
+        res.json(req.session).end();
+        console.log(req.session)
+    }
     tellschnMetrics.webHit("api_get");
     if (req.params.endpoint === "session_info") {
         // return general information about the logged in user

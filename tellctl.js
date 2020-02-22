@@ -6,7 +6,6 @@ try {
     const mysql = require("mysql");
     const util = require("util");
     const fs = require("fs");
-
     program
         .command("v1migrate")
         .description("Migrate old TellschnV1 Database to the new format. Expects the Picdrop table to be in the database as 'images'. Please move all files from the picdrop instance to cdn/")
@@ -166,7 +165,7 @@ try {
             console.timeEnd("tell_migration")
 
         });
-    program.command("media-calculate-size")
+    program.command("media-database-calculate-size")
         .description("Will add all unknown file sizes to the media database")
         .option("-a", "--all", "Recalculate the size of all media in the database")
         .action(async () => {
@@ -188,8 +187,20 @@ try {
                 throw e;
             }
         })
-
-
+    program.command("stats_media")
+        .description("Get Stats about the Database")
+        .option("-m", "media_size", "Returns the total size of the media database, read from MySQL. To ensure the accuarcy, use media-database-calculate-size first.")
+        .action(async () => {
+            let size = await Tellschn.sqlQuery("SELECT SUM(size) AS size FROM attachment_media");
+            console.log(size[0]["size"]);
+            process.exit(0);
+        });
+    program.command("downloadMedia <url>")
+    .description("Download a File and add it to the Media Database")
+    .action(async (url) => {
+        const tellschnmedia = new tellschnModule.tellschnMedia();
+        console.log(await tellschnmedia.downloadMediaToDatabase(url));
+    })
     program.parse(process.argv);
 } catch (e) {
     throw e;
