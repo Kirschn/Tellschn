@@ -80,7 +80,6 @@ Einstellungsoptionen:
         </div>
     </div>
     {{#is_own_account}}
-    <!-- Using Tell Template because it's easy and works -->
 
     <div class="tell" id="settings_list_of_external_accounts_with_access">
         <div id="tell_content">
@@ -91,7 +90,7 @@ Einstellungsoptionen:
                     <th>
                         {{translation.account}}
                     </th>
-                    <th>
+                    <th class="no_mobile">
                         {{translation.added}}
                     </th>
                     <th>
@@ -105,7 +104,7 @@ Einstellungsoptionen:
                     <td>
                         {{to_user_screen_name}}
                     </td>
-                    <td>
+                    <td class="no_mobile">
                         {{granted_at}}
                     </td>
                     <td>
@@ -116,7 +115,7 @@ Einstellungsoptionen:
                 </tr>
                 {{/user_access_sharing}} {{^user_access_sharing}}
                 <tr>
-                    <td>
+                    <td colspan="3">
                         {{translation.settings_no_access_granted}}
                     </td>
 

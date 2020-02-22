@@ -775,6 +775,10 @@ input[type="checkbox"]:checked + label:before{
 }
 
 @media screen and (max-width: 800px){
+    .no_mobile{
+        display: none;
+    }
+
     .answer_tell{
         display: none;
     }
