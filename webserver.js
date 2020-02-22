@@ -39,6 +39,10 @@ app.use(session({
     store: new redisStore({ host: 'localhost', port: 6379, client: redisClient, ttl: 86400 }),
 }));
 app.use(fileUpload());
+app.use((req, res, next) => {
+    tellschnMetrics.increment("webserver-hit")
+    next();
+})
 var kue = require('kue')
     , queue = kue.createQueue();
 var Twitter = require("node-twitter-api");
@@ -292,6 +296,7 @@ app.get("/settings", nocache, async (req, res) => {
 })
 
 app.get("/api/:endpoint", nocache, async function (req, res) {
+    tellschnMetrics.webHit("api_get");
     if (req.params.endpoint === "session_info") {
         // return general information about the logged in user
 
@@ -422,6 +427,7 @@ app.get("/api/:endpoint", nocache, async function (req, res) {
 
 
 app.post("/api/:endpoint", nocache, async function (req, res) {
+    tellschnMetrics.webHit("api_post")
     Tellschn.dbg("POST ENDPOINT " + req.params.endpoint)
     if (req.query.token !== req.session.token) {
         // Token Invalid, Abort Request

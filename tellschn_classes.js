@@ -89,6 +89,7 @@ class tellschnMailer extends tellschnTemplate {
         super(lang);
         
         this.mailer = nodemailer.createTransport(this.accessConf.mail);
+        this.metrics = new tellschnMetrics();
     }
     async sendMail(to, subject, text) {
         let info = await this.mailer.sendMail({
@@ -97,6 +98,7 @@ class tellschnMailer extends tellschnTemplate {
             "subject": subject,
             "text": text
         });
+        this.metrics.increment("emails-sent");
         return info;
     }
     async sendValidationMail(address, userpayload) {
@@ -137,7 +139,7 @@ class tellschnMetrics extends Tellschn {
         return;
     }
     webHit(endpoint) {
-        this.increment(endpoint.replace("/", "-"));
+        this.increment("tellschnweb_" + endpoint.replace("/", "-"));
     }
 }
 
