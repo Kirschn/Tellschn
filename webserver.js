@@ -10,6 +10,7 @@ Date.prototype.toMysqlFormat = function () {
 const tellschnModule = require("./tellschn_classes.js");
 const Tellschn = new tellschnModule.Tellschn();
 const tellschnTemplate = new tellschnModule.tellschnTemplate();
+const tellschnMetrics = new tellschnModule.tellschnMetrics();
 var fs = require("fs");
 var util = require("util");
 var accessconf = JSON.parse(fs.readFileSync("access-config.json", "utf8"));
@@ -74,6 +75,7 @@ app.get("/", function (req, res) {
         res.end();
         return;
     }
+    tellschnMetrics.webHit("landing")
     var debug = "";
     if (appconf.debug) {
         debug = JSON.stringify(req.session, null, 4).replace(new RegExp("[\n]+"), "\n<br>");
@@ -105,6 +107,7 @@ function mysql_result_time_to_string(result_object, date_key) {
 
 // twitter API Auth callback
 app.get("/login/twitter_callback", function (req, res) {
+    tellschnMetrics.webHit("twitter_login");
     util.log(port, " /twitter_callback hit");
     if (req.query.oauth_token == null || req.query.oauth_verifier == null || req.session.requestSecret == undefined) {
         res.status(400).end("Query Parameters not set");
@@ -243,6 +246,7 @@ app.get("/confirm_email", nocache, async (req, res) => {
 });
 
 app.get("/settings", nocache, async (req, res) => {
+    tellschnMetrics.webHit("settings")
     if (req.session.own_twitter_id == undefined) {
         res.redirect("/");
         res.end();
@@ -835,7 +839,8 @@ async function usrlandHandler(req, res, tell_showbox_html) {
 
 
     if (req.session.userpayload !== undefined && req.params.userpage === req.session.userpayload.twitter_handle && req.session.own_twitter_id !== undefined) {
-        // show template for logged in user
+        // show template for logged in 
+        tellschnMetrics.webHit("logged_in_user")
         let has_access_to = await Tellschn.sqlQuery("SELECT users.twitter_id AS shared_twitter_id, users.twitter_handle AS shared_display_name, users.profile_pic_original_link AS shared_profile_image_url FROM users, user_access_sharing WHERE user_access_sharing.from_user_id = users.twitter_id AND user_access_sharing.to_user_id = ?", req.session.own_twitter_id)
 
 
@@ -884,6 +889,7 @@ async function usrlandHandler(req, res, tell_showbox_html) {
 
     } else {
         // show template for telling a new tell
+        tellschnMetrics.webHit("send_tell_page")
         let result = await Tellschn.sqlQuery("SELECT twitter_id, twitter_handle, profile_pic_original_link, profile_pic_small_link, custom_page_text FROM users WHERE twitter_handle = ?", req.params.userpage);
         if (result[0] == undefined) {
             res.redirect("/");

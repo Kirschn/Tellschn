@@ -27,5 +27,10 @@
             "user": "noreply@tellschn.de",
             "pass": ""
         }
+    },
+    "monitoring": {
+        "enabled": true,
+        "statsd_server": "localhost",
+        "statsd_port": 8125
     }
 }

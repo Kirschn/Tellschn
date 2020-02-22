@@ -1,6 +1,8 @@
 const fs = require("fs");
 const nodemailer = require("nodemailer");
 const util = require("util");
+const Lynx = require("lynx");
+
 class Tellschn {
     constructor() {
         const mysql = require("mysql");
@@ -119,4 +121,24 @@ class tellschnMailer extends tellschnTemplate {
         );
     }
 }
-module.exports = {Tellschn, tellschnTemplate, tellschnMailer}
+
+class tellschnMetrics extends Tellschn {
+    constructor(service_name = "tellschn") {
+        super();
+        this.service_name = service_name;
+        if (this.accessConf.metrics.enabled) {
+        this.metrics = new Lynx(this.accessConf.metrics.statsd_host, this.accessConf.metrics.statsd_port);
+        }
+    }
+    increment(value) {
+        if (this.accessConf.metrics.enabled) {
+            this.metrics.increment(this.service_name + '.' + value);
+        }
+        return;
+    }
+    webHit(endpoint) {
+        this.increment(endpoint.replace("/", "-"));
+    }
+}
+
+module.exports = {Tellschn, tellschnTemplate, tellschnMailer, tellschnMetrics}
