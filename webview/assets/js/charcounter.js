@@ -1,8 +1,4 @@
-
-    
-
-
-function checkTextAreaMaxLength(textBox) {
+function checkTextAreaMaxLength(textBox){
     var maxLength = parseInt(textBox.dataset.length);
 
     var rest = maxLength - textBox.value.length;
@@ -12,7 +8,7 @@ function checkTextAreaMaxLength(textBox) {
 
     if(rest === maxLength || rest < 0){
         disableSendButton()
-    } else {
+    } else{
         activateSendButton()
     }
 

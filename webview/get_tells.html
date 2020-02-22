@@ -28,55 +28,62 @@
 </head>
 
 <body>
-    <div class="navbar">
-        <a href="/">
-            <img class="logo" src="/assets/images/logo_white.svg" alt="Tellschn" style="height:2em; margin-top: -0.45em;">
-        </a>
+<div class="navbar">
+    <a href="/">
+        <img class="logo" src="/assets/images/logo_white.svg" alt="Tellschn" style="height:2em; margin-top: -0.45em;">
+    </a>
 
-        <div id="navbar-right">
-            <div style="margin-right: 5rem">
-                {{#account_pool}}
-                <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img class="profile_pic" src="{{{shared_profile_image_url}}}" alt="{{{shared_display_name}}}"></a>
-                {{/account_pool}}
-                <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img class="profile_pic" src="{{{base_user.profile_image_url}}}" alt="{{{base_user.display_name}}}"></a>
-            </div>
+    <div id="navbar-right">
+        <div style="margin-right: 5rem">
+            {{#account_pool}}
+            <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img class="profile_pic"
+                                                                                             src="{{{shared_profile_image_url}}}"
+                                                                                             alt="{{{shared_display_name}}}"></a>
+            {{/account_pool}}
+            <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img class="profile_pic"
+                                                                                                src="{{{base_user.profile_image_url}}}"
+                                                                                                alt="{{{base_user.display_name}}}"></a>
+        </div>
 
-            <div id="user"><a href="/settings"><i id="settings_btn" class="material-icons">settings</i></a><a href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
+        <div id="user"><a href="/settings"><i id="settings_btn" class="material-icons">settings</i></a><a
+                href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
 
-            </div>
         </div>
     </div>
-    <div class="loggedin">
-        {{#showcase}}
-        <span id="tellShowcase">
+</div>
+<div class="loggedin">
+    {{#showcase}}
+    <span id="tellShowcase">
             {{{showcase}}}
         </span> {{/showcase}}
-        <div id="top">
-            <h1>{{translation.get_tells_headline}}</h1>
-            <h2>{{translation.get_tells_site_description}}</h2>
-            <p id="share_url">{{translation.get_tells_want_more_tells}}</p>
-            <input id="url" class="copyurl" type="text" name="profile-url" value="{{{base_url}}}/{{display_name}}" readonly="readonly" /> <button class="copyBtn">{{translation.copy}}</button>
-        </div>
-        <hr/>
-        <span id="tells">
+    <div id="top">
+        <h1>{{translation.get_tells_headline}}</h1>
+        <h2>{{translation.get_tells_site_description}}</h2>
+        <p id="share_url">{{translation.get_tells_want_more_tells}}</p>
+        <input id="url" class="copyurl" type="text" name="profile-url" value="{{{base_url}}}/{{display_name}}"
+               readonly="readonly" />
+        <button class="copyBtn">{{translation.copy}}</button>
+    </div>
+    <hr />
+    <span id="tells">
         {{>tell_list}}
         </span>
 
-        <div class="pagination" id="loadingSymbol">
-            <div class="lds-ripple">
-                <div></div>
-                <div></div>
-            </div>
+    <div class="pagination" id="loadingSymbol">
+        <div class="lds-ripple">
+            <div></div>
+            <div></div>
         </div>
+    </div>
 
-        <footer><a href="{{{appconf.gitURL}}}">{{translation.is_free_software}}<a></footer>
+    <footer><a href="{{{appconf.gitURL}}}">{{translation.is_free_software}}<a></footer>
 
 
-        <!-- TODO: Popups do not close when clicked out of the window and page always scrolls up to the top -->
-        <div id="answer" class="overlay">
-            <div class="popup">
-                <h2>{{translation.answer}}</h2>
-                <a class="close" href="#">&times;</a>
+    <!-- TODO: Popups do not close when clicked out of the window and page always scrolls up to the top -->
+    <div id="answer" class="overlay">
+        <div class="popup">
+            <h2>{{translation.answer}}</h2>
+            <a class="close" href="#">&times;</a>
             <div class="content answer_popup" id="answer_popup_content">
                 <div class="answer_tell">
                     <h3>{{translation.tell}}:</h3>
@@ -105,7 +112,7 @@
                 </div>
             </div>
             <div class="content answer_popup" id="answer_popup_response" style="display: none">&nbsp;</div>
-    </div>
+        </div>
     </div>
     <div id="edit" class="overlay">
         <div class="popup">
@@ -147,7 +154,9 @@
             <div class="content">
                 <p>{{translation.get_tells_delete_tell_confirm_text}}
                 </p>
-                <button class="delete" onclick="deleteTell()">{{translation.get_tells_delete_tell_confirm_button}}</button> <button class="cancel">{{translation.get_tells_delete_tell_abort_button}}</button>
+                <button class="delete" onclick="deleteTell()">{{translation.get_tells_delete_tell_confirm_button}}
+                </button>
+                <button class="cancel">{{translation.get_tells_delete_tell_abort_button}}</button>
             </div>
         </div>
     </div>
@@ -165,134 +174,134 @@
             <a class="close" href="#" onclick='$("#lightbox_media").attr("src", "");'>&times;</a>
             <div class="content">
                 <video src="" id="lightbox_media" controls autoplay>
-                            {{translation.no_html5_video_support}}
-                        </video>
+                    {{translation.no_html5_video_support}}
+                </video>
             </div>
         </div>
     </div>
 
-    </div>
-    <script async src="/assets/js/charcounter.js"></script>
-    <script async src="/assets/js/copy.js"></script>
-    <script>
-        if (no_more_tells) noMoreTells();
+</div>
+<script async src="/assets/js/charcounter.js"></script>
+<script async src="/assets/js/copy.js"></script>
+<script>
+    if(no_more_tells) noMoreTells();
 
-        var request_in_progress = false;
-        var delete_buffer = null;
-        var answer_id_buffer = null;
+    var request_in_progress = false;
+    var delete_buffer = null;
+    var answer_id_buffer = null;
 
-        if (!no_more_tells) scrollHandler("get_own_tells");
+    if(!no_more_tells) scrollHandler("get_own_tells");
 
-        function filldeletemodal(tell_id) {
-            delete_buffer = tell_id;
+    function filldeletemodal(tell_id){
+        delete_buffer = tell_id;
 
-        }
+    }
 
-        function deleteTell() {
-            delete_tell(delete_buffer, function(response) {
-                if (response.err) throw response.err;
-                window.location.hash = "";
-                document.getElementById("tell-" + delete_buffer).remove();
-                delete_buffer = null;
-            })
-        }
-
-        function fillanswermodal(tell_id, has_img) {
-            if (has_img) {
-                document.getElementById("checkboxes_imagesharing").style.display = "block";
-            } else {
-                document.getElementById("checkboxes_imagesharing").style.display = "none";
-
-            }
-            document.getElementById("answer_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
-            answer_id_buffer = tell_id;
-        }
-
-        function filleditmodal(tell_id, has_img, was_public, was_img_public) {
-            if (has_img) {
-                document.getElementById("editcheckboxes_imagesharing").style.display = "block";
-            } else {
-                document.getElementById("editcheckboxes_imagesharing").style.display = "none";
-
-            }
-            if (was_img_public) {
-                $("#editpost_image").attr("checked", "checked");
-            }
-            if (was_public) {
-                $("#editprofileposting").attr("checked", "checked");
-            }
-            document.getElementById("edit_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
-            $("#edit_answer").val(document.getElementById("answer_content_" + tell_id).innerHTML);
-            answer_id_buffer = tell_id;
-        }
-
-        function editTell() {
-            if (request_in_progress) {
-                return;
-            }
-            request_in_progress = true;
-            edit_tell(answer_id_buffer,
-                $("#edit_answer").val(),
-                $("#editprofileposting").is(":checked"),
-                $("#editpost_image").is(":checked"),
-                function(response) {
-                    request_in_progress = false;
-                    if (response.err !== null) {
-                        alert(response);
-                        return;
-                    }
-
-                    document.getElementById("edit_popup_content").style.display = "none";
-                    document.getElementById("edit_popup_response").style.display = "inline";
-                    document.getElementById("edit_popup_response").innerHTML = "{{translation.get_tells_your_answer_was_edited}}<br><br>";
-                    document.getElementById("edit_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">{{translation.okay}}</a></div>';
-
-
-                }
-            )
-        }
-
-        function answerTell() {
-            if (request_in_progress) {
-                return;
-            }
-            request_in_progress = true;
-            reply_to_tell(
-                answer_id_buffer,
-                $("#enter_answer").val(),
-                $("#tweeting").is(":checked"),
-                $("#profileposting").is(":checked"),
-                $("#tweet_image").is(":checked"),
-                $("#post_image").is(":checked"),
-                function(response) {
-                    request_in_progress = false;
-                    if (response.err == null) {
-                        // answer successful
-                        // display success message
-                        document.getElementById("answer_popup_content").style.display = "none";
-                        document.getElementById("answer_popup_response").style.display = "inline";
-                        document.getElementById("answer_popup_response").innerHTML = "{{translation.get_tells_your_answer_was_sent}}<br><br>";
-                        document.getElementById("answer_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">{{translation.okay}}</a></div>';
-                    } else {
-                        alert(response);
-                        return;
-                    }
-                }
-            )
-        }
-
-        function reset_answer_modal() {
+    function deleteTell(){
+        delete_tell(delete_buffer, function(response){
+            if(response.err) throw response.err;
             window.location.hash = "";
-            window.location.reload();
-            // eh just reload the page, so we don't have to fuck with all of the ajax requests to change the local view
+            document.getElementById("tell-" + delete_buffer).remove();
+            delete_buffer = null;
+        })
+    }
 
-            /*document.getElementById("answer_popup_response").style.display = "none";
-            document.getElementById("answer_popup_content").style.display = "inline";
-            document.getElementById("edit_popup_response").style.display = "none";
-            document.getElementById("edit_popup_content").style.display = "inline";
-            $("#enter_answer").val(" "); */
+    function fillanswermodal(tell_id, has_img){
+        if(has_img){
+            document.getElementById("checkboxes_imagesharing").style.display = "block";
+        } else{
+            document.getElementById("checkboxes_imagesharing").style.display = "none";
+
         }
-    </script>
+        document.getElementById("answer_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
+        answer_id_buffer = tell_id;
+    }
+
+    function filleditmodal(tell_id, has_img, was_public, was_img_public){
+        if(has_img){
+            document.getElementById("editcheckboxes_imagesharing").style.display = "block";
+        } else{
+            document.getElementById("editcheckboxes_imagesharing").style.display = "none";
+
+        }
+        if(was_img_public){
+            $("#editpost_image").attr("checked", "checked");
+        }
+        if(was_public){
+            $("#editprofileposting").attr("checked", "checked");
+        }
+        document.getElementById("edit_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
+        $("#edit_answer").val(document.getElementById("answer_content_" + tell_id).innerHTML);
+        answer_id_buffer = tell_id;
+    }
+
+    function editTell(){
+        if(request_in_progress){
+            return;
+        }
+        request_in_progress = true;
+        edit_tell(answer_id_buffer,
+            $("#edit_answer").val(),
+            $("#editprofileposting").is(":checked"),
+            $("#editpost_image").is(":checked"),
+            function(response){
+                request_in_progress = false;
+                if(response.err !== null){
+                    alert(response);
+                    return;
+                }
+
+                document.getElementById("edit_popup_content").style.display = "none";
+                document.getElementById("edit_popup_response").style.display = "inline";
+                document.getElementById("edit_popup_response").innerHTML = "{{translation.get_tells_your_answer_was_edited}}<br><br>";
+                document.getElementById("edit_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">{{translation.okay}}</a></div>';
+
+
+            }
+        )
+    }
+
+    function answerTell(){
+        if(request_in_progress){
+            return;
+        }
+        request_in_progress = true;
+        reply_to_tell(
+            answer_id_buffer,
+            $("#enter_answer").val(),
+            $("#tweeting").is(":checked"),
+            $("#profileposting").is(":checked"),
+            $("#tweet_image").is(":checked"),
+            $("#post_image").is(":checked"),
+            function(response){
+                request_in_progress = false;
+                if(response.err == null){
+                    // answer successful
+                    // display success message
+                    document.getElementById("answer_popup_content").style.display = "none";
+                    document.getElementById("answer_popup_response").style.display = "inline";
+                    document.getElementById("answer_popup_response").innerHTML = "{{translation.get_tells_your_answer_was_sent}}<br><br>";
+                    document.getElementById("answer_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">{{translation.okay}}</a></div>';
+                } else{
+                    alert(response);
+                    return;
+                }
+            }
+        )
+    }
+
+    function reset_answer_modal(){
+        window.location.hash = "";
+        window.location.reload();
+        // eh just reload the page, so we don't have to fuck with all of the ajax requests to change the local view
+
+        /*document.getElementById("answer_popup_response").style.display = "none";
+        document.getElementById("answer_popup_content").style.display = "inline";
+        document.getElementById("edit_popup_response").style.display = "none";
+        document.getElementById("edit_popup_content").style.display = "inline";
+        $("#enter_answer").val(" "); */
+    }
+</script>
 </body>
 
 </html>

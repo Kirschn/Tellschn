@@ -9,7 +9,8 @@
 
         {{/is_mp4}} {{#is_mp4}}
         <a href="#show_media">
-            <img src="/assets/images/media.png" onclick="document.getElementById('lightbox_media').src = '/cdn/{{cdn_path}}'">
+            <img src="/assets/images/media.png"
+                 onclick="document.getElementById('lightbox_media').src = '/cdn/{{cdn_path}}'">
         </a>
 
         {{/is_mp4}} {{/has_media}}
@@ -17,13 +18,14 @@
 
         {{#was_answered}}
         <hr class="hr_tell_answer">
-        <h3>{{translation.answer_noun}}:</h3>{{#answer_was_edited}} <i>{{translation.edited}}</i>{{/answer_was_edited}}
+        <h3>{{translation.answer_noun}}:</h3>
         <p id="answer_content_{{tell_id}}">{{answer_content}}</p>
         {{/was_answered}}
         <hr />
     </div>
     <div id="tell_additional">
-        <div id="tell_time">{{timestamp}}</div>
+        <div id="tell_time">{{timestamp}}{{#answer_was_edited}} <i>{{translation.edited}}</i>{{/answer_was_edited}}
+        </div>
         {{#edit_tools}}
         <!-- TODO: Schön machen-->
 
@@ -35,15 +37,19 @@
         <div id="button">
 
             {{^was_answered}}
-            <a class="answer" href="#answer" onclick="fillanswermodal('{{tell_id}}', {{has_media}})">{{translation.answer}}</a> {{/was_answered}} {{#was_answered}}
-            <a class="answer" href="#edit" onclick="filleditmodal('{{tell_id}}', {{has_media}}, {{#answer_show_public}}true{{/answer_show_public}}{{^answer_show_public}}false{{/answer_show_public}}, {{#answer_show_media_public}}true{{/answer_show_media_public}}{{^answer_show_media_public}}false{{/answer_show_media_public}})">{{translation.edit}}</a>            {{/was_answered}}
+            <a class="answer" href="#answer" onclick="fillanswermodal('{{tell_id}}', {{has_media}})">{{translation.answer}}</a>
+            {{/was_answered}} {{#was_answered}}
+            <a class="answer" href="#edit"
+               onclick="filleditmodal('{{tell_id}}', {{has_media}}, {{#answer_show_public}}true{{/answer_show_public}}{{^answer_show_public}}false{{/answer_show_public}}, {{#answer_show_media_public}}true{{/answer_show_media_public}}{{^answer_show_media_public}}false{{/answer_show_media_public}})">{{translation.edit}}</a>
+            {{/was_answered}}
 
         </div>
         {{/do_not_share}}
 
         <div id="button">
             {{#answer_tweet_id}}
-            <a class="answer" href="https://twitter.com/{{display_name}}/status/{{answer_tweet_id}}">{{translation.link_to_tweet}}</a> {{/answer_tweet_id}}
+            <a class="answer" href="https://twitter.com/{{display_name}}/status/{{answer_tweet_id}}">{{translation.link_to_tweet}}</a>
+            {{/answer_tweet_id}}
             <a class="delete" href="#confirm_delete" onclick="filldeletemodal('{{tell_id}}')">{{translation.delete}}</a>
         </div>
         {{/edit_tools}}
