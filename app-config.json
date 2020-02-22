@@ -4,5 +4,6 @@
     "debug": true,
     "tells_per_page": 10,
     "local_path": "file:///home/wolff/Tellschn/",
-    "lang": "de"
+    "lang": "de",
+    "gitURL": "https://github.com/Kirschn/Tellschn"
 }
