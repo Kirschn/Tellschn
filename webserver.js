@@ -164,12 +164,15 @@ app.get("/login/twitter_callback", function (req, res) {
 
                 } else {
                     util.log("Found User in Database!")
-                    await Tellschn.sqlQuery("UPDATE `users` SET `oauth_token` = ?, `oauth_secret` = ?, `twitter_handle` = ?, `set_name` = ? WHERE `twitter_id` = ?",
-                        [accessToken, accessSecret, user.screen_name, user.name, user.id_str]);
+                    await Tellschn.sqlQuery("UPDATE `users` SET `oauth_token` = ?, `oauth_secret` = ?, `twitter_handle` = ?, `set_name` = ?, `profile_pic_original_link` = ?, `profile_pic_small_link` = ? WHERE `twitter_id` = ?",
+                        [accessToken, accessSecret, user.screen_name, user.name, user.profile_image_url_https, user.profile_image_url_https, user.id_str]);
                     sqlsearchres[0]["oauth_token"] = accessToken;
                     sqlsearchres[0]["oauth_secret"] = accessSecret;
                     sqlsearchres[0]["twitter_handle"] = user.screen_name;
                     sqlsearchres[0]["set_name"] = user.id_str;
+                    sqlsearchres[0]["profile_pic_original_link"] = user.profile_image_url_https;
+                    sqlsearchres[0]["profile_pic_small_link"] = user.profile_image_url_https;
+                    
 
                     util.log("Storing to session...")
                     req.session.userpayload = sqlsearchres[0];
