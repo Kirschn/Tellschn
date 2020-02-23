@@ -52,6 +52,16 @@ function edit_tell(tell_id, content, on_page, share_image_page, cb){
     })
 }
 
+function showLoadingAnimation () {
+
+    $("#loadingSymbol").show();
+
+}
+function hideLoadingAnimation () {
+
+    $("#loadingSymbol").hide();
+
+}
 function scrollHandler(apinode, add){
     if(add == undefined){
         add = ""
@@ -63,10 +73,10 @@ function scrollHandler(apinode, add){
             // nachladen
             if(!request_in_progress && !at_end){
                 request_in_progress = true;
-
+                showLoadingAnimation()
                 function next(next_page){
                     document.getElementById("tells").innerHTML += next_page;
-
+                    hideLoadingAnimation();
                     request_in_progress = false;
                     page++;
                 }
