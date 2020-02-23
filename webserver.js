@@ -715,7 +715,7 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
             }).on('progress', function (progress, data) {
                 console.log('\r  job #' + processUploadJob.id + ' ' + progress + '% complete with data ', data);
                 req.session.latestUpload = {
-                    "progress": progress,
+                    "progress": Math.round(parseFloat(progress)),
                     error: null,
                     uuid: null
                 }
