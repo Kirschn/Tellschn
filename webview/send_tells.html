@@ -104,7 +104,7 @@
                             /* Hier kann man die Fortschrittsanzeige updaten. Beispielsweise prozent = (evt.loaded/evt.total*100); */
                             var uploadProgress = (evt.loaded / evt.total * 100);
                             console.log(uploadProgress);
-                            $("#uploadbuttonContent").html("Upload " + uploadProgress + "%");
+                            $("#uploadbuttonContent").html("Upload " + Math.round(uploadProgress) + "%");
                         };
                         xhr.upload.onload = function(){
                             console.log('Upload done.')
