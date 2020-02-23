@@ -557,15 +557,18 @@ app.post("/api/:endpoint", nocache, async function (req, res) {
             // 2) Start Job to check if the user has IM Notifications activated
             res.json({ "err": null, "status": "success" });
             res.end();
-
+            console.log("Replyconfig:");
+            console.log(replyconfig)
             if (replyconfig.send_tweet) {
                 util.log("Trigger Job to send Tweet")
-                queue.create("send_tweet", {
+                let job_data =  {
                     "title": "Send Answer-Tweet for Tell " + req.body.for_tell_id,
                     "twitter_id": sanity_1[0].for_user_id,
                     "for_tell_id": req.body.for_tell_id,
                     "share_image_twitter": replyconfig.share_image_twitter
-                }).save(function (err) {
+                };
+                console.log("Job Data", job_data)
+                queue.create("send_tweet", job_data).save(function (err) {
                     if (err) throw err;
                 });
             } else {

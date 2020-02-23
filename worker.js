@@ -154,7 +154,8 @@ queue.process("process_uploaded_file", async function (job, done) {
     )();
 });
 queue.process("send_tweet", async function (job, done) {
-    job.log("Send Tweet: Task Started");
+
+    job.log("Send Tweet: Task Started Job Data: ", job.data);
     let result = await Tellschn.sqlQuery(get_public_tweet, job.data.for_tell_id);
     job.log("Send Tweet: SQL Result Successful. Generating Image");
     if (result[0].answer_content.length > 230) {
@@ -223,6 +224,8 @@ queue.process("send_tweet", async function (job, done) {
         media: base64_tell_img,
         isBase64: true
     }, function (textImgID) {
+        console.log (result[0]);
+        console.log(job.data)
         if (result[0].has_media && !result[0].is_mp4 && job.data.share_image_twitter) {
             console.log("Has another Image Attached, uploading...");
             uploadTweetImage({

@@ -18,7 +18,7 @@ function reply_to_tell(to_tell_id, content, send_tweet, on_page, share_image_twi
         "reply_config": JSON.stringify({
             "send_tweet": send_tweet,
             "show_on_page": on_page,
-            "share_image_twtter": share_image_twitter,
+            "share_image_twitter": share_image_twitter,
             "show_image_page": share_image_page
         })
     }, (result) => {
