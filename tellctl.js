@@ -155,7 +155,7 @@ try {
                     await Tellschn.sqlQuery("INSERT INTO answers (for_tell_id, timestamp, content, show_public) VALUES (?)", [[
                         insertQuery.insertId,
                         currentTell.reply_timestamp,
-                        currentTell.content,
+                        currentTell.reply,
                         true
                     ]])
                 }
