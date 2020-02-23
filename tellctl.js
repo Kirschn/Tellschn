@@ -191,6 +191,7 @@ try {
         .description("Get Stats about the Database")
         .option("-m", "media_size", "Returns the total size of the media database, read from MySQL. To ensure the accuarcy, use media-database-calculate-size first.")
         .action(async () => {
+            Tellschn.appconf.debug = false;
             let size = await Tellschn.sqlQuery("SELECT SUM(size) AS size FROM attachment_media");
             console.log(size[0]["size"]);
             process.exit(0);
