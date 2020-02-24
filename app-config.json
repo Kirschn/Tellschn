@@ -5,5 +5,7 @@
     "tells_per_page": 10,
     "local_path": "file:///home/wolff/Tellschn/",
     "lang": "de",
-    "gitURL": "https://github.com/Kirschn/Tellschn"
+    "gitURL": "https://github.com/Kirschn/Tellschn",
+    "cdn_path": "/cdn/"
+
 }
