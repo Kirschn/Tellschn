@@ -28,6 +28,7 @@
     "private": "Privat",
     "link_to_tweet": "Zum Tweet",
     "no_more_tells": "Hier sind leider keine Tells :(",
+    "running_at": "TellschnV2 @",
 
 
     "telegram_welcome_message": "Hallo {{from_username}}! Du bist dabei dein Tellschn-Konto mit Telegram zu verknüpfen. Wenn du dein Telegram anbindest, erhältst du eine Benachrichtigung, sobald du neue Tells erhältst.",

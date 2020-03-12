@@ -13,6 +13,7 @@
     "express-session": "^1.17.0",
     "file-type": "^13.0.3",
     "fluent-ffmpeg": "^2.1.2",
+    "git-last-commit": "^1.0.0",
     "jimp": "^0.9.3",
     "kue": "^0.11.6",
     "lynx": "^0.2.0",

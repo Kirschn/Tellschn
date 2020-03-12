@@ -162,7 +162,8 @@
     <span id="tells">
             {{>publicanswers}}
         </span>
-    <footer><a href="{{{appconf.gitURL}}}">{{translation.is_free_software}}</a></footer>
+    <footer><a href="{{{appconf.gitURL}}}">{{translation.is_free_software}}</a> | <a href="{{{appconf.gitURL}}}/commit/{{{appconf.lastCommit.hash}}}">{{translation.running_at}} {{appconf.lastCommit.branch}}/{{appconf.lastCommit.shortHash}}</a></footer>
+
 
     <div id="show_img" class="overlay">
         <div class="popup">

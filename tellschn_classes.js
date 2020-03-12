@@ -3,6 +3,7 @@ const nodemailer = require("nodemailer");
 const util = require("util");
 const Lynx = require("lynx");
 const request = require("request");
+const git = require('git-last-commit');
 
 class Tellschn {
     constructor() {
@@ -10,6 +11,10 @@ class Tellschn {
         this.appconf = JSON.parse(fs.readFileSync("app-config.json", "utf8"));
         this.accessConf = JSON.parse(fs.readFileSync("access-config.json", "utf8"))
         this.sqlConnection = mysql.createConnection(this.accessConf.mysql);
+        git.getLastCommit((err, commit) => {
+            if (err) throw err
+            this.appconf.lastCommit = commit;
+        })
     }
     sqlQuery(query, data) {
         return new Promise((resolve, reject) => {
@@ -44,6 +49,7 @@ class Tellschn {
             Promise.resolve()
         }, time)
     }
+    
 }
 class tellschnTemplate extends Tellschn {
     constructor(lang = "de") {
