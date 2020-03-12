@@ -92,12 +92,7 @@ table{
 }
 
 tr:nth-child(2n+1){
-    background: red;
-    border: 1px solid red;
-}
-
-tr:nth-child(2n+1){
-    background: #2f2e2e;
+    background: #d5d5d5;
 }
 
 tr{
