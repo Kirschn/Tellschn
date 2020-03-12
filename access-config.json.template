@@ -28,7 +28,7 @@
             "pass": ""
         }
     },
-    "monitoring": {
+    "metrics": {
         "enabled": true,
         "statsd_server": "localhost",
         "statsd_port": 8125
