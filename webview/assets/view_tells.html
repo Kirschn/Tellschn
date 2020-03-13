@@ -14,12 +14,12 @@
         </a>
 
         {{/is_mp4}} {{/has_media}}
-        <p id="tell_content_{{tell_id}}">{{tell_content}}</p>
+        <p id="tell_content_{{tell_id}}" class="wrap_text">{{tell_content}}</p>
 
         {{#was_answered}}
         <hr class="hr_tell_answer">
         <h3>{{translation.answer_noun}}:</h3>
-        <p id="answer_content_{{tell_id}}">{{answer_content}}</p>
+        <p id="answer_content_{{tell_id}}" class="wrap_text">{{answer_content}}</p>
         {{/was_answered}}
         <hr />
     </div>

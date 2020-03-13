@@ -107,7 +107,10 @@ th{
     padding: 0 10px 0 10px;
 }
 
+.wrap_text{
+    white-space: pre-wrap;
 
+}
 /* landing page */
 
 .intro{
