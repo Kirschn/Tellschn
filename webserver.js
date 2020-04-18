@@ -36,8 +36,8 @@ app.use(session({
     name: '_TellschnV2',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
-    store: new redisStore({ host: 'localhost', port: 6379, client: redisClient, ttl: 86400 }),
+    cookie: { secure: false, maxAge: 86400 },
+    store: new redisStore({ host: 'localhost', port: 6379, client: redisClient, ttl: 864000 }),
 }));
 app.use(fileUpload());
 app.use((req, res, next) => {
