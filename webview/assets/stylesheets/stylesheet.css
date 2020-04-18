@@ -941,4 +941,7 @@ input[type="checkbox"]:checked + label:before{
         color: #ffffff;
         margin-bottom: 1em;
     }
+    tr:nth-child(2n+1) {
+        background: #171616;
+    }
 }
