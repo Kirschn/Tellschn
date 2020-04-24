@@ -181,6 +181,7 @@ queue.process("send_tweet", async function (job, done) {
     });
 
     var page = await browser.newPage();
+    await page.setCacheEnabled(false);
     job.log("Navigating to HTML");
     var randomNumber = Math.floor(Math.random() * 2000);
     fs.writeFileSync("webview/assets/temp_" + randomNumber + ".html", html, "utf8");
