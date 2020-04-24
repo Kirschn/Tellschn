@@ -29,7 +29,7 @@
 
 @font-face {
     font-family : "twemoji";
-    src         : url("../fonts/TwitterColorEmoji-SVGinOT.woff2") format("woff2"), url("../fonts/TwitterColorEmoji-SVGinOT.woff") format("woff");
+    src         : url("../fonts/TwitterColorEmoji-SVGinOT.woff2") format("woff2"), url("../fonts/TwitterColorEmoji-SVGinOT.woff") format("woff"), url("../fonts/TwitterColorEmoji-SVGinOT.ttf") format("truetype");
     font-style  : normal;
     font-weight : 400;
 }
