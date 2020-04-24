@@ -1,203 +1,210 @@
 <!Doctype HTML>
 <html>
 
-<head>
-    <title>@{{display_name}} - Tellschn</title>
+    <head>
+        <title>@{{display_name}} - Tellschn</title>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <meta name="description" lang="de" content="{{translation.site_description}}">
-    <meta name="theme-color" content="#253e59">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta property="og:site_name" content="@{{display_name}} - {{translation.title}}">
-    <meta property="og:title" content="Tellschn">
-    <meta property="og:description" content="{{translation.send_tells_og_description}}">
-    <meta property="og:url" content="{{{appconf.base_url}}}/{{display_name}}">
-    <meta property="og:image" content="{{{appconf.base_url}}}/assets/images/og.png">
-    <meta property="og:type" content="article">
-    <link rel="stylesheet" href="/assets/stylesheets/stylesheet.css" />
-    <link rel="icon" href="/assets/images/favicon.ico" />
-    <link rel="icon" type="image/png" href="/assets/images/favicon.png">
-    <script src="/assets/js/jquery-3.4.1.min.js"></script>
-    <script src="/assets/js/tellschn-client.js"></script>
-    <script>
-        var blocked = false;
-        var upload_ready = true;
-        var twitter_id = "{{ twitter_id }}";
-        var token = "{{ token }}";
-        var media_uuid = null;
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+        <meta name="description" lang="de" content="{{translation.site_description}}">
+        <meta name="theme-color" content="#253e59">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta property="og:site_name" content="@{{display_name}} - {{translation.title}}">
+        <meta property="og:title" content="Tellschn">
+        <meta property="og:description" content="{{translation.send_tells_og_description}}">
+        <meta property="og:url" content="{{{appconf.base_url}}}/{{display_name}}">
+        <meta property="og:image" content="{{{appconf.base_url}}}/assets/images/og.png">
+        <meta property="og:type" content="article">
+        <link rel="stylesheet" href="/assets/stylesheets/stylesheet.css" />
+        <link rel="icon" href="/assets/images/favicon.ico" />
+        <link rel="icon" type="image/png" href="/assets/images/favicon.png">
+        <script src="/assets/js/jquery-3.4.1.min.js"></script>
+        <script src="/assets/js/tellschn-client.js"></script>
+        <script>
+            var blocked = false;
+            var upload_ready = true;
+            var twitter_id = "{{ twitter_id }}";
+            var token = "{{ token }}";
+            var media_uuid = null;
 
-        function checkUploadedFile(){
-            $.get("/api/upload_status?token=" + token, res => {
-                if(res.error != null){
-                    alert(res.error);
-                    return;
-                }
-                if(res.uuid !== null){
-                    console.log(res.uuid);
-                    media_uuid = res.uuid;
-                    $("#uploadbuttonContent").html("{{translation.uploaded}}!");
-                    blocked = false;
-                    return;
-                }
-                $("#uploadbuttonContent").html("{{translation.converting}} " + res.progress + "%");
-                setTimeout(checkUploadedFile, 1000);
-            })
+            function checkUploadedFile(){
+                $.get("/api/upload_status?token=" + token, res => {
+                    if(res.error != null){
+                        alert(res.error);
+                        return;
+                    }
+                    if(res.uuid !== null){
+                        console.log(res.uuid);
+                        media_uuid = res.uuid;
+                        $("#uploadbuttonContent").html("{{translation.uploaded}}!");
+                        blocked = false;
+                        return;
+                    }
+                    $("#uploadbuttonContent").html("{{translation.converting}} " + res.progress + "%");
+                    setTimeout(checkUploadedFile, 1000);
+                })
 
-        }
+            }
 
-        function onload(){
-            /*var enterAnswerElem = document
-                .querySelector("#enter_tell")
+            function onload(){
+                /*var enterAnswerElem = document
+                    .querySelector("#enter_tell")
 
-            enterAnswerElem
-                .addEventListener("keyup", function () {
-                    checkTextAreaMaxLength(enterAnswerElem);
+                enterAnswerElem
+                    .addEventListener("keyup", function () {
+                        checkTextAreaMaxLength(enterAnswerElem);
+                    });
+                checkTextAreaMaxLength(enterAnswerElem);
+                    */
+                $("#send_tell_button").click(function(){
+                    console.log("Send Tell Button was clicked");
+                    if(blocked){
+                        console.log("Input Blocked");
+                        return;
+                    }
+                    if(!upload_ready){
+                        console.log("Upload not ready");
+                        return;
+                    }
+                    // Block input
+                    blocked = true;
+                    send_tell(twitter_id,
+                        $("#enter_tell").val(),
+                        media_uuid, //TODO: MEDIA UUID
+                        $("#tweetable").is(":checked"),
+                        function(call){
+                            if(call.status == "success"){
+                                $("#send_tell_button").html("{{translation.sent}}!");
+                                setTimeout(function(){
+                                    window.location = window.location;
+
+                                }, 3000)
+                            } else{
+                                alert(call.err);
+                                blocked = false;
+                            }
+                        });
                 });
-            checkTextAreaMaxLength(enterAnswerElem);
-                */
-            $("#send_tell_button").click(function(){
-                console.log("Send Tell Button was clicked");
-                if(blocked){
-                    console.log("Input Blocked");
-                    return;
-                }
-                if(!upload_ready){
-                    console.log("Upload not ready");
-                    return;
-                }
-                // Block input
-                blocked = true;
-                send_tell(twitter_id,
-                    $("#enter_tell").val(),
-                    media_uuid, //TODO: MEDIA UUID
-                    $("#tweetable").is(":checked"),
-                    function(call){
-                        if(call.status == "success"){
-                            $("#send_tell_button").html("{{translation.sent}}!");
-                            setTimeout(function(){
-                                window.location = window.location;
+                $('#file').on('change', function(){
+                    if(blocked) return;
+                    blocked = true;
+                    console.log("Catched FIle Change event")
+                    var data = new FormData(); // das ist unser Daten-Objekt ...
+                    data.append('media', this.files[0]); // ... an die wir unsere Datei anhängen
+                    $.ajax({
+                        url: '/api/upload_media?token=' + token, // Wohin soll die Datei geschickt werden?
+                        data: data, // Das ist unser Datenobjekt.
+                        type: 'POST', // HTTP-Methode, hier: POST
+                        processData: false,
+                        contentType: false,
+                        xhr: function(){
+                            var xhr = $.ajaxSettings.xhr();
+                            xhr.upload.onprogress = function(evt){
+                                /* Hier kann man die Fortschrittsanzeige updaten. Beispielsweise prozent = (evt.loaded/evt.total*100); */
+                                var uploadProgress = (evt.loaded / evt.total * 100);
+                                console.log(uploadProgress);
+                                $("#uploadbuttonContent").html("Upload " + Math.round(uploadProgress) + "%");
+                            };
+                            xhr.upload.onload = function(){
+                                console.log('Upload done.')
+                            };
+                            return xhr;
+                        },
+                        // und wenn alles erfolgreich verlaufen ist, schreibe eine Meldung
+                        // in das Response-Div
+                        success: function(result){
+                            console.log(result);
+                            $("#uploadbuttonContent").html("{{translation.converting}}...");
 
-                            }, 3000)
-                        } else{
-                            alert(call.err);
-                            blocked = false;
+                            checkUploadedFile();
                         }
                     });
-            });
-            $('#file').on('change', function(){
-                if(blocked) return;
-                blocked = true;
-                console.log("Catched FIle Change event")
-                var data = new FormData(); // das ist unser Daten-Objekt ...
-                data.append('media', this.files[0]); // ... an die wir unsere Datei anhängen
-                $.ajax({
-                    url: '/api/upload_media?token=' + token, // Wohin soll die Datei geschickt werden?
-                    data: data, // Das ist unser Datenobjekt.
-                    type: 'POST', // HTTP-Methode, hier: POST
-                    processData: false,
-                    contentType: false,
-                    xhr: function(){
-                        var xhr = $.ajaxSettings.xhr();
-                        xhr.upload.onprogress = function(evt){
-                            /* Hier kann man die Fortschrittsanzeige updaten. Beispielsweise prozent = (evt.loaded/evt.total*100); */
-                            var uploadProgress = (evt.loaded / evt.total * 100);
-                            console.log(uploadProgress);
-                            $("#uploadbuttonContent").html("Upload " + Math.round(uploadProgress) + "%");
-                        };
-                        xhr.upload.onload = function(){
-                            console.log('Upload done.')
-                        };
-                        return xhr;
-                    },
-                    // und wenn alles erfolgreich verlaufen ist, schreibe eine Meldung
-                    // in das Response-Div
-                    success: function(result){
-                        console.log(result);
-                        $("#uploadbuttonContent").html("{{translation.converting}}...");
-
-                        checkUploadedFile();
-                    }
                 });
-            });
-        }
-    </script>
-</head>
+            }
+        </script>
+    </head>
 
-<body onload="onload()">
-<div class="navbar_centered">
-    <a href="/"><img class="logo" src="/assets/images/logo_white.svg" alt="{{translation.title}}"
-                     style="height:2em; margin-top: -0.45em;"></a>
-</div>
-<div class="loggedin">
-    {{#showcase}}
-    <span id="tellShowcase">
+    <body onload="onload()">
+        <div class="navbar_centered">
+            <a href="/"><img class="logo" src="/assets/images/logo_white.svg" alt="{{translation.title}}"
+                             style="height:2em; margin-top: -0.45em;"></a>
+        </div>
+        <div class="loggedin">
+            {{#showcase}}
+            <span id="tellShowcase">
             {{{showcase}}}
         </span> {{/showcase}}
-    <div id="top">
-        <h1>Hinterlasse @{{display_name}} einen Tell!</h1>
-        <p>{{custom_page_text}}</p>
-        <textarea data-length=9999 id="enter_tell"></textarea>
-        <div class="tell_actions">
-            <div id="file_upload">
-                <label class="fileContainer">
-                    <span id="uploadbuttonContent">{{translation.send_tells_attach_image}}</span>
-                    <input name="file" type="file" id="file">
-                </label>
-            </div>
-            <div id="private_checkbox">
-                <input type="checkbox" id="tweetable">
-                <label for="tweetable">
-                    <div class="tooltip">{{{translation.send_tells_mark_as_private}}}<span class="tooltiptext">{{translation.send_tells_mark_as_private_tooltip}}</span>
+            <div id="top">
+                <h1>Hinterlasse @{{display_name}} einen Tell!</h1>
+                <p>{{custom_page_text}}</p>
+                <textarea data-length=9999 id="enter_tell"></textarea>
+                <div class="tell_actions">
+                    <div id="file_upload">
+                        <label class="fileContainer">
+                            <span id="uploadbuttonContent">{{translation.send_tells_attach_image}}</span>
+                            <input name="file" type="file" id="file">
+                        </label>
                     </div>
-                </label>
+                    <div id="private_checkbox">
+                        <input type="checkbox" id="tweetable">
+                        <label for="tweetable">
+                            <div class="tooltip">{{{translation.send_tells_mark_as_private}}}<span class="tooltiptext">{{translation.send_tells_mark_as_private_tooltip}}</span>
+                            </div>
+                        </label>
+                    </div>
+                    <span class="spacer"></span>
+                    <button class="send_tell" id="send_tell_button">{{translation.send}}</button>
+                </div>
             </div>
-            <span class="spacer"></span>
-            <button class="send_tell" id="send_tell_button">{{translation.send}}</button>
-        </div>
-    </div>
-    <hr />
-    <h2>{{translation.send_tells_public_answers_headline}}</h2>
-    <span id="tells">
+            <hr />
+            <h2>{{translation.send_tells_public_answers_headline}}</h2>
+            <span id="tells">
             {{>publicanswers}}
         </span>
-    <footer><a href="{{{appconf.gitURL}}}">{{translation.is_free_software}}</a> | <a href="{{{appconf.gitURL}}}/commit/{{{appconf.lastCommit.hash}}}">{{translation.running_at}} {{appconf.lastCommit.branch}}/{{appconf.lastCommit.shortHash}}</a></footer>
+            <footer><a href="{{{appconf.gitURL}}}">{{translation.is_free_software}}</a> | <a
+                    href="{{{appconf.gitURL}}}/commit/{{{appconf.lastCommit.hash}}}">{{translation.running_at}}
+                                                                                     {{appconf.lastCommit.branch}}/{{appconf.lastCommit.shortHash}}</a>
+            </footer>
 
 
-    <div id="show_img" class="overlay">
-        <div class="popup">
-            <a class="close" href="#">&times;</a>
-            <div class="content">
-                <img src="/assets/images/test_image.jpg" id="lightbox_img" />
+            <div id="show_img" class="overlay">
+                <div class="popup">
+                    <a class="close" href="#">&times;</a>
+                    <div class="content">
+                        <img src="/assets/images/test_image.jpg" id="lightbox_img" />
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    <div id="show_media" class="overlay">
-        <div class="popup">
-            <a class="close" href="#" onclick='$("#lightbox_media").attr("src", "");'>&times;</a>
-            <div class="content">
-                <video src="" id="lightbox_media" controls autoplay>
-                    {{translation.no_html5_video_support}}
-                </video>
+            <div id="show_media" class="overlay">
+                <div class="popup">
+                    <a class="close" href="#" onclick='$("#lightbox_media").attr("src", "");'>&times;</a>
+                    <div class="content">
+                        <video src="" id="lightbox_media" controls autoplay>
+                            {{translation.no_html5_video_support}}
+                        </video>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <div class="pagination" id="loadingSymbol" style="visibility: hidden;">
-        <div class="lds-ripple">
-            <div></div>
-            <div></div>
+            <div class="pagination" id="loadingSymbol" style="visibility: hidden;">
+                <div class="lds-ripple">
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+            <script>
+                var delete_buffer = null;
+                var answer_id_buffer = null;
+                var request_in_progress = false;
+                scrollHandler("get_public_tells", "&twitter_id={{twitter_id}}");
+            </script>
         </div>
-    </div>
-    <script>
-        var delete_buffer = null;
-        var answer_id_buffer = null;
-        var request_in_progress = false;
-        scrollHandler("get_public_tells", "&twitter_id={{twitter_id}}");
-    </script>
-</div>
-<script async src="/assets/js/charcounter.js"></script>
-</body>
+        <script src="/assets/js/twemoji.js"></script>
+        <script>
+            twemoji.parse(document.body);
+        </script>
+        <script async src="/assets/js/charcounter.js"></script>
+    </body>
 
 </html>

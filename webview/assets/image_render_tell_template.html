@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html>
-
     <head>
         <link rel="stylesheet" href="stylesheets/image_renderer_tell_stylesheet.css" />
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     </head>
-
     <body>
-
         <div class="tell" id="tell-{{tell_id}}">
             <div id="tell_content">
 
@@ -26,6 +23,9 @@
                 <div id="url">{{{base_url}}}/{{display_name}}</div>
             </div>
         </div>
+        <script src="/assets/js/twemoji.js"></script>
+        <script>
+            twemoji.parse(document.body);
+        </script>
     </body>
-
 </html>

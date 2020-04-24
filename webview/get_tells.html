@@ -1,307 +1,317 @@
 <!Doctype HTML>
 <html>
 
-<head>
-    <title>{{translation.title}}</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <meta name="description" lang="de" content="{{translation.site_description}}">
-    <meta name="theme-color" content="#253e59">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta property="og:site_name" content="{{translation.title}}">
-    <meta property="og:title" content="{{translation.title}}">
-    <meta property="og:description" content="{{translation.site_description}}">
-    <meta property="og:url" content="{{[appconf.base_url}}}">
-    <meta property="og:image" content="{{{appconf.base_url}}}/assets/images/og.png">
-    <meta property="og:type" content="article">
-    <link rel="stylesheet" href="/assets/stylesheets/stylesheet.css" />
-    <link rel="icon" href="/assets/images/favicon.ico" />
-    <link rel="icon" type="/image/png" href="/assets/images/favicon.png">
-    <script src="/assets/js/jquery-3.4.1.min.js"></script>
-    <script src="/assets/js/tellschn-client.js"></script>
-    <script>
-        var custom_page_text = "{{custom_page_text}}";
-        var token = "{{token}}";
-        var no_more_tells = false;
-    </script>
-</head>
+    <head>
+        <title>{{translation.title}}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+        <meta name="description" lang="de" content="{{translation.site_description}}">
+        <meta name="theme-color" content="#253e59">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta property="og:site_name" content="{{translation.title}}">
+        <meta property="og:title" content="{{translation.title}}">
+        <meta property="og:description" content="{{translation.site_description}}">
+        <meta property="og:url" content="{{[appconf.base_url}}}">
+        <meta property="og:image" content="{{{appconf.base_url}}}/assets/images/og.png">
+        <meta property="og:type" content="article">
+        <link rel="stylesheet" href="/assets/stylesheets/stylesheet.css" />
+        <link rel="icon" href="/assets/images/favicon.ico" />
+        <link rel="icon" type="/image/png" href="/assets/images/favicon.png">
+        <script src="/assets/js/jquery-3.4.1.min.js"></script>
+        <script src="/assets/js/tellschn-client.js"></script>
+        <script>
+            var custom_page_text = "{{custom_page_text}}";
+            var token = "{{token}}";
+            var no_more_tells = false;
+        </script>
+    </head>
 
-<body>
-<div class="navbar">
-    <a href="/">
-        <img class="logo" src="/assets/images/logo_white.svg" alt="Tellschn" style="height:2em; margin-top: -0.45em;">
-    </a>
+    <body>
+        <div class="navbar">
+            <a href="/">
+                <img class="logo" src="/assets/images/logo_white.svg" alt="Tellschn"
+                     style="height:2em; margin-top: -0.45em;">
+            </a>
 
-    <div id="navbar-right">
-        <div style="margin-right: 5rem">
-            {{#account_pool}}
-            <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img class="profile_pic"
-                                                                                             src="{{{appconf.cdn_path}}}{{{profile_pic_cdn_link}}}"
-                                                                                             alt="{{{shared_display_name}}}"></a>
-            {{/account_pool}}
-            <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img class="profile_pic"
-                                                                                                src="{{{base_user.profile_image_url}}}"
-                                                                                                alt="{{{base_user.display_name}}}"></a>
+            <div id="navbar-right">
+                <div style="margin-right: 5rem">
+                    {{#account_pool}}
+                    <a href="/api/switch_user?token={{token}}&twitter_id={{shared_twitter_id}}"><img class="profile_pic"
+                                                                                                     src="{{{appconf.cdn_path}}}{{{profile_pic_cdn_link}}}"
+                                                                                                     alt="{{{shared_display_name}}}"></a>
+                    {{/account_pool}}
+                    <a href="/api/switch_user?token={{token}}&twitter_id={{base_user.twitter_id}}"><img
+                            class="profile_pic"
+                            src="{{{base_user.profile_image_url}}}"
+                            alt="{{{base_user.display_name}}}"></a>
+                </div>
+
+                <div id="user"><a href="/settings"><i id="settings_btn" class="material-icons">settings</i></a><a
+                        href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
+
+                </div>
+            </div>
         </div>
-
-        <div id="user"><a href="/settings"><i id="settings_btn" class="material-icons">settings</i></a><a
-                href="/api/logoff"><i class="material-icons">power_settings_new</i></a>
-
-        </div>
-    </div>
-</div>
-<div class="loggedin">
-    {{#showcase}}
-    <span id="tellShowcase">
+        <div class="loggedin">
+            {{#showcase}}
+            <span id="tellShowcase">
             {{{showcase}}}
         </span> {{/showcase}}
-    <div id="top">
-        <h1>{{translation.get_tells_headline}}</h1>
-        <h2>{{translation.get_tells_site_description}}</h2>
-        <p id="share_url">{{translation.get_tells_want_more_tells}}</p>
-        <input id="url" class="copyurl" type="text" name="profile-url" value="{{{base_url}}}/{{display_name}}"
-               readonly="readonly" />
-        <button class="copyBtn">{{translation.copy}}</button>
-    </div>
-    <hr />
-    <span id="tells">
+            <div id="top">
+                <h1>{{translation.get_tells_headline}}</h1>
+                <h2>{{translation.get_tells_site_description}}</h2>
+                <p id="share_url">{{translation.get_tells_want_more_tells}}</p>
+                <input id="url" class="copyurl" type="text" name="profile-url" value="{{{base_url}}}/{{display_name}}"
+                       readonly="readonly" />
+                <button class="copyBtn">{{translation.copy}}</button>
+            </div>
+            <hr />
+            <span id="tells">
         {{>tell_list}}
         </span>
 
-    <div class="pagination" id="loadingSymbol" style="visibility: hidden;">
-        <div class="lds-ripple">
-            <div></div>
-            <div></div>
-        </div>
-    </div>
-
-    <footer><a href="{{{appconf.gitURL}}}">{{translation.is_free_software}}</a> | <a href="{{{appconf.gitURL}}}/commit/{{{appconf.lastCommit.hash}}}">{{translation.running_at}} {{appconf.lastCommit.branch}}/{{appconf.lastCommit.shortHash}}</a></footer>
-
-
-    <!-- TODO: Popups do not close when clicked out of the window and page always scrolls up to the top -->
-    <div id="answer" class="overlay">
-        <div class="popup">
-            <h2>{{translation.answer}}</h2>
-            <a class="close" href="#">&times;</a>
-            <div class="content answer_popup" id="answer_popup_content">
-                <div class="answer_tell">
-                    <h3>{{translation.tell}}:</h3>
-                    <p id="answer_tellcontent" class="wrap_text"></p>
-                </div>
-                <div class="answer_container">
-                    <textarea data-length="280" id="enter_answer"></textarea>
-                    <span class="counter"></span>
-                </div>
-                <div id="button">
-                    <button class="send" onclick="answerTell()">{{translation.send}}</button>
-                </div>
-                <div class="checkboxes">
-                    <input type="checkbox" id="tweeting" {{#custom_configuration.std_tweet}}checked{{/custom_configuration.std_tweet}}>
-                    <label for="tweeting">{{translation.get_tells_answer_on_twitter}}</label>
-
-                    <input type="checkbox" id="profileposting" {{#custom_configuration.std_post_feed}}checked{{/custom_configuration.std_post_feed}}>
-                    <label for="profileposting">{{translation.get_tells_answer_on_own_profile}}</label>
-                </div>
-                <div class="checkboxes" id="checkboxes_imagesharing">
-                    <input type="checkbox" id="tweet_image" {{#custom_configuration.std_tweet_image}}checked{{/custom_configuration.std_tweet_image}}>
-                    <label for="tweet_image">{{translation.get_tells_answer_image_on_twitter}}</label>
-
-                    <input type="checkbox" id="post_image" {{#custom_configuration.std_post_image}}checked{{/custom_configuration.std_post_image}}>
-                    <label for="post_image">{{translation.get_tells_answer_image_on_own_profile}}</label>
+            <div class="pagination" id="loadingSymbol" style="visibility: hidden;">
+                <div class="lds-ripple">
+                    <div></div>
+                    <div></div>
                 </div>
             </div>
-            <div class="content answer_popup" id="answer_popup_response" style="display: none">&nbsp;</div>
-        </div>
-    </div>
-    <div id="edit" class="overlay">
-        <div class="popup">
-            <h2>{{translation.get_tells_edit_answer_headine}}</h2>
-            <a class="close" href="#">&times;</a>
-            <div class="content answer_popup" id="edit_popup_content">
-                <div class="answer_tell">
-                    <h3>{{translation.tell}}:</h3>
-                    <p id="edit_tellcontent" class="wrap_text"></p>
-                </div>
-                <!-- TODO: Somehow broke class of answer container -->
-                <div class="answer_container">
-                    <textarea data-length="280" id="edit_answer"></textarea>
-                    <span class="counter"></span>
-                </div>
-                <div id="button">
-                    <button class="send" onclick="editTell()">{{translation.send}}</button>
-                </div>
-                <div class="checkboxes">
-                    <input type="checkbox" id="editprofileposting">
-                    <label for="editprofileposting">{{translation.get_tells_answer_on_own_profile}}</label>
-                </div>
-                <div class="checkboxes" id="editcheckboxes_imagesharing">
 
-                    <input type="checkbox" id="editpost_image">
-                    <label for="editpost_image">{{translation.get_tells_answer_image_on_own_profile}}</label>
+            <footer><a href="{{{appconf.gitURL}}}">{{translation.is_free_software}}</a> | <a
+                    href="{{{appconf.gitURL}}}/commit/{{{appconf.lastCommit.hash}}}">{{translation.running_at}}
+                                                                                     {{appconf.lastCommit.branch}}/{{appconf.lastCommit.shortHash}}</a>
+            </footer>
+
+
+            <!-- TODO: Popups do not close when clicked out of the window and page always scrolls up to the top -->
+            <div id="answer" class="overlay">
+                <div class="popup">
+                    <h2>{{translation.answer}}</h2>
+                    <a class="close" href="#">&times;</a>
+                    <div class="content answer_popup" id="answer_popup_content">
+                        <div class="answer_tell">
+                            <h3>{{translation.tell}}:</h3>
+                            <p id="answer_tellcontent" class="wrap_text"></p>
+                        </div>
+                        <div class="answer_container">
+                            <textarea data-length="280" id="enter_answer"></textarea>
+                            <span class="counter"></span>
+                        </div>
+                        <div id="button">
+                            <button class="send" onclick="answerTell()">{{translation.send}}</button>
+                        </div>
+                        <div class="checkboxes">
+                            <input type="checkbox" id="tweeting" {{#custom_configuration.std_tweet}}checked{{/custom_configuration.std_tweet}}>
+                            <label for="tweeting">{{translation.get_tells_answer_on_twitter}}</label>
+
+                            <input type="checkbox" id="profileposting" {{#custom_configuration.std_post_feed}}checked{{/custom_configuration.std_post_feed}}>
+                            <label for="profileposting">{{translation.get_tells_answer_on_own_profile}}</label>
+                        </div>
+                        <div class="checkboxes" id="checkboxes_imagesharing">
+                            <input type="checkbox" id="tweet_image" {{#custom_configuration.std_tweet_image}}checked{{/custom_configuration.std_tweet_image}}>
+                            <label for="tweet_image">{{translation.get_tells_answer_image_on_twitter}}</label>
+
+                            <input type="checkbox" id="post_image" {{#custom_configuration.std_post_image}}checked{{/custom_configuration.std_post_image}}>
+                            <label for="post_image">{{translation.get_tells_answer_image_on_own_profile}}</label>
+                        </div>
+                    </div>
+                    <div class="content answer_popup" id="answer_popup_response" style="display: none">&nbsp;</div>
                 </div>
             </div>
-            <div class="content answer_popup" id="edit_popup_response" style="display: none">
+            <div id="edit" class="overlay">
+                <div class="popup">
+                    <h2>{{translation.get_tells_edit_answer_headine}}</h2>
+                    <a class="close" href="#">&times;</a>
+                    <div class="content answer_popup" id="edit_popup_content">
+                        <div class="answer_tell">
+                            <h3>{{translation.tell}}:</h3>
+                            <p id="edit_tellcontent" class="wrap_text"></p>
+                        </div>
+                        <!-- TODO: Somehow broke class of answer container -->
+                        <div class="answer_container">
+                            <textarea data-length="280" id="edit_answer"></textarea>
+                            <span class="counter"></span>
+                        </div>
+                        <div id="button">
+                            <button class="send" onclick="editTell()">{{translation.send}}</button>
+                        </div>
+                        <div class="checkboxes">
+                            <input type="checkbox" id="editprofileposting">
+                            <label for="editprofileposting">{{translation.get_tells_answer_on_own_profile}}</label>
+                        </div>
+                        <div class="checkboxes" id="editcheckboxes_imagesharing">
+
+                            <input type="checkbox" id="editpost_image">
+                            <label for="editpost_image">{{translation.get_tells_answer_image_on_own_profile}}</label>
+                        </div>
+                    </div>
+                    <div class="content answer_popup" id="edit_popup_response" style="display: none">
+
+                    </div>
+                </div>
 
             </div>
-        </div>
-
-    </div>
-    <div id="confirm_delete" class="overlay">
-        <div class="popup">
-            <h2>{{translation.get_tells_delete_confirm_headline}}</h2>
-            <a class="close" href="#">&times;</a>
-            <div class="content">
-                <p>{{translation.get_tells_delete_tell_confirm_text}}
-                </p>
-                <button class="delete" onclick="deleteTell()">{{translation.get_tells_delete_tell_confirm_button}}
-                </button>
-                <button class="cancel">{{translation.get_tells_delete_tell_abort_button}}</button>
+            <div id="confirm_delete" class="overlay">
+                <div class="popup">
+                    <h2>{{translation.get_tells_delete_confirm_headline}}</h2>
+                    <a class="close" href="#">&times;</a>
+                    <div class="content">
+                        <p>{{translation.get_tells_delete_tell_confirm_text}}
+                        </p>
+                        <button class="delete" onclick="deleteTell()">
+                            {{translation.get_tells_delete_tell_confirm_button}}
+                        </button>
+                        <button class="cancel">{{translation.get_tells_delete_tell_abort_button}}</button>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <div id="show_img" class="overlay">
-        <div class="popup">
-            <a class="close" href="#">&times;</a>
-            <div class="content">
-                <img src="/assets/images/test_image.jpg" id="lightbox_img" />
+            <div id="show_img" class="overlay">
+                <div class="popup">
+                    <a class="close" href="#">&times;</a>
+                    <div class="content">
+                        <img src="/assets/images/test_image.jpg" id="lightbox_img" />
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    <div id="show_media" class="overlay">
-        <div class="popup">
-            <a class="close" href="#" onclick='$("#lightbox_media").attr("src", "");'>&times;</a>
-            <div class="content">
-                <video src="" id="lightbox_media" controls autoplay>
-                    {{translation.no_html5_video_support}}
-                </video>
+            <div id="show_media" class="overlay">
+                <div class="popup">
+                    <a class="close" href="#" onclick='$("#lightbox_media").attr("src", "");'>&times;</a>
+                    <div class="content">
+                        <video src="" id="lightbox_media" controls autoplay>
+                            {{translation.no_html5_video_support}}
+                        </video>
+                    </div>
+                </div>
             </div>
+
         </div>
-    </div>
+        <script src="/assets/js/twemoji.js"></script>
+        <script>
+            twemoji.parse(document.body);
+        </script>
+        <script async src="/assets/js/charcounter.js"></script>
+        <script async src="/assets/js/copy.js"></script>
+        <script>
+            if(no_more_tells) noMoreTells();
 
-</div>
-<script async src="/assets/js/charcounter.js"></script>
-<script async src="/assets/js/copy.js"></script>
-<script>
-    if(no_more_tells) noMoreTells();
+            var request_in_progress = false;
+            var delete_buffer = null;
+            var answer_id_buffer = null;
 
-    var request_in_progress = false;
-    var delete_buffer = null;
-    var answer_id_buffer = null;
+            if(!no_more_tells) scrollHandler("get_own_tells");
 
-    if(!no_more_tells) scrollHandler("get_own_tells");
-
-    function filldeletemodal(tell_id){
-        delete_buffer = tell_id;
-
-    }
-
-    function deleteTell(){
-        delete_tell(delete_buffer, function(response){
-            if(response.err) throw response.err;
-            window.location.hash = "";
-            document.getElementById("tell-" + delete_buffer).remove();
-            delete_buffer = null;
-        })
-    }
-
-    function fillanswermodal(tell_id, has_img){
-        if(has_img){
-            document.getElementById("checkboxes_imagesharing").style.display = "block";
-        } else{
-            document.getElementById("checkboxes_imagesharing").style.display = "none";
-
-        }
-        document.getElementById("answer_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
-        answer_id_buffer = tell_id;
-    }
-
-    function filleditmodal(tell_id, has_img, was_public, was_img_public){
-        if(has_img){
-            document.getElementById("editcheckboxes_imagesharing").style.display = "block";
-        } else{
-            document.getElementById("editcheckboxes_imagesharing").style.display = "none";
-
-        }
-        if(was_img_public){
-            $("#editpost_image").attr("checked", "checked");
-        }
-        if(was_public){
-            $("#editprofileposting").attr("checked", "checked");
-        }
-        document.getElementById("edit_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
-        $("#edit_answer").val(document.getElementById("answer_content_" + tell_id).innerHTML);
-        answer_id_buffer = tell_id;
-    }
-
-    function editTell(){
-        if(request_in_progress){
-            return;
-        }
-        request_in_progress = true;
-        edit_tell(answer_id_buffer,
-            $("#edit_answer").val(),
-            $("#editprofileposting").is(":checked"),
-            $("#editpost_image").is(":checked"),
-            function(response){
-                request_in_progress = false;
-                if(response.err !== null){
-                    alert(response);
-                    return;
-                }
-
-                document.getElementById("edit_popup_content").style.display = "none";
-                document.getElementById("edit_popup_response").style.display = "inline";
-                document.getElementById("edit_popup_response").innerHTML = "{{translation.get_tells_your_answer_was_edited}}<br><br>";
-                document.getElementById("edit_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">{{translation.okay}}</a></div>';
-
+            function filldeletemodal(tell_id){
+                delete_buffer = tell_id;
 
             }
-        )
-    }
 
-    function answerTell(){
-        if(request_in_progress){
-            return;
-        }
-        request_in_progress = true;
-        reply_to_tell(
-            answer_id_buffer,
-            $("#enter_answer").val(),
-            $("#tweeting").is(":checked"),
-            $("#profileposting").is(":checked"),
-            $("#tweet_image").is(":checked"),
-            $("#post_image").is(":checked"),
-            function(response){
-                request_in_progress = false;
-                if(response.err == null){
-                    // answer successful
-                    // display success message
-                    document.getElementById("answer_popup_content").style.display = "none";
-                    document.getElementById("answer_popup_response").style.display = "inline";
-                    document.getElementById("answer_popup_response").innerHTML = "{{translation.get_tells_your_answer_was_sent}}<br><br>";
-                    document.getElementById("answer_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">{{translation.okay}}</a></div>';
+            function deleteTell(){
+                delete_tell(delete_buffer, function(response){
+                    if(response.err) throw response.err;
+                    window.location.hash = "";
+                    document.getElementById("tell-" + delete_buffer).remove();
+                    delete_buffer = null;
+                })
+            }
+
+            function fillanswermodal(tell_id, has_img){
+                if(has_img){
+                    document.getElementById("checkboxes_imagesharing").style.display = "block";
                 } else{
-                    alert(response);
+                    document.getElementById("checkboxes_imagesharing").style.display = "none";
+
+                }
+                document.getElementById("answer_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
+                answer_id_buffer = tell_id;
+            }
+
+            function filleditmodal(tell_id, has_img, was_public, was_img_public){
+                if(has_img){
+                    document.getElementById("editcheckboxes_imagesharing").style.display = "block";
+                } else{
+                    document.getElementById("editcheckboxes_imagesharing").style.display = "none";
+
+                }
+                if(was_img_public){
+                    $("#editpost_image").attr("checked", "checked");
+                }
+                if(was_public){
+                    $("#editprofileposting").attr("checked", "checked");
+                }
+                document.getElementById("edit_tellcontent").innerHTML = document.getElementById("tell_content_" + tell_id).innerHTML;
+                $("#edit_answer").val(document.getElementById("answer_content_" + tell_id).innerHTML);
+                answer_id_buffer = tell_id;
+            }
+
+            function editTell(){
+                if(request_in_progress){
                     return;
                 }
+                request_in_progress = true;
+                edit_tell(answer_id_buffer,
+                    $("#edit_answer").val(),
+                    $("#editprofileposting").is(":checked"),
+                    $("#editpost_image").is(":checked"),
+                    function(response){
+                        request_in_progress = false;
+                        if(response.err !== null){
+                            alert(response);
+                            return;
+                        }
+
+                        document.getElementById("edit_popup_content").style.display = "none";
+                        document.getElementById("edit_popup_response").style.display = "inline";
+                        document.getElementById("edit_popup_response").innerHTML = "{{translation.get_tells_your_answer_was_edited}}<br><br>";
+                        document.getElementById("edit_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">{{translation.okay}}</a></div>';
+
+
+                    }
+                )
             }
-        )
-    }
 
-    function reset_answer_modal(){
-        window.location.hash = "";
-        window.location.reload();
-        // eh just reload the page, so we don't have to fuck with all of the ajax requests to change the local view
+            function answerTell(){
+                if(request_in_progress){
+                    return;
+                }
+                request_in_progress = true;
+                reply_to_tell(
+                    answer_id_buffer,
+                    $("#enter_answer").val(),
+                    $("#tweeting").is(":checked"),
+                    $("#profileposting").is(":checked"),
+                    $("#tweet_image").is(":checked"),
+                    $("#post_image").is(":checked"),
+                    function(response){
+                        request_in_progress = false;
+                        if(response.err == null){
+                            // answer successful
+                            // display success message
+                            document.getElementById("answer_popup_content").style.display = "none";
+                            document.getElementById("answer_popup_response").style.display = "inline";
+                            document.getElementById("answer_popup_response").innerHTML = "{{translation.get_tells_your_answer_was_sent}}<br><br>";
+                            document.getElementById("answer_popup_response").innerHTML += '<div class="button"><a href="#" class="answer" onclick="reset_answer_modal()">{{translation.okay}}</a></div>';
+                        } else{
+                            alert(response);
+                            return;
+                        }
+                    }
+                )
+            }
 
-        /*document.getElementById("answer_popup_response").style.display = "none";
-        document.getElementById("answer_popup_content").style.display = "inline";
-        document.getElementById("edit_popup_response").style.display = "none";
-        document.getElementById("edit_popup_content").style.display = "inline";
-        $("#enter_answer").val(" "); */
-    }
-</script>
-</body>
+            function reset_answer_modal(){
+                window.location.hash = "";
+                window.location.reload();
+                // eh just reload the page, so we don't have to fuck with all of the ajax requests to change the local view
+
+                /*document.getElementById("answer_popup_response").style.display = "none";
+                document.getElementById("answer_popup_content").style.display = "inline";
+                document.getElementById("edit_popup_response").style.display = "none";
+                document.getElementById("edit_popup_content").style.display = "inline";
+                $("#enter_answer").val(" "); */
+            }
+        </script>
+    </body>
 
 </html>
