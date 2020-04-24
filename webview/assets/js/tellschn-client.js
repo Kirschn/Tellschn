@@ -76,9 +76,12 @@ function scrollHandler(apinode, add){
                 showLoadingAnimation()
                 function next(next_page){
                     document.getElementById("tells").innerHTML += next_page;
+                    twemoji.parse(document.getElementById("tells"));
                     hideLoadingAnimation();
                     request_in_progress = false;
                     page++;
+                    
+
                 }
 
                 $.ajax({
